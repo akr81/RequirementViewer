@@ -2,6 +2,8 @@ import streamlit as st
 import subprocess
 from urllib.parse import urlencode
 
+# キャッシュを利用して、同じコードの場合は再実行を防ぐ
+@st.cache_data
 def plantuml_svg(plantuml_code: str) -> str:
     """
     ローカルの PlantUML jar を利用して、PlantUML コードから SVG を生成する関数
@@ -32,6 +34,9 @@ URL パラメータとして `selected=req1` が付与され、Streamlit 側で�
 # 初期の PlantUML コード（クリック可能なハイパーリンク付き）
 default_code = """@startuml
 ' PlantUML Requirement Diagram with clickable entities
+'!pragma svginteractive true
+skinparam svgLinkTarget _href
+skinparam pathHoverColor green
 agent "System Requirement: システムは安全に動作すること" as req1 [[?selected=req1]]
 agent "User Requirement: ユーザは容易に操作できること" as req2 [[?selected=req2]]
 agent "Derived Requirement: 操作性と安全性の両立を実現すること" as req3 [[?selected=req3]]
@@ -50,11 +55,10 @@ selected_entity = st.query_params.get("selected", [None])
 
 # ローカルで PlantUML コードから SVG を生成
 svg_output = plantuml_svg(plantuml_code)
-svg_output = svg_output.replace('target="_top"', 'target="_href"')
 
 # svg出力のデバッグ
-# with open("debug.svg", "w") as out:
-    # out.writelines(svg_output)
+with open("debug.svg", "w") as out:
+    out.writelines(svg_output)
 
 # SVG をそのまま HTML コンポーネントで表示
 # st.components.v1.html(svg_output, height=600, scrolling=True)
