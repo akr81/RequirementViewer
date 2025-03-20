@@ -46,25 +46,33 @@ plantuml_code = st.text_area("PlantUML コード", value=default_code, height=25
 
 # URL のクエリパラメータから、選択されたエンティティを取得
 # query_params = st.query_params()
-selected_entity = st.query_params.get("selected", [None])[0]
+selected_entity = st.query_params.get("selected", [None])
 
 # ローカルで PlantUML コードから SVG を生成
 svg_output = plantuml_svg(plantuml_code)
+svg_output = svg_output.replace('target="_top"', 'target="_href"')
+
+# svg出力のデバッグ
+# with open("debug.svg", "w") as out:
+    # out.writelines(svg_output)
 
 # SVG をそのまま HTML コンポーネントで表示
-st.components.v1.html(svg_output, height=600, scrolling=True)
+# st.components.v1.html(svg_output, height=600, scrolling=True)
+st.markdown(svg_output, unsafe_allow_html=True)
+
+st.write(selected_entity)
 
 # 選択されたエンティティの情報を表示・編集
-if selected_entity:
-    st.subheader(f"選択されたエンティティ: {selected_entity}")
-    # サンプル用のダミーデータ（実際は session_state 等で管理することを検討）
-    entity_info = {
-        "req1": "System Requirement: システムは安全に動作すること",
-        "req2": "User Requirement: ユーザは容易に操作できること",
-        "req3": "Derived Requirement: 操作性と安全性の両立を実現すること"
-    }
-    current_info = entity_info.get(selected_entity, "情報なし")
-    new_info = st.text_area("エンティティ情報", value=current_info)
-    if st.button("更新"):
-        # 更新処理（ここではダミー）
-        st.success(f"{selected_entity} の情報が更新されました。（この例では更新処理はダミーです）")
+# if selected_entity:
+#     st.subheader(f"選択されたエンティティ: {selected_entity}")
+#     # サンプル用のダミーデータ（実際は session_state 等で管理することを検討）
+#     entity_info = {
+#         "req1": "System Requirement: システムは安全に動作すること",
+#         "req2": "User Requirement: ユーザは容易に操作できること",
+#         "req3": "Derived Requirement: 操作性と安全性の両立を実現すること"
+#     }
+#     current_info = entity_info.get(selected_entity, "情報なし")
+#     new_info = st.text_area("エンティティ情報", value=current_info)
+#     if st.button("更新"):
+#         # 更新処理（ここではダミー）
+#         st.success(f"{selected_entity} の情報が更新されました。（この例では更新処理はダミーです）")
