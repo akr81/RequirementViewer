@@ -45,6 +45,7 @@ hide empty members
 hide method
 skinparam linetype polyline
 skinparam linetype ortho
+skinparam HyperlinkUnderline false
 skinparam usecase {
 BackgroundColor White
 ArrowColor Black
@@ -154,7 +155,7 @@ allowmixing
 
         if self.detail or self.debug:
             # Ignore () as method using {field}
-            ret = f"class \"{title}\" as {data['unique_id']} <<{type}>> " + "{\n"
+            ret = f"class \"{title}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}]]" + "{\n"
 
             if self.debug:
                 ret += "{field}" + f"unique_id=\"{data['unique_id']}\"\n"
