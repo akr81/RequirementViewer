@@ -6,7 +6,7 @@ class RequirementGraph:
         self.entities = entities
         self.graph = nx.DiGraph()
         for entity in entities:
-            self.graph.add_node(entity["unique_id"], id=entity["id"], title=entity["title"], text=entity["text"], unique_id=entity["unique_id"])
+            self.graph.add_node(entity["unique_id"], id=entity["id"], title=entity["title"], text=entity["text"], unique_id=entity["unique_id"], type=entity["type"])
             for relation in entity["relations"]:
                 self.graph.add_edge(entity["unique_id"], relation["destination"], type=relation["type"])
 

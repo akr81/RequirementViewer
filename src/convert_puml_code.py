@@ -75,7 +75,7 @@ allowmixing
         # Convert nodes other than orphan
         for node in graph.nodes(data=True):
             if node[0] not in nx.isolates(graph):
-                # ret += self._convert_node(node) + "\n"
+                ret += self._convert_node(node) + "\n"
                 pass
 
         # Convert edges
@@ -96,8 +96,10 @@ allowmixing
         Returns:
             str: PlantUML code.
         """
+        print("===")
+        print(node)
+        print("===")
         attr = node[1]
-        print(attr)
         type = attr["type"]
         ret = ""
         if type == "usecase":
@@ -232,6 +234,7 @@ allowmixing
         Returns:
             str: PlantUML string
         """
+        print(data)
         src = data[0]
         dst = data[1]
         kind = data[2]["type"]
