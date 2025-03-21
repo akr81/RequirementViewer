@@ -1,9 +1,12 @@
 import streamlit as st
 import subprocess
 from urllib.parse import urlencode
+from src.requirement_graph import RequirementGraph
+from src.convert_puml_code import ConvertPumlCode
 import json
 import os
 import uuid
+import networkx as nx
 
 # Streamlit のレイアウトをワイドに設定
 st.set_page_config(layout="wide")
@@ -47,15 +50,31 @@ else:
     #存在しない場合は空で始める
     requirement_data = []
 
+print(requirement_data)
+
 # 読み込んだデータからIDとタイトルのリストを作成
 id_title_list = [requirement["id"] + ": " + requirement["title"] for requirement in requirement_data]
 id_title_list.insert(0, "None")
 
 # 読み込んだデータをグラフデータに変換
+graph_data = RequirementGraph(requirement_data)
+print(graph_data)
 # graph_data = {
 #     "nodes": [],
 #     "edges": []
 # }
+
+# グラフデータをPlantUMLコードに変換
+config = {
+    "detail": True,
+    "debug": True,
+    "width": 800,
+    "left_to_right": False
+}
+converter = ConvertPumlCode(config)
+puml_code = converter.convert_to_puml(graph_data.graph, title=None, target=None)
+print(puml_code)
+st.write(puml_code)
 
 
 st.write("""
@@ -65,22 +84,22 @@ URL パラメータとして `selected=req1` が付与され、Streamlit 側で�
 """)
 
 # 初期の PlantUML コード（クリック可能なハイパーリンク付き）
-default_code = """@startuml
-' PlantUML Requirement Diagram with clickable entities
-'!pragma svginteractive true
-skinparam svgLinkTarget _href
-skinparam pathHoverColor green
-agent "System Requirement: システムは安全に動作すること" as req1 [[?selected=req1]]
-agent "User Requirement: ユーザは容易に操作できること" as req2 [[?selected=req2]]
-agent "Derived Requirement: 操作性と安全性の両立を実現すること" as req3 [[?selected=req3]]
+# default_code = """@startuml
+# ' PlantUML Requirement Diagram with clickable entities
+# '!pragma svginteractive true
+# skinparam svgLinkTarget _href
+# skinparam pathHoverColor green
+# agent "System Requirement: システムは安全に動作すること" as req1 [[?selected=req1]]
+# agent "User Requirement: ユーザは容易に操作できること" as req2 [[?selected=req2]]
+# agent "Derived Requirement: 操作性と安全性の両立を実現すること" as req3 [[?selected=req3]]
 
-req1 --> req3 : satisfies
-req2 --> req3 : verifies
-@enduml
-"""
+# req1 --> req3 : satisfies
+# req2 --> req3 : verifies
+# @enduml
+# """
 
 # テキストエリアで PlantUML コードの編集が可能
-plantuml_code = st.text_area("PlantUML コード", value=default_code, height=250)
+plantuml_code = st.text_area("PlantUML コード", value=puml_code, height=250)
 
 # URL のクエリパラメータから、選択されたエンティティを取得
 # query_params = st.query_params()
@@ -118,6 +137,7 @@ with col2:
     entity_type = st.selectbox("エンティティタイプ", entity_types)
     entity_id = st.text_input("ID", "")
     entity_title = st.text_input("タイトル", "")
+    entity_text = st.text_area("説明", "")
     # ユニークIDをGUIDで生成
     entity_unique_id = uuid.uuid4()
 
