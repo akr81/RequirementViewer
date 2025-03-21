@@ -1,6 +1,12 @@
 import streamlit as st
 import subprocess
 from urllib.parse import urlencode
+import json
+import os
+import uuid
+
+# Streamlit のレイアウトをワイドに設定
+st.set_page_config(layout="wide")
 
 # キャッシュを利用して、同じコードの場合は再実行を防ぐ
 @st.cache_data
@@ -23,7 +29,34 @@ def plantuml_svg(plantuml_code: str) -> str:
         st.error(e.stderr.decode("utf-8"))
         return ""
 
-st.title("PlantUML の図とエンティティ情報の編集")
+st.title("Requirement Diagram Viewer")
+
+# テキストでJSONファイルのパスを指定(デフォルトはdefault.json)
+file_path = st.text_input("JSONファイルのパスを入力してください", "default.json")
+
+# ファイルが存在する場合は読み込む
+if os.path.exists(file_path):
+    # JSONファイルを読み込む。文字コードに注意
+    with open(file_path, "r", encoding="utf-8") as f:
+        try:
+            requirement_data = json.load(f)
+        except:
+            st.error("JSONファイルの読み込みに失敗しました。")
+            st.stop()
+else:
+    #存在しない場合は空で始める
+    requirement_data = []
+
+# 読み込んだデータからIDとタイトルのリストを作成
+id_title_list = [requirement["id"] + ": " + requirement["title"] for requirement in requirement_data]
+id_title_list.insert(0, "None")
+
+# 読み込んだデータをグラフデータに変換
+# graph_data = {
+#     "nodes": [],
+#     "edges": []
+# }
+
 
 st.write("""
 PlantUML のコード内で各要求（エンティティ）にハイパーリンクを設定しています。
@@ -53,6 +86,14 @@ plantuml_code = st.text_area("PlantUML コード", value=default_code, height=25
 # query_params = st.query_params()
 selected_entity = st.query_params.get("selected", [None])
 
+# パラメタがない場合はデフォルトのエンティティを選択してリロード
+print(selected_entity)
+if selected_entity == [None]:
+    print("Set default params")
+    default_params = {"selected": "default"}
+    st.query_params.setdefault("selected", "default")
+    st.rerun()
+
 # ローカルで PlantUML コードから SVG を生成
 svg_output = plantuml_svg(plantuml_code)
 
@@ -60,11 +101,45 @@ svg_output = plantuml_svg(plantuml_code)
 with open("debug.svg", "w") as out:
     out.writelines(svg_output)
 
-# SVG をそのまま HTML コンポーネントで表示
-# st.components.v1.html(svg_output, height=600, scrolling=True)
-st.markdown(svg_output, unsafe_allow_html=True)
+# 2つのカラムに表示を分割
+col1, col2 = st.columns([4, 1])
 
-st.write(selected_entity)
+with col1:
+    st.write("## PlantUML 図")
+    st.write("クリックするとエンティティが選択されます")
+    st.write(selected_entity)
+    # SVG をそのまま HTML コンポーネントで表示
+    st.markdown(svg_output, unsafe_allow_html=True)
+
+with col2:
+    st.write("## データ操作")
+    # エンティティタイプを定義
+    entity_types = ["functionalRequirement", "performanceRequirement", "designConstraint", "interfaceRequirement", "physicalRequirement"]
+    entity_type = st.selectbox("エンティティタイプ", entity_types)
+    entity_id = st.text_input("ID", "")
+    entity_title = st.text_input("タイトル", "")
+    # ユニークIDをGUIDで生成
+    entity_unique_id = uuid.uuid4()
+
+    # テキストエリアでエンティティの詳細情報を入力
+    # 関係は複数ありえるため、繰り返し表示させる
+    # また、関係の追加を行うケースがあるため、最初の項目は空にしておき2つめ以後は設定されているデータを表示する
+    relation_types = ["None", "deriveReqt", "satisfy", "refine", "containment", "problem"]
+
+    col21, col22 = st.columns(2)
+    with col21:
+        relation_type = st.selectbox("関係タイプ", relation_types)
+    with col22:
+        destination_unique_id = st.selectbox("接続先", id_title_list)
+
+    # 追加ボタンを表示
+    if st.button("追加"):
+        # 関係を追加
+        # 1. 関係を追加
+        # 2. 画面をリロード
+        st.write("追加ボタンが押されました")
+        st.write(relation_type)
+
 
 # 選択されたエンティティの情報を表示・編集
 # if selected_entity:
