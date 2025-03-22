@@ -1,6 +1,5 @@
 import streamlit as st
 import subprocess
-from urllib.parse import urlencode
 from src.requirement_graph import RequirementGraph
 from src.convert_puml_code import ConvertPumlCode
 import json
@@ -9,35 +8,11 @@ import uuid
 import networkx as nx
 import atexit
 import requests
-import base64
 import zlib
-import urllib
 import copy
 
 # Streamlit のレイアウトをワイドに設定
 st.set_page_config(layout="wide")
-
-
-# キャッシュを利用して、同じコードの場合は再実行を防ぐ
-@st.cache_data
-def plantuml_svg(plantuml_code: str) -> str:
-    """
-    ローカルの PlantUML jar を利用して、PlantUML コードから SVG を生成する関数
-    ※PlantUML jar（plantuml.jar）はこのコードと同じディレクトリに配置すること。
-    """
-    try:
-        process = subprocess.run(
-            ["java", "-jar", "plantuml.jar", "-pipe", "-tsvg"],
-            input=plantuml_code.encode("utf-8"),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=True,
-        )
-        return process.stdout.decode("utf-8")
-    except subprocess.CalledProcessError as e:
-        st.error("PlantUML の図生成中にエラーが発生しました:")
-        st.error(e.stderr.decode("utf-8"))
-        return ""
 
 
 # PlantUMLサーバをバックグラウンドプロセスとして起動し、キャッシュする
