@@ -133,7 +133,7 @@ graph_data = RequirementGraph(requirement_data)
 # グラフデータをPlantUMLコードに変換
 config = {
     "detail": True,
-    "debug": True,
+    "debug": False,
     "width": 800,
     "left_to_right": False
 }
@@ -171,7 +171,7 @@ if not selected_entity:
 # ローカルで PlantUML コードから SVG を生成
 # svg_output = plantuml_svg(plantuml_code)
 svg_output = get_diagram(plantuml_code)
-svg_output = svg_output.replace("<defs/>", "<defs/><style>a {text-decoration: none;}</style>")
+svg_output = svg_output.replace("<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>")
 
 # svg出力のデバッグ
 with open("debug.svg", "w") as out:
