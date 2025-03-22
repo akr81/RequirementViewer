@@ -207,7 +207,7 @@ with col1:
     # SVG をそのまま表示
     st.markdown(
         f'''
-        <div style="width:100%; height:400px; overflow:auto; border:0px solid black;">
+        <div style="width:100%; height:800px; overflow:auto; border:0px solid black;">
             {svg_output}
         </div>
         ''',
@@ -235,11 +235,11 @@ with col2:
     with col21:
         relation_type = st.selectbox("関係タイプ", relation_types)
         for relation in tmp_entity["relations"]:
-            relation["type"] = st.selectbox("関係タイプ", relation["type"])
+            relation["type"] = st.selectbox("関係タイプ", relation_types, relation_types.index(relation["type"]))
     with col22:
-        destination_unique_id = st.selectbox("接続先", id_title_dict.keys(), index=len(id_title_dict) - 1) # 末尾に追加用の空要素を追加
+        destination_unique_id = id_title_dict[st.selectbox("接続先", id_title_dict.keys(), index=len(id_title_dict) - 1)] # 末尾に追加用の空要素を追加
         for relation in tmp_entity["relations"]:
-            relation["destination"] = id_title_dict[st.selectbox("接続先", unique_id_dict[relation["destination"]])]
+            relation["destination"] = id_title_dict[st.selectbox("接続先", id_title_dict.keys(), list(id_title_dict.keys()).index(unique_id_dict[relation["destination"]]))]
 
 
     space_col, col31, col32, col33 = st.columns([3, 1, 1, 1])
@@ -251,6 +251,8 @@ with col2:
             else:
                 # ユニークID振り直し
                 tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
+                if destination_unique_id != "None":
+                    tmp_entity["relations"].append({"type": relation_type, "destination": destination_unique_id})
                 requirement_data.append(tmp_entity)
                 with open("default.json", "w", encoding="utf-8") as f:
                     json.dump(requirement_data, f, ensure_ascii=False, indent=4)
@@ -264,6 +266,8 @@ with col2:
             else:
                 # 一度削除してから追加
                 requirement_data.remove([d for d in requirement_data if d["unique_id"] == tmp_entity["unique_id"]][0])
+                if destination_unique_id != "None":
+                    tmp_entity["relations"].append({"type": relation_type, "destination": destination_unique_id})
                 requirement_data.append(tmp_entity)
                 with open("default.json", "w", encoding="utf-8") as f:
                     json.dump(requirement_data, f, ensure_ascii=False, indent=4)
