@@ -176,21 +176,46 @@ with col2:
             relation["destination"] = id_title_dict[st.selectbox("接続先", unique_id_dict[relation["destination"]])]
 
 
-    # 追加ボタンを表示
-    if st.button("追加"):
-        # 関係を追加
-        # 1. 関係を追加
-        # 2. 画面をリロード
-        if (tmp_entity["id"] + ": " + tmp_entity["title"]) in id_title_dict:
-            st.error("IDとタイトルが既存のエンティティと重複しています。")
-        else:
-            # ユニークID振り直し
-            tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
-            requirement_data.append(tmp_entity)
-            with open("default.json", "w", encoding="utf-8") as f:
-                json.dump(requirement_data, f, ensure_ascii=False, indent=4)
-            st.write("エンティティを追加しました。")
-            st.rerun()
+    space_col, col31, col32, col33 = st.columns([3, 1, 1, 1])
+    with col31:
+        # 追加ボタンを表示
+        if st.button("追加"):
+            if (tmp_entity["id"] + ": " + tmp_entity["title"]) in id_title_dict:
+                st.error("IDとタイトルが既存のエンティティと重複しています。")
+            else:
+                # ユニークID振り直し
+                tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
+                requirement_data.append(tmp_entity)
+                with open("default.json", "w", encoding="utf-8") as f:
+                    json.dump(requirement_data, f, ensure_ascii=False, indent=4)
+                st.write("エンティティを追加しました。")
+                st.rerun()
+    with col32:
+        # 更新ボタンを表示
+        if st.button("更新"):
+            if not (tmp_entity["unique_id"]) in unique_id_dict:
+                st.error("更新すべきエンティティがありません。")
+            else:
+                # 一度削除してから追加
+                requirement_data.remove([d for d in requirement_data if d["unique_id"] == tmp_entity["unique_id"]][0])
+                requirement_data.append(tmp_entity)
+                with open("default.json", "w", encoding="utf-8") as f:
+                    json.dump(requirement_data, f, ensure_ascii=False, indent=4)
+                st.write("エンティティを更新しました。")
+                st.rerun()
+    with col33:
+        # 削除ボタンを表示
+        if st.button("削除"):
+            if not (tmp_entity["id"] + ": " + tmp_entity["title"]) in id_title_dict:
+                st.error("削除すべきエンティティがありません。")
+            else:
+                # 削除
+                # TODO: 関連エンティティも削除する
+                requirement_data.remove([d for d in requirement_data if d["unique_id"] == tmp_entity["unique_id"]][0])
+                with open("default.json", "w", encoding="utf-8") as f:
+                    json.dump(requirement_data, f, ensure_ascii=False, indent=4)
+                st.write("エンティティを削除しました。")
+                st.rerun()
 
 
 # 選択されたエンティティの情報を表示・編集
