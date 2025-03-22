@@ -128,30 +128,6 @@ entity_types = load_entity_types()
 relation_types = load_relation_types()
 
 
-def extract_subgraph(graph: nx.DiGraph, target_node: str) -> nx.DiGraph:
-    """Extract subgraph from graph with target node.
-
-    Args:
-        graph (nx.Digraph): Whole graph
-        target_node (str): Target node to extract subgraph
-
-    Returns:
-        nx.DiGraph: Subgraph with target node
-    """
-    if target_node is None or target_node == "None":
-        return graph
-
-    reachable_upper_nodes = nx.descendants(graph, target_node)
-    reachable_lower_nodes = nx.ancestors(graph, target_node)
-    reachable_nodes = reachable_upper_nodes.union(reachable_lower_nodes)
-    reachable_nodes.add(target_node)  # 自分自身も含める
-
-    # これらのノードを含むサブグラフを作成
-    subgraph = graph.subgraph(reachable_nodes).copy()
-
-    return subgraph
-
-
 st.title("Requirement Diagram Viewer")
 
 # テキストでJSONファイルのパスを指定(デフォルトはdefault.json)
@@ -261,7 +237,7 @@ with col1:
         # 読み込んだデータをグラフデータに変換
         graph_data = RequirementGraph(requirement_data)
         # グラフをフィルタリング
-        graph_data.subgraph = extract_subgraph(graph_data.graph, target)
+        graph_data.extract_subgraph(target)
     with col13:
         # 出力svgの拡大縮小倍率を設定
         scale = st.slider(
