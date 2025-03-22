@@ -139,7 +139,13 @@ with col1:
     st.write("## PlantUML 図")
     st.write("クリックするとエンティティが選択されます")
     # SVG をそのまま表示
-    st.markdown(svg_output, unsafe_allow_html=True)
+    st.markdown(
+        f'''
+        <div style="width:100%; height:400px; overflow:auto; border:0px solid black;">
+            {svg_output}
+        </div>
+        ''',
+        unsafe_allow_html=True)
 
 with col2:
     st.write("## データ操作")
@@ -184,6 +190,7 @@ with col2:
             with open("default.json", "w", encoding="utf-8") as f:
                 json.dump(requirement_data, f, ensure_ascii=False, indent=4)
             st.write("エンティティを追加しました。")
+            st.rerun()
 
 
 # 選択されたエンティティの情報を表示・編集
