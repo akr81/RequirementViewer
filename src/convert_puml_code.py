@@ -88,7 +88,7 @@ scale {scale}
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            ret += self._convert_node(node, scale) + "\n"
+            ret += self._convert_node(node, scale, target) + "\n"
 
         # Convert edges
         for edge in graph.edges(data=True):
@@ -99,7 +99,7 @@ scale {scale}
         ret += "\n}\n@enduml\n"
         return ret
 
-    def _convert_node(self, node: Tuple[str, Dict], scale: float) -> str:
+    def _convert_node(self, node: Tuple[str, Dict], scale: float, target: str) -> str:
         """Convert node information to PlantUML code.
 
         Args:
@@ -124,9 +124,9 @@ scale {scale}
             or type == "physicalRequirement"
             or type == "designConstraint"
         ):
-            ret = self._convert_requirement(attr, type, scale)
+            ret = self._convert_requirement(attr, type, scale, target)
         elif type == "block" or type == "testCase":
-            ret = self._convert_block(attr, type, scale)
+            ret = self._convert_block(attr, type, scale, target)
         elif type == "rationale" or type == "problem":
             ret = self._convert_note_entity(attr)
         else:
@@ -151,7 +151,9 @@ scale {scale}
             ret = f"usecase \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<usecase>>"
         return ret
 
-    def _convert_requirement(self, data: Dict[str, Any], type: str, scale) -> str:
+    def _convert_requirement(
+        self, data: Dict[str, Any], type: str, scale, target
+    ) -> str:
         """Convert requirement information to PlantUML code.
 
         Args:
@@ -167,7 +169,7 @@ scale {scale}
         if self.detail or self.debug:
             # Ignore () as method using {field}
             ret = (
-                f"class \"{title}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}]]"
+                f"class \"{title}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}&target={target}]]"
                 + "{\n"
             )
 
@@ -180,7 +182,9 @@ scale {scale}
             ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<requirement>>"
         return ret
 
-    def _convert_block(self, data: Dict[str, Any], type: str, scale: float) -> str:
+    def _convert_block(
+        self, data: Dict[str, Any], type: str, scale: float, target: str
+    ) -> str:
         """Convert block information to PlantUML code.
 
         Args:
@@ -192,9 +196,9 @@ scale {scale}
         """
         title = self._insert_newline(data["title"])
         if self.debug:
-            ret = f"class \"unique_id=\"{data['unique_id']}\"\\n{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}]]"
+            ret = f"class \"unique_id=\"{data['unique_id']}\"\\n{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}&target={target}]]"
         else:
-            ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}]]"
+            ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}&target={target}]]"
         return ret
 
     def _convert_note_entity(self, data: Dict[str, Any]) -> str:
