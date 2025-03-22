@@ -123,7 +123,7 @@ scale {scale}
         ):
             ret = self._convert_requirement(attr, type, scale)
         elif type == "block" or type == "testCase":
-            ret = self._convert_block(attr, type)
+            ret = self._convert_block(attr, type, scale)
         elif type == "rationale" or type == "problem":
             ret = self._convert_note_entity(attr)
         else:
@@ -177,7 +177,7 @@ scale {scale}
             ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<requirement>>"
         return ret
 
-    def _convert_block(self, data: Dict[str, Any], type: str) -> str:
+    def _convert_block(self, data: Dict[str, Any], type: str, scale: float) -> str:
         """Convert block information to PlantUML code.
 
         Args:
@@ -189,9 +189,9 @@ scale {scale}
         """
         title = self._insert_newline(data["title"])
         if self.debug:
-            ret = f"class \"unique_id=\"{data['unique_id']}\"\\n{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>>"
+            ret = f"class \"unique_id=\"{data['unique_id']}\"\\n{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}]]"
         else:
-            ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>>"
+            ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}]]"
         return ret
 
     def _convert_note_entity(self, data: Dict[str, Any]) -> str:

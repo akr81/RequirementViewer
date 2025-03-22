@@ -226,8 +226,14 @@ with col2:
         "designConstraint",
         "interfaceRequirement",
         "physicalRequirement",
+        "block",
+        "element",
     ]
-    tmp_entity["type"] = st.selectbox("エンティティタイプ", entity_types)
+    tmp_entity["type"] = st.selectbox(
+        "エンティティタイプ",
+        entity_types,
+        index := entity_types.index(tmp_entity["type"]),
+    )
     tmp_entity["id"] = st.text_input("ID", tmp_entity["id"])
     tmp_entity["title"] = st.text_input("タイトル", tmp_entity["title"])
     tmp_entity["text"] = st.text_area("説明", tmp_entity["text"])
