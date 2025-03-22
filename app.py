@@ -27,9 +27,23 @@ def start_plantuml_server():
     return process
 
 
+@st.cache_data
+def load_entity_types() -> list[str]:
+    """Load entity types from JSON file.
+
+    Returns:
+        list[str]: List of entity types
+    """
+    with open(os.path.join("setting", "entity_types.json"), "r", encoding="utf-8") as f:
+        entity_types = json.load(f)
+    return entity_types
+
+
 # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
 plantuml_process = start_plantuml_server()
 # st.write("PlantUMLサーバが立ち上がっています（プロセスID：", plantuml_process.pid, "）")
+
+entity_types = load_entity_types()
 
 
 # PlantUMLサーバ向けのエンコード関数
@@ -264,16 +278,6 @@ with col2:
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
 
-    # エンティティタイプを定義
-    entity_types = [
-        "functionalRequirement",
-        "performanceRequirement",
-        "designConstraint",
-        "interfaceRequirement",
-        "physicalRequirement",
-        "block",
-        "element",
-    ]
     tmp_entity["type"] = st.selectbox(
         "エンティティタイプ",
         entity_types,
