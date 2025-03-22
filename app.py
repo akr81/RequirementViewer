@@ -126,8 +126,6 @@ if scale == [None]:
     scale = 1.0
 else:
     scale = float(scale)
-# 出力svgの拡大縮小倍率を設定
-scale = st.slider("拡大縮小倍率", min_value=0.1, max_value=3.0, value=scale, step=0.1)
 
 # 読み込んだデータをグラフデータに変換
 graph_data = RequirementGraph(requirement_data)
@@ -183,8 +181,13 @@ with open("debug.svg", "w") as out:
 col1, col2 = st.columns([4, 1])
 
 with col1:
-    st.write("## Requirement Diagram")
-    st.write("クリックするとエンティティが選択されます")
+    col11, col12 = st.columns([3, 1])
+    with col11:
+        st.write("## Requirement Diagram")
+        st.write("クリックするとエンティティが選択されます")
+    with col12:
+        # 出力svgの拡大縮小倍率を設定
+        scale = st.slider("スケール", min_value=0.1, max_value=3.0, value=scale, step=0.1)
     # SVG をそのまま表示
     st.markdown(
         f'''
