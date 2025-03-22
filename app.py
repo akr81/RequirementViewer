@@ -116,6 +116,25 @@ def load_relation_types() -> list[str]:
     return relation_types
 
 
+def get_default_entity(entity_types: list[str]) -> dict:
+    """Get default entity data.
+
+    Returns:
+        entity_types: Entity data list
+    """
+    default_type = ""
+    if len(entity_types) > 0:
+        default_type = entity_types[0]
+    return {
+        "type": default_type,
+        "id": "",
+        "title": "",
+        "text": "",
+        "unique_id": uuid.uuid4(),
+        "relations": [],
+    }
+
+
 # Streamlit のレイアウトをワイドに設定
 st.set_page_config(layout="wide")
 
@@ -196,15 +215,7 @@ else:
             ][0]
 
 if not selected_entity:
-    selected_entity = {
-        "type": "functionalRequirement",
-        "id": "",
-        "title": "",
-        "text": "",
-        "unique_id": uuid.uuid4(),
-        "relations": [],
-    }
-
+    selected_entity = get_default_entity(entity_types)
 
 # 2つのカラムに表示を分割
 col1, col2 = st.columns([4, 1])
@@ -384,5 +395,5 @@ with col2:
                 st.rerun()
 
 
-# テキストエリアで PlantUML コードのが可能
+# テキストエリアで PlantUML コードが確認可能
 st.text_area("PlantUML コード", value=plantuml_code, height=250)
