@@ -18,7 +18,9 @@ class ConvertPumlCode:
         self.width = config["width"]
         self.left_to_right = config["left_to_right"]
 
-    def convert_to_puml(self, graph: nx.DiGraph, title: str, target: str, scale: float) -> str:
+    def convert_to_puml(
+        self, graph: nx.DiGraph, title: str, target: str, scale: float
+    ) -> str:
         """Convert graph to requirement diagram as PlantUML code string.
 
         Args:
@@ -161,7 +163,10 @@ scale {scale}
 
         if self.detail or self.debug:
             # Ignore () as method using {field}
-            ret = f"class \"{title}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}]]" + "{\n"
+            ret = (
+                f"class \"{title}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}]]"
+                + "{\n"
+            )
 
             if self.debug:
                 ret += "{field}" + f"unique_id=\"{data['unique_id']}\"\n"

@@ -2,6 +2,7 @@ import streamlit as st
 import subprocess
 from urllib.parse import urlencode
 
+
 def plantuml_svg(plantuml_code: str) -> str:
     """
     ローカルの PlantUML jar を利用して、PlantUML コードから SVG を生成する関数
@@ -13,7 +14,7 @@ def plantuml_svg(plantuml_code: str) -> str:
             input=plantuml_code.encode("utf-8"),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            check=True
+            check=True,
         )
         return process.stdout.decode("utf-8")
     except subprocess.CalledProcessError as e:
@@ -21,13 +22,16 @@ def plantuml_svg(plantuml_code: str) -> str:
         st.error(e.stderr.decode("utf-8"))
         return ""
 
+
 st.title("PlantUML の図とエンティティ情報の編集")
 
-st.write("""
+st.write(
+    """
 PlantUML のコード内で各要求（エンティティ）にハイパーリンクを設定しています。
 例: `[[?selected=req1]]` とすることで、エンティティ req1 がクリックされた際に
 URL パラメータとして `selected=req1` が付与され、Streamlit 側で検出できます。
-""")
+"""
+)
 
 # 初期の PlantUML コード（クリック可能なハイパーリンク付き）
 default_code = """@startuml
@@ -75,10 +79,10 @@ if selected_entity:
     entity_info = {
         "req1": "System Requirement: システムは安全に動作すること",
         "req2": "User Requirement: ユーザは容易に操作できること",
-        "req3": "Derived Requirement: 操作性と安全性の両立を実現すること"
+        "req3": "Derived Requirement: 操作性と安全性の両立を実現すること",
     }
     # current_info = entity_info.get(selected_entity, "情報なし")
     # new_info = st.text_area("エンティティ情報", value=current_info)
     # if st.button("更新"):
-        # 更新処理（ここではダミー）
-        # st.success(f"{selected_entity} の情報が更新されました。（この例では更新処理はダミーです）")
+    # 更新処理（ここではダミー）
+    # st.success(f"{selected_entity} の情報が更新されました。（この例では更新処理はダミーです）")
