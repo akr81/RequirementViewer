@@ -24,44 +24,6 @@ def start_plantuml_server():
     return process
 
 
-@st.cache_data
-def load_entity_types() -> list[str]:
-    """Load entity types from JSON file.
-
-    Returns:
-        list[str]: List of entity types
-    """
-    with open(os.path.join("setting", "entity_types.json"), "r", encoding="utf-8") as f:
-        entity_types = json.load(f)
-    return entity_types
-
-
-@st.cache_data
-def load_relation_types() -> list[str]:
-    """Load relation types from JSON file.
-
-    Returns:
-        list[str]: List of relation types
-    """
-    with open(
-        os.path.join("setting", "relation_types.json"), "r", encoding="utf-8"
-    ) as f:
-        relation_types = json.load(f)
-    return relation_types
-
-
-# Streamlit のレイアウトをワイドに設定
-st.set_page_config(layout="wide")
-
-
-# PlantUMLサーバを起動（キャッシュされるので再度起動されません）
-plantuml_process = start_plantuml_server()
-# st.write("PlantUMLサーバが立ち上がっています（プロセスID：", plantuml_process.pid, "）")
-
-entity_types = load_entity_types()
-relation_types = load_relation_types()
-
-
 # PlantUMLサーバ向けのエンコード関数
 def encode_plantuml(text: str) -> str:
     """Encode text to PlantUML server format.
@@ -126,6 +88,44 @@ def get_diagram(plantuml_code: str) -> str:
     else:
         st.error("PlantUMLサーバから図を取得できませんでした。")
         return ""
+
+
+@st.cache_data
+def load_entity_types() -> list[str]:
+    """Load entity types from JSON file.
+
+    Returns:
+        list[str]: List of entity types
+    """
+    with open(os.path.join("setting", "entity_types.json"), "r", encoding="utf-8") as f:
+        entity_types = json.load(f)
+    return entity_types
+
+
+@st.cache_data
+def load_relation_types() -> list[str]:
+    """Load relation types from JSON file.
+
+    Returns:
+        list[str]: List of relation types
+    """
+    with open(
+        os.path.join("setting", "relation_types.json"), "r", encoding="utf-8"
+    ) as f:
+        relation_types = json.load(f)
+    return relation_types
+
+
+# Streamlit のレイアウトをワイドに設定
+st.set_page_config(layout="wide")
+
+
+# PlantUMLサーバを起動（キャッシュされるので再度起動されません）
+plantuml_process = start_plantuml_server()
+# st.write("PlantUMLサーバが立ち上がっています（プロセスID：", plantuml_process.pid, "）")
+
+entity_types = load_entity_types()
+relation_types = load_relation_types()
 
 
 def extract_subgraph(graph: nx.DiGraph, target_node: str) -> nx.DiGraph:

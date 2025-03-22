@@ -1,0 +1,9 @@
+[
+    "functionalRequirement",
+    "performanceRequirement",
+    "designConstraint",
+    "interfaceRequirement",
+    "physicalRequirement",
+    "block",
+    "element"
+]
