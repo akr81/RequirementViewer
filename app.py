@@ -18,6 +18,7 @@ st.set_page_config(layout="wide")
 # PlantUMLサーバをバックグラウンドプロセスとして起動し、キャッシュする
 @st.cache_resource
 def start_plantuml_server():
+    """Launch PlantUML server as a background process."""
     # plantuml.jarは同一ディレクトリに配置していると仮定
     command = ["java", "-jar", "plantuml.jar", "-picoweb"]
     process = subprocess.Popen(command)
@@ -33,6 +34,14 @@ plantuml_process = start_plantuml_server()
 
 # PlantUMLサーバ向けのエンコード関数
 def encode_plantuml(text: str) -> str:
+    """Encode text to PlantUML server format.
+
+    Args:
+        text (str): Text to encode
+
+    Returns:
+        str: Encoded text
+    """
     # UTF-8にエンコードし、zlibでdeflate圧縮
     data = text.encode("utf-8")
     compressed = zlib.compress(data)
@@ -42,6 +51,14 @@ def encode_plantuml(text: str) -> str:
 
 
 def encode64(data: bytes) -> str:
+    """Encode bytes to PlantUML server format.
+
+    Args:
+        data (bytes): Data to encode
+
+    Returns:
+        str: Encoded text
+    """
     # PlantUML用のカスタム64エンコードテーブル
     char_map = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
     res = []
@@ -62,6 +79,14 @@ def encode64(data: bytes) -> str:
 
 # PlantUMLコードからSVG画像を取得する関数
 def get_diagram(plantuml_code: str) -> str:
+    """Get SVG diagram from PlantUML code.
+
+    Args:
+        plantuml_code (str): PlantUML code
+
+    Returns:
+        str: SVG diagram as text
+    """
     # PlantUMLサーバ用にエンコード
     encoded = encode_plantuml(plantuml_code)
     url = f"http://localhost:8080/svg/{encoded}"
@@ -73,11 +98,19 @@ def get_diagram(plantuml_code: str) -> str:
         return ""
 
 
-def extract_subgraph(graph, target_node):
+def extract_subgraph(graph: nx.DiGraph, target_node: str) -> nx.DiGraph:
+    """Extract subgraph from graph with target node.
+
+    Args:
+        graph (nx.Digraph): Whole graph
+        target_node (str): Target node to extract subgraph
+
+    Returns:
+        nx.DiGraph: Subgraph with target node
+    """
     if target_node is None or target_node == "None":
         return graph
 
-    print(f"target_node: {target_node}")
     reachable_upper_nodes = nx.descendants(graph, target_node)
     reachable_lower_nodes = nx.ancestors(graph, target_node)
     reachable_nodes = reachable_upper_nodes.union(reachable_lower_nodes)
