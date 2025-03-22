@@ -50,7 +50,7 @@ def start_plantuml_server():
 
 # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
 plantuml_process = start_plantuml_server()
-st.write("PlantUMLサーバが立ち上がっています（プロセスID：", plantuml_process.pid, "）")
+#st.write("PlantUMLサーバが立ち上がっています（プロセスID：", plantuml_process.pid, "）")
 
 # PlantUMLサーバ向けのエンコード関数
 def encode_plantuml(text: str) -> str:
@@ -110,8 +110,6 @@ else:
     #存在しない場合は空で始める
     requirement_data = []
 
-print(requirement_data)
-
 # 読み込んだデータからIDとタイトルをキーとする辞書を作成
 id_title_dict = {requirement["id"] + ": " + requirement["title"]: requirement["unique_id"] for requirement in requirement_data}
 id_title_dict["None"] = "None"
@@ -122,16 +120,17 @@ unique_id_dict["None"] = "None"
 id_title_list = [requirement["id"] + ": " + requirement["title"] for requirement in requirement_data]
 id_title_list.insert(0, "None")
 
+# URL のクエリパラメータから、選択されたエンティティを取得
+scale = st.query_params.get("scale", [None])
+if scale == [None]:
+    scale = 1.0
+else:
+    scale = float(scale)
 # 出力svgの拡大縮小倍率を設定
-scale = st.slider("拡大縮小倍率", min_value=0.1, max_value=3.0, value=1.0, step=0.1)
+scale = st.slider("拡大縮小倍率", min_value=0.1, max_value=3.0, value=scale, step=0.1)
 
 # 読み込んだデータをグラフデータに変換
 graph_data = RequirementGraph(requirement_data)
-print(graph_data)
-# graph_data = {
-#     "nodes": [],
-#     "edges": []
-# }
 
 # グラフデータをPlantUMLコードに変換
 config = {
@@ -144,14 +143,11 @@ converter = ConvertPumlCode(config)
 plantuml_code = converter.convert_to_puml(graph_data.graph, title=None, target=None, scale=scale)
 
 # URL のクエリパラメータから、選択されたエンティティを取得
-# query_params = st.query_params()
 selected_unique_id = st.query_params.get("selected", [None])
 
 # パラメタがない場合はデフォルトのエンティティを選択してリロード
-print(selected_unique_id)
 selected_entity = {}
 if selected_unique_id == [None]:
-    print("Set default params")
     default_params = {"selected": "default"}
     st.query_params.setdefault("selected", "default")
     st.rerun()
@@ -163,7 +159,6 @@ else:
             selected_entity = None
         else:
             selected_entity = [d for d in requirement_data if d["unique_id"] == selected_unique_id][0]
-st.write(selected_unique_id)
 
 if not selected_entity:
     selected_entity = {
@@ -180,21 +175,6 @@ if not selected_entity:
 svg_output = get_diagram(plantuml_code)
 svg_output = svg_output.replace("<defs/>", "<defs/><style>a {text-decoration: none;}</style>")
 
-# svg_output = '''
-# <svg width="200" height="100" xmlns="http://www.w3.org/2000/svg">
-#   <style>
-#     a {
-#       text-decoration: none;
-#     }
-#   </style>
-#   <a xlink:href="https://example.com">
-#     <text x="10" y="40" font-family="Arial" font-size="24" fill="blue">
-#       クリックしてリンクへ
-#     </text>
-#   </a>
-# </svg>
-# '''
-
 # svg出力のデバッグ
 with open("debug.svg", "w") as out:
     out.writelines(svg_output)
@@ -203,7 +183,7 @@ with open("debug.svg", "w") as out:
 col1, col2 = st.columns([4, 1])
 
 with col1:
-    st.write("## PlantUML 図")
+    st.write("## Requirement Diagram")
     st.write("クリックするとエンティティが選択されます")
     # SVG をそのまま表示
     st.markdown(

@@ -83,7 +83,7 @@ scale {scale}
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            ret += self._convert_node(node) + "\n"
+            ret += self._convert_node(node, scale) + "\n"
 
         # Convert edges
         for edge in graph.edges(data=True):
@@ -94,7 +94,7 @@ scale {scale}
         ret += "\n}\n@enduml\n"
         return ret
 
-    def _convert_node(self, node: Tuple[str, Dict]) -> str:
+    def _convert_node(self, node: Tuple[str, Dict], scale: float) -> str:
         """Convert node information to PlantUML code.
 
         Args:
@@ -119,7 +119,7 @@ scale {scale}
             or type == "physicalRequirement"
             or type == "designConstraint"
         ):
-            ret = self._convert_requirement(attr, type)
+            ret = self._convert_requirement(attr, type, scale)
         elif type == "block" or type == "testCase":
             ret = self._convert_block(attr, type)
         elif type == "rationale" or type == "problem":
@@ -146,7 +146,7 @@ scale {scale}
             ret = f"usecase \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<usecase>>"
         return ret
 
-    def _convert_requirement(self, data: Dict[str, Any], type: str) -> str:
+    def _convert_requirement(self, data: Dict[str, Any], type: str, scale) -> str:
         """Convert requirement information to PlantUML code.
 
         Args:
@@ -161,7 +161,7 @@ scale {scale}
 
         if self.detail or self.debug:
             # Ignore () as method using {field}
-            ret = f"class \"{title}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}]]" + "{\n"
+            ret = f"class \"{title}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}]]" + "{\n"
 
             if self.debug:
                 ret += "{field}" + f"unique_id=\"{data['unique_id']}\"\n"
