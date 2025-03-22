@@ -12,6 +12,7 @@ import requests
 import base64
 import zlib
 import urllib
+import copy
 
 # Streamlit のレイアウトをワイドに設定
 st.set_page_config(layout="wide")
@@ -216,7 +217,7 @@ with col1:
 with col2:
     st.write("## データ操作")
     # 直接データ操作はせず、コピーに対して操作する
-    tmp_entity = selected_entity.copy()
+    tmp_entity = copy.deepcopy(selected_entity)
 
     # エンティティタイプを定義
     entity_types = ["functionalRequirement", "performanceRequirement", "designConstraint", "interfaceRequirement", "physicalRequirement"]
@@ -234,12 +235,12 @@ with col2:
     col21, col22 = st.columns(2)
     with col21:
         relation_type = st.selectbox("関係タイプ", relation_types)
-        for relation in tmp_entity["relations"]:
-            relation["type"] = st.selectbox("関係タイプ", relation_types, relation_types.index(relation["type"]))
+        for i, relation in enumerate(tmp_entity["relations"]):
+            relation["type"] = st.selectbox("関係タイプ", relation_types, relation_types.index(relation["type"]), key=f"relation_type{i}")
     with col22:
         destination_unique_id = id_title_dict[st.selectbox("接続先", id_title_dict.keys(), index=len(id_title_dict) - 1)] # 末尾に追加用の空要素を追加
-        for relation in tmp_entity["relations"]:
-            relation["destination"] = id_title_dict[st.selectbox("接続先", id_title_dict.keys(), list(id_title_dict.keys()).index(unique_id_dict[relation["destination"]]))]
+        for i, relation in enumerate(tmp_entity["relations"]):
+            relation["destination"] = id_title_dict[st.selectbox("接続先", id_title_dict.keys(), list(id_title_dict.keys()).index(unique_id_dict[relation["destination"]]), key=f"destination{i}")]
 
 
     space_col, col31, col32, col33 = st.columns([3, 1, 1, 1])
@@ -251,6 +252,8 @@ with col2:
             else:
                 # ユニークID振り直し
                 tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
+                # tmp_entityでdestinationがNoneのものを削除
+                tmp_entity["relations"] = [relation for relation in tmp_entity["relations"] if relation["destination"] != "None"]
                 if destination_unique_id != "None":
                     tmp_entity["relations"].append({"type": relation_type, "destination": destination_unique_id})
                 requirement_data.append(tmp_entity)
@@ -266,6 +269,8 @@ with col2:
             else:
                 # 一度削除してから追加
                 requirement_data.remove([d for d in requirement_data if d["unique_id"] == tmp_entity["unique_id"]][0])
+                # tmp_entityでdestinationがNoneのものを削除
+                tmp_entity["relations"] = [relation for relation in tmp_entity["relations"] if relation["destination"] != "None"]
                 if destination_unique_id != "None":
                     tmp_entity["relations"].append({"type": relation_type, "destination": destination_unique_id})
                 requirement_data.append(tmp_entity)
