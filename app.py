@@ -52,7 +52,13 @@ else:
 
 print(requirement_data)
 
-# 読み込んだデータからIDとタイトルのリストを作成
+# 読み込んだデータからIDとタイトルをキーとする辞書を作成
+id_title_dict = {requirement["id"] + ": " + requirement["title"]: requirement["unique_id"] for requirement in requirement_data}
+id_title_dict["None"] = "None"
+# 逆にユニークIDをキーとする辞書も作成
+unique_id_dict = {requirement["unique_id"]:  requirement["id"] + ": " + requirement["title"]for requirement in requirement_data}
+unique_id_dict["None"] = "None"
+
 id_title_list = [requirement["id"] + ": " + requirement["title"] for requirement in requirement_data]
 id_title_list.insert(0, "None")
 
@@ -72,31 +78,7 @@ config = {
     "left_to_right": False
 }
 converter = ConvertPumlCode(config)
-puml_code = converter.convert_to_puml(graph_data.graph, title=None, target=None)
-
-st.write("""
-PlantUML のコード内で各要求（エンティティ）にハイパーリンクを設定しています。
-例: `[[?selected=req1]]` とすることで、エンティティ req1 がクリックされた際に
-URL パラメータとして `selected=req1` が付与され、Streamlit 側で検出できます。
-""")
-
-# 初期の PlantUML コード（クリック可能なハイパーリンク付き）
-# default_code = """@startuml
-# ' PlantUML Requirement Diagram with clickable entities
-# '!pragma svginteractive true
-# skinparam svgLinkTarget _href
-# skinparam pathHoverColor green
-# agent "System Requirement: システムは安全に動作すること" as req1 [[?selected=req1]]
-# agent "User Requirement: ユーザは容易に操作できること" as req2 [[?selected=req2]]
-# agent "Derived Requirement: 操作性と安全性の両立を実現すること" as req3 [[?selected=req3]]
-
-# req1 --> req3 : satisfies
-# req2 --> req3 : verifies
-# @enduml
-# """
-
-# テキストエリアで PlantUML コードの編集が可能
-plantuml_code = st.text_area("PlantUML コード", value=puml_code, height=250)
+plantuml_code = converter.convert_to_puml(graph_data.graph, title=None, target=None)
 
 # URL のクエリパラメータから、選択されたエンティティを取得
 # query_params = st.query_params()
@@ -156,20 +138,20 @@ col1, col2 = st.columns([4, 1])
 with col1:
     st.write("## PlantUML 図")
     st.write("クリックするとエンティティが選択されます")
-    st.write(selected_entity)
     # SVG をそのまま表示
     st.markdown(svg_output, unsafe_allow_html=True)
 
 with col2:
     st.write("## データ操作")
+    # 直接データ操作はせず、コピーに対して操作する
+    tmp_entity = selected_entity.copy()
+
     # エンティティタイプを定義
     entity_types = ["functionalRequirement", "performanceRequirement", "designConstraint", "interfaceRequirement", "physicalRequirement"]
-    entity_type = st.selectbox("エンティティタイプ", entity_types)
-    entity_id = st.text_input("ID", selected_entity["id"])
-    entity_title = st.text_input("タイトル", selected_entity["title"])
-    entity_text = st.text_area("説明", selected_entity["text"])
-    # ユニークIDをGUIDで生成
-    entity_unique_id = uuid.uuid4()
+    tmp_entity["type"] = st.selectbox("エンティティタイプ", entity_types)
+    tmp_entity["id"] = st.text_input("ID", tmp_entity["id"])
+    tmp_entity["title"] = st.text_input("タイトル", tmp_entity["title"])
+    tmp_entity["text"] = st.text_area("説明", tmp_entity["text"])
 
     # テキストエリアでエンティティの詳細情報を入力
     # 関係は複数ありえるため、繰り返し表示させる
@@ -180,12 +162,12 @@ with col2:
     col21, col22 = st.columns(2)
     with col21:
         relation_type = st.selectbox("関係タイプ", relation_types)
-        for relation in selected_entity["relations"]:
-            relation_type = st.selectbox("関係タイプ", relation["type"])
+        for relation in tmp_entity["relations"]:
+            relation["type"] = st.selectbox("関係タイプ", relation["type"])
     with col22:
-        destination_unique_id = st.selectbox("接続先", id_title_list)
-        for relation in selected_entity["relations"]:
-            relation_type = st.selectbox("接続先", relation["destination"])
+        destination_unique_id = st.selectbox("接続先", id_title_dict.keys(), index=len(id_title_dict) - 1) # 末尾に追加用の空要素を追加
+        for relation in tmp_entity["relations"]:
+            relation["destination"] = id_title_dict[st.selectbox("接続先", unique_id_dict[relation["destination"]])]
 
 
     # 追加ボタンを表示
@@ -193,9 +175,14 @@ with col2:
         # 関係を追加
         # 1. 関係を追加
         # 2. 画面をリロード
-        if (entity_id + ": " + entity_title) in id_title_list:
+        if (tmp_entity["id"] + ": " + tmp_entity["title"]) in id_title_dict:
             st.error("IDとタイトルが既存のエンティティと重複しています。")
         else:
+            # ユニークID振り直し
+            tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
+            requirement_data.append(tmp_entity)
+            with open("default.json", "w", encoding="utf-8") as f:
+                json.dump(requirement_data, f, ensure_ascii=False, indent=4)
             st.write("エンティティを追加しました。")
 
 
@@ -213,3 +200,6 @@ with col2:
 #     if st.button("更新"):
 #         # 更新処理（ここではダミー）
 #         st.success(f"{selected_entity} の情報が更新されました。（この例では更新処理はダミーです）")
+
+# テキストエリアで PlantUML コードの編集が可能
+st.text_area("PlantUML コード", value=plantuml_code, height=250)
