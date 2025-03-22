@@ -73,9 +73,6 @@ config = {
 }
 converter = ConvertPumlCode(config)
 puml_code = converter.convert_to_puml(graph_data.graph, title=None, target=None)
-print(puml_code)
-st.write(puml_code)
-
 
 st.write("""
 PlantUML のコード内で各要求（エンティティ）にハイパーリンクを設定しています。
@@ -103,18 +100,51 @@ plantuml_code = st.text_area("PlantUML コード", value=puml_code, height=250)
 
 # URL のクエリパラメータから、選択されたエンティティを取得
 # query_params = st.query_params()
-selected_entity = st.query_params.get("selected", [None])
+selected_unique_id = st.query_params.get("selected", [None])
 
 # パラメタがない場合はデフォルトのエンティティを選択してリロード
-print(selected_entity)
-if selected_entity == [None]:
+print(selected_unique_id)
+selected_entity = {}
+if selected_unique_id == [None]:
     print("Set default params")
     default_params = {"selected": "default"}
     st.query_params.setdefault("selected", "default")
     st.rerun()
+else:
+    if selected_unique_id == "default":
+        selected_entity = None
+    else:
+        selected_entity = [d for d in requirement_data if d["unique_id"] == selected_unique_id][0]
+st.write(selected_unique_id)
+
+if not selected_entity:
+    selected_entity = {
+        "type": "functionalRequirement",
+        "id": "",
+        "title": "",
+        "text": "",
+        "unique_id": uuid.uuid4(),
+        "relations": []
+    }
 
 # ローカルで PlantUML コードから SVG を生成
 svg_output = plantuml_svg(plantuml_code)
+svg_output = svg_output.replace("<defs/>", "<defs/><style>a {text-decoration: none;}</style>")
+
+# svg_output = '''
+# <svg width="200" height="100" xmlns="http://www.w3.org/2000/svg">
+#   <style>
+#     a {
+#       text-decoration: none;
+#     }
+#   </style>
+#   <a xlink:href="https://example.com">
+#     <text x="10" y="40" font-family="Arial" font-size="24" fill="blue">
+#       クリックしてリンクへ
+#     </text>
+#   </a>
+# </svg>
+# '''
 
 # svg出力のデバッグ
 with open("debug.svg", "w") as out:
@@ -127,7 +157,7 @@ with col1:
     st.write("## PlantUML 図")
     st.write("クリックするとエンティティが選択されます")
     st.write(selected_entity)
-    # SVG をそのまま HTML コンポーネントで表示
+    # SVG をそのまま表示
     st.markdown(svg_output, unsafe_allow_html=True)
 
 with col2:
@@ -135,9 +165,9 @@ with col2:
     # エンティティタイプを定義
     entity_types = ["functionalRequirement", "performanceRequirement", "designConstraint", "interfaceRequirement", "physicalRequirement"]
     entity_type = st.selectbox("エンティティタイプ", entity_types)
-    entity_id = st.text_input("ID", "")
-    entity_title = st.text_input("タイトル", "")
-    entity_text = st.text_area("説明", "")
+    entity_id = st.text_input("ID", selected_entity["id"])
+    entity_title = st.text_input("タイトル", selected_entity["title"])
+    entity_text = st.text_area("説明", selected_entity["text"])
     # ユニークIDをGUIDで生成
     entity_unique_id = uuid.uuid4()
 
@@ -146,19 +176,27 @@ with col2:
     # また、関係の追加を行うケースがあるため、最初の項目は空にしておき2つめ以後は設定されているデータを表示する
     relation_types = ["None", "deriveReqt", "satisfy", "refine", "containment", "problem"]
 
+    # 関係追加の操作があるため、1つは常に表示
     col21, col22 = st.columns(2)
     with col21:
         relation_type = st.selectbox("関係タイプ", relation_types)
+        for relation in selected_entity["relations"]:
+            relation_type = st.selectbox("関係タイプ", relation["type"])
     with col22:
         destination_unique_id = st.selectbox("接続先", id_title_list)
+        for relation in selected_entity["relations"]:
+            relation_type = st.selectbox("接続先", relation["destination"])
+
 
     # 追加ボタンを表示
     if st.button("追加"):
         # 関係を追加
         # 1. 関係を追加
         # 2. 画面をリロード
-        st.write("追加ボタンが押されました")
-        st.write(relation_type)
+        if (entity_id + ": " + entity_title) in id_title_list:
+            st.error("IDとタイトルが既存のエンティティと重複しています。")
+        else:
+            st.write("エンティティを追加しました。")
 
 
 # 選択されたエンティティの情報を表示・編集
