@@ -32,8 +32,11 @@ class ConvertPumlCode:
         Returns:
             str: PlantUML code
         """
+        print(f"target: {target}")
         if not title:
-            if not target:
+            print(f"target: {target}")
+            print(f"target: {not target}")
+            if target == None or target == "None":
                 title = '"req Requirements [all]"'
             else:
                 target_title = graph.nodes(data=True)[target]["title"]

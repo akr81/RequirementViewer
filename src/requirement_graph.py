@@ -6,6 +6,7 @@ class RequirementGraph:
     def __init__(self, entities: List[Dict]):
         self.entities = entities
         self.graph = nx.DiGraph()
+        self.subgraph = nx.DiGraph()
         for entity in entities:
             self.graph.add_node(
                 entity["unique_id"],

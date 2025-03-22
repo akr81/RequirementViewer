@@ -98,6 +98,22 @@ def get_diagram(plantuml_code: str) -> str:
         return ""
 
 
+def extract_subgraph(graph, target_node):
+    if target_node is None or target_node == "None":
+        return graph
+
+    print(f"target_node: {target_node}")
+    reachable_upper_nodes = nx.descendants(graph, target_node)
+    reachable_lower_nodes = nx.ancestors(graph, target_node)
+    reachable_nodes = reachable_upper_nodes.union(reachable_lower_nodes)
+    reachable_nodes.add(target_node)  # 自分自身も含める
+
+    # これらのノードを含むサブグラフを作成
+    subgraph = graph.subgraph(reachable_nodes).copy()
+
+    return subgraph
+
+
 st.title("Requirement Diagram Viewer")
 
 # テキストでJSONファイルのパスを指定(デフォルトはdefault.json)
@@ -141,9 +157,6 @@ if scale == [None]:
 else:
     scale = float(scale)
 
-# 読み込んだデータをグラフデータに変換
-graph_data = RequirementGraph(requirement_data)
-
 # グラフデータをPlantUMLコードに変換
 config = {"detail": True, "debug": False, "width": 800, "left_to_right": False}
 converter = ConvertPumlCode(config)
@@ -182,19 +195,27 @@ if not selected_entity:
 # 2つのカラムに表示を分割
 col1, col2 = st.columns([4, 1])
 
+target = None
 with col1:
-    col11, col12 = st.columns([3, 1])
+    col11, col12, col13 = st.columns([3, 1, 1])
     with col11:
         st.write("## Requirement Diagram")
         st.write("クリックするとエンティティが選択されます")
     with col12:
+        target = id_title_dict[st.selectbox("フィルタ", id_title_list)]
+
+        # 読み込んだデータをグラフデータに変換
+        graph_data = RequirementGraph(requirement_data)
+        # グラフをフィルタリング
+        graph_data.subgraph = extract_subgraph(graph_data.graph, target)
+    with col13:
         # 出力svgの拡大縮小倍率を設定
         scale = st.slider(
             "スケール", min_value=0.1, max_value=3.0, value=scale, step=0.1
         )
         # ローカルで PlantUML コードから SVG を生成
         plantuml_code = converter.convert_to_puml(
-            graph_data.graph, title=None, target=None, scale=scale
+            graph_data.subgraph, title=None, target=target, scale=scale
         )
         svg_output = get_diagram(plantuml_code)
         svg_output = svg_output.replace(
