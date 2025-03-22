@@ -11,9 +11,6 @@ import requests
 import zlib
 import copy
 
-# Streamlit のレイアウトをワイドに設定
-st.set_page_config(layout="wide")
-
 
 # PlantUMLサーバをバックグラウンドプロセスとして起動し、キャッシュする
 @st.cache_resource
@@ -39,11 +36,30 @@ def load_entity_types() -> list[str]:
     return entity_types
 
 
+@st.cache_data
+def load_relation_types() -> list[str]:
+    """Load relation types from JSON file.
+
+    Returns:
+        list[str]: List of relation types
+    """
+    with open(
+        os.path.join("setting", "relation_types.json"), "r", encoding="utf-8"
+    ) as f:
+        relation_types = json.load(f)
+    return relation_types
+
+
+# Streamlit のレイアウトをワイドに設定
+st.set_page_config(layout="wide")
+
+
 # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
 plantuml_process = start_plantuml_server()
 # st.write("PlantUMLサーバが立ち上がっています（プロセスID：", plantuml_process.pid, "）")
 
 entity_types = load_entity_types()
+relation_types = load_relation_types()
 
 
 # PlantUMLサーバ向けのエンコード関数
@@ -290,14 +306,6 @@ with col2:
     # テキストエリアでエンティティの詳細情報を入力
     # 関係は複数ありえるため、繰り返し表示させる
     # また、関係の追加を行うケースがあるため、最初の項目は空にしておき2つめ以後は設定されているデータを表示する
-    relation_types = [
-        "None",
-        "deriveReqt",
-        "satisfy",
-        "refine",
-        "containment",
-        "problem",
-    ]
 
     # 関係追加の操作があるため、1つは常に表示
     col21, col22 = st.columns(2)
