@@ -138,7 +138,6 @@ config = {
     "left_to_right": False
 }
 converter = ConvertPumlCode(config)
-plantuml_code = converter.convert_to_puml(graph_data.graph, title=None, target=None, scale=scale)
 
 # URL のクエリパラメータから、選択されたエンティティを取得
 selected_unique_id = st.query_params.get("selected", [None])
@@ -168,14 +167,6 @@ if not selected_entity:
         "relations": []
     }
 
-# ローカルで PlantUML コードから SVG を生成
-# svg_output = plantuml_svg(plantuml_code)
-svg_output = get_diagram(plantuml_code)
-svg_output = svg_output.replace("<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>")
-
-# svg出力のデバッグ
-with open("debug.svg", "w") as out:
-    out.writelines(svg_output)
 
 # 2つのカラムに表示を分割
 col1, col2 = st.columns([4, 1])
@@ -188,14 +179,22 @@ with col1:
     with col12:
         # 出力svgの拡大縮小倍率を設定
         scale = st.slider("スケール", min_value=0.1, max_value=3.0, value=scale, step=0.1)
-    # SVG をそのまま表示
-    st.markdown(
-        f'''
-        <div style="width:100%; height:800px; overflow:auto; border:0px solid black;">
-            {svg_output}
-        </div>
-        ''',
-        unsafe_allow_html=True)
+        # ローカルで PlantUML コードから SVG を生成
+        plantuml_code = converter.convert_to_puml(graph_data.graph, title=None, target=None, scale=scale)
+        svg_output = get_diagram(plantuml_code)
+        svg_output = svg_output.replace("<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>")
+
+    # svg出力のデバッグ
+    with open("debug.svg", "w") as out:
+        out.writelines(svg_output)
+        # SVG をそのまま表示
+        st.markdown(
+            f'''
+            <div style="width:100%; height:800px; overflow:auto; border:0px solid black;">
+                {svg_output}
+            </div>
+            ''',
+            unsafe_allow_html=True)
 
 with col2:
     st.write("## データ操作")
