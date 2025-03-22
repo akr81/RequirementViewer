@@ -7,6 +7,11 @@ import json
 import os
 import uuid
 import networkx as nx
+import atexit
+import requests
+import base64
+import zlib
+import urllib
 
 # Streamlit のレイアウトをワイドに設定
 st.set_page_config(layout="wide")
@@ -30,6 +35,60 @@ def plantuml_svg(plantuml_code: str) -> str:
     except subprocess.CalledProcessError as e:
         st.error("PlantUML の図生成中にエラーが発生しました:")
         st.error(e.stderr.decode("utf-8"))
+        return ""
+
+# PlantUMLサーバをバックグラウンドプロセスとして起動し、キャッシュする
+@st.cache_resource
+def start_plantuml_server():
+    # plantuml.jarは同一ディレクトリに配置していると仮定
+    command = ["java", "-jar", "plantuml.jar", "-picoweb"]
+    process = subprocess.Popen(command)
+    # プロセス終了時にクリーンアップするため、atexitに登録
+    atexit.register(lambda: process.terminate())
+    return process
+
+# PlantUMLサーバを起動（キャッシュされるので再度起動されません）
+plantuml_process = start_plantuml_server()
+st.write("PlantUMLサーバが立ち上がっています（プロセスID：", plantuml_process.pid, "）")
+
+# PlantUMLサーバ向けのエンコード関数
+def encode_plantuml(text: str) -> str:
+    # UTF-8にエンコードし、zlibでdeflate圧縮
+    data = text.encode('utf-8')
+    compressed = zlib.compress(data)
+    # zlibヘッダー(最初の2バイト)とチェックサム(最後の4バイト)を除去
+    compressed = compressed[2:-4]
+    return encode64(compressed)
+
+def encode64(data: bytes) -> str:
+    # PlantUML用のカスタム64エンコードテーブル
+    char_map = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
+    res = []
+    # 3バイトずつ処理し、24ビット整数にまとめる
+    for i in range(0, len(data), 3):
+        b = data[i:i+3]
+        # 3バイトに満たない場合は0でパディング
+        if len(b) < 3:
+            b = b + bytes(3 - len(b))
+        n = (b[0] << 16) + (b[1] << 8) + b[2]
+        # 6ビットごとに分割して、char_mapの文字に変換
+        res.append(char_map[(n >> 18) & 0x3F])
+        res.append(char_map[(n >> 12) & 0x3F])
+        res.append(char_map[(n >> 6) & 0x3F])
+        res.append(char_map[n & 0x3F])
+    return "".join(res)
+
+
+# PlantUMLコードからSVG画像を取得する関数
+def get_diagram(plantuml_code: str) -> str:
+    # PlantUMLサーバ用にエンコード
+    encoded = encode_plantuml(plantuml_code)
+    url = f"http://localhost:8080/svg/{encoded}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.text
+    else:
+        st.error("PlantUMLサーバから図を取得できませんでした。")
         return ""
 
 st.title("Requirement Diagram Viewer")
@@ -116,7 +175,8 @@ if not selected_entity:
     }
 
 # ローカルで PlantUML コードから SVG を生成
-svg_output = plantuml_svg(plantuml_code)
+# svg_output = plantuml_svg(plantuml_code)
+svg_output = get_diagram(plantuml_code)
 svg_output = svg_output.replace("<defs/>", "<defs/><style>a {text-decoration: none;}</style>")
 
 # svg_output = '''

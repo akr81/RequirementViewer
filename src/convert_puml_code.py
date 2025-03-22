@@ -77,13 +77,13 @@ scale {scale}
         ret += f"package {title} <<Frame>> " + "{\n"
 
         # Convert nodes other than orphan
-        for node in graph.nodes(data=True):
-            if node[0] not in nx.isolates(graph):
-                ret += self._convert_node(node) + "\n"
+        # for node in graph.nodes(data=True):
+        #     if node[0] not in nx.isolates(graph):
+        #         ret += self._convert_node(node) + "\n"
 
-        # Convert node if only one node exists
-        if (len(graph.nodes) == 1):
-            ret += self._convert_node(list(graph.nodes(data=True))[0]) + "\n"
+        # Convert all nodes
+        for node in graph.nodes(data=True):
+            ret += self._convert_node(node) + "\n"
 
         # Convert edges
         for edge in graph.edges(data=True):
