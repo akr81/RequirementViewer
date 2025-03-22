@@ -18,13 +18,14 @@ class ConvertPumlCode:
         self.width = config["width"]
         self.left_to_right = config["left_to_right"]
 
-    def convert_to_puml(self, graph: nx.DiGraph, title: str, target: str) -> str:
+    def convert_to_puml(self, graph: nx.DiGraph, title: str, target: str, scale: float) -> str:
         """Convert graph to requirement diagram as PlantUML code string.
 
         Args:
             graph (nx.DiGraph): Graph of requirements.
             title (str): Title of diagram.
             target (str): Target requirement.
+            scale (float): Image scale.
 
         Returns:
             str: PlantUML code
@@ -38,7 +39,7 @@ class ConvertPumlCode:
         else:
             title = f'"req {title}"'
 
-        ret = """
+        ret = f"""
 @startuml
 hide circle
 hide empty members
@@ -46,24 +47,26 @@ hide method
 skinparam linetype polyline
 skinparam linetype ortho
 skinparam HyperlinkUnderline false
-skinparam usecase {
+skinparam usecase {{
 BackgroundColor White
 ArrowColor Black
 BorderColor Black
 FontSize 12
-}
-skinparam class {
+}}
+skinparam class {{
 BackgroundColor White
 ArrowColor Black
 BorderColor Black
-}
-skinparam note {
+}}
+skinparam note {{
 BackgroundColor White
 ArrowColor Black
 BorderColor Black
 FontSize 12
-}
+}}
 allowmixing
+
+scale {scale}
 
 """
         if self.left_to_right:
@@ -77,7 +80,10 @@ allowmixing
         for node in graph.nodes(data=True):
             if node[0] not in nx.isolates(graph):
                 ret += self._convert_node(node) + "\n"
-                pass
+
+        # Convert node if only one node exists
+        if (len(graph.nodes) == 1):
+            ret += self._convert_node(list(graph.nodes(data=True))[0]) + "\n"
 
         # Convert edges
         for edge in graph.edges(data=True):

@@ -62,6 +62,9 @@ unique_id_dict["None"] = "None"
 id_title_list = [requirement["id"] + ": " + requirement["title"] for requirement in requirement_data]
 id_title_list.insert(0, "None")
 
+# 出力svgの拡大縮小倍率を設定
+scale = st.slider("拡大縮小倍率", min_value=0.1, max_value=3.0, value=1.0, step=0.1)
+
 # 読み込んだデータをグラフデータに変換
 graph_data = RequirementGraph(requirement_data)
 print(graph_data)
@@ -78,7 +81,7 @@ config = {
     "left_to_right": False
 }
 converter = ConvertPumlCode(config)
-plantuml_code = converter.convert_to_puml(graph_data.graph, title=None, target=None)
+plantuml_code = converter.convert_to_puml(graph_data.graph, title=None, target=None, scale=scale)
 
 # URL のクエリパラメータから、選択されたエンティティを取得
 # query_params = st.query_params()
@@ -96,7 +99,10 @@ else:
     if selected_unique_id == "default":
         selected_entity = None
     else:
-        selected_entity = [d for d in requirement_data if d["unique_id"] == selected_unique_id][0]
+        if selected_unique_id not in unique_id_dict:
+            selected_entity = None
+        else:
+            selected_entity = [d for d in requirement_data if d["unique_id"] == selected_unique_id][0]
 st.write(selected_unique_id)
 
 if not selected_entity:
