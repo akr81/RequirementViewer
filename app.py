@@ -305,22 +305,15 @@ with col1:
         st.write("クリックするとエンティティが選択されます")
     with col12:
         target = st.query_params.get("target", None)
-        if target != None and target != "None":
-            target = id_title_dict[
-                st.selectbox(
-                    "フィルタ",
-                    id_title_list,
-                    index=id_title_list.index(unique_id_dict[target]),
-                )
-            ]
-        else:
-            target = id_title_dict[
-                st.selectbox(
-                    "フィルタ",
-                    id_title_list,
-                    index=id_title_list.index(unique_id_dict["None"]),
-                )
-            ]
+        if target == None or target == "None":
+            target = "None"
+        target = id_title_dict[
+            st.selectbox(
+                "フィルタ",
+                id_title_list,
+                index=id_title_list.index(unique_id_dict[target]),
+            )
+        ]
 
         # 読み込んだデータをグラフデータに変換
         graph_data = RequirementGraph(requirement_data)
