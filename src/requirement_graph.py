@@ -24,7 +24,10 @@ class RequirementGraph:
             )
             for relation in entity["relations"]:
                 self.graph.add_edge(
-                    entity["unique_id"], relation["destination"], type=relation["type"]
+                    entity["unique_id"],
+                    relation["destination"],
+                    type=relation["type"],
+                    note=relation["note"],
                 )
 
     def extract_subgraph(self, target_node: str):
