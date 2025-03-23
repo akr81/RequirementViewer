@@ -73,7 +73,7 @@
         "unique_id": "508d38d6a4ba4e5f849eab3e7f2e388e",
         "relations": [
             {
-                "note": "[[https://plantuml.com/ja-dark/class-diagram]]",
+                "note": "",
                 "type": "satisfy",
                 "destination": "991267c83e4542229c5b1747573d8ee2"
             }
