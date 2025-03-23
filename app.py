@@ -146,6 +146,8 @@ def update_requirement_data(file_path: str, requirement_data: list[dict]):
         file_path (str): Path to JSON file
         requirement_data (list[dict]): Requirement data list
     """
+    # list内の辞書型データをunique_id順に並び替える
+    requirement_data.sort(key=lambda x: x["unique_id"])
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(requirement_data, f, ensure_ascii=False, indent=4)
 

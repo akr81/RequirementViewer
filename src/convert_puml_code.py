@@ -258,6 +258,7 @@ scale {scale}
         src = data[0]
         dst = data[1]
         kind = data[2]["type"]
+        note = data[2]["note"]
         ret = ""
         if kind == "containment":
             ret = f"{dst} +-- {src}"
@@ -271,11 +272,13 @@ scale {scale}
         ):
             ret = f"{dst} <.. {src}: <<{kind}>>"
         elif kind == "problem" or kind == "rationale":
-            # For rationale and problem (entiry) only
+            # For rationale and problem (entity) only
             ret = f"{dst} .. {src}"
         else:
             raise ValueError(f"No implement exist for relation kind: {kind}")
 
+        if note:
+            ret += f"\nnote on link #business: {note}"
         return ret
 
     def _convert_note_edge(self, note_id: str, nodes: List[Dict[str, Any]]) -> str:
