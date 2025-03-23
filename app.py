@@ -116,7 +116,6 @@ def load_relation_types() -> list[str]:
     return relation_types
 
 
-@st.cache_data
 def load_requirement_data(file_path: str) -> list[dict]:
     """Load requirement data from JSON file.
 
@@ -212,6 +211,20 @@ def get_default_entity(entity_types: list[str]) -> dict:
     }
 
 
+def get_scale_from_query_params() -> float:
+    """Get scale from query parameters.
+
+    Returns:
+        float: Scale value
+    """
+    scale = st.query_params.get("scale", [None])
+    if scale == [None]:
+        scale = 1.0  # デフォルト値
+    else:
+        scale = float(scale)
+    return scale
+
+
 # Streamlit のレイアウトをワイドに設定
 st.set_page_config(layout="wide")
 
@@ -237,12 +250,8 @@ unique_id_dict = get_unique_id_dict(requirement_data)
 
 id_title_list = get_id_title_list(requirement_data)
 
-# URL のクエリパラメータから、選択されたエンティティを取得
-scale = st.query_params.get("scale", [None])
-if scale == [None]:
-    scale = 1.0
-else:
-    scale = float(scale)
+# URL のクエリパラメータからスケールを取得
+scale = get_scale_from_query_params()
 
 # グラフデータをPlantUMLコードに変換
 config = {"detail": True, "debug": False, "width": 800, "left_to_right": False}
