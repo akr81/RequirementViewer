@@ -214,23 +214,6 @@
         ]
     },
     {
-        "type": "block",
-        "id": "EditPanel",
-        "title": "編集パネル",
-        "text": "データ操作・更新のためのパネル",
-        "unique_id": "aaebda46a6c14483964273fe68e3bb13",
-        "relations": [
-            {
-                "type": "satisfy",
-                "destination": "54041b54a89d4c108426a8ebc60f4cc9"
-            },
-            {
-                "type": "satisfy",
-                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
-            }
-        ]
-    },
-    {
         "type": "functionalRequirement",
         "id": "CreateRequirementDiagram",
         "title": "要求図の生成",
@@ -266,6 +249,23 @@
             {
                 "type": "deriveReqt",
                 "destination": "2f2602c820b74b01912eeda59bf29eb8"
+            }
+        ]
+    },
+    {
+        "type": "block",
+        "id": "EditPanel",
+        "title": "データ編集パネル",
+        "text": "データ操作・更新のためのパネル",
+        "unique_id": "f345d4d8044f408187a8bcc71e6d552f",
+        "relations": [
+            {
+                "type": "satisfy",
+                "destination": "54041b54a89d4c108426a8ebc60f4cc9"
+            },
+            {
+                "type": "satisfy",
+                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
             }
         ]
     }

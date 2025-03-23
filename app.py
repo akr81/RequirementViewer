@@ -348,7 +348,7 @@ with col1:
     )
 
 with col2:
-    st.write("## データ操作")
+    st.write("## データ編集")
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
 
