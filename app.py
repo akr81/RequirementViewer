@@ -416,27 +416,8 @@ with col2:
             if not (tmp_entity["unique_id"]) in unique_id_dict:
                 st.error("更新すべきエンティティがありません。")
             else:
-                # 一度削除してから追加
-                requirement_data.remove(
-                    [
-                        d
-                        for d in requirement_data
-                        if d["unique_id"] == tmp_entity["unique_id"]
-                    ][0]
-                )
-                # tmp_entityでdestinationがNoneのものを削除
-                tmp_entity["relations"] = [
-                    relation
-                    for relation in tmp_entity["relations"]
-                    if relation["destination"] != "None"
-                ]
-                if destination_unique_id != "None":
-                    tmp_entity["relations"].append(
-                        {"type": relation_type, "destination": destination_unique_id}
-                    )
-                requirement_data.append(tmp_entity)
-                with open("default.json", "w", encoding="utf-8") as f:
-                    json.dump(requirement_data, f, ensure_ascii=False, indent=4)
+                requirement_manager.update(tmp_entity)
+                update_requirement_data(file_path, requirement_manager.requirements)
                 st.write("エンティティを更新しました。")
                 st.rerun()
     with col33:

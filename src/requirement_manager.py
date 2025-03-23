@@ -47,3 +47,15 @@ class RequirementManager:
                 for rel in requirement["relations"]
                 if rel["destination"] != unique_id
             ]
+
+    def update(self, requirement: Dict):
+        """Update requirement with specified unique_id.
+
+        Args:
+            requirement (Dict): Requirement to update
+        """
+        # 指定されたunique_idの要求を削除する
+        self.remove(requirement["unique_id"])
+
+        # 新しい要求を追加する
+        self.add(requirement)
