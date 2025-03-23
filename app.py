@@ -3,7 +3,7 @@ import subprocess
 from src.requirement_graph import RequirementGraph
 from src.convert_puml_code import ConvertPumlCode
 from src.requirement_manager import RequirementManager
-import json
+import hjson
 import os
 import uuid
 import networkx as nx
@@ -71,24 +71,39 @@ def encode64(data: bytes) -> str:
 
 
 # PlantUMLコードからSVG画像を取得する関数
-def get_diagram(plantuml_code: str) -> str:
+def get_diagram(plantuml_code: str, plantuml_server: str) -> str:
     """Get SVG diagram from PlantUML code.
 
     Args:
         plantuml_code (str): PlantUML code
+        plantuml_server (str): PlantUML server URL
 
     Returns:
         str: SVG diagram as text
     """
     # PlantUMLサーバ用にエンコード
     encoded = encode_plantuml(plantuml_code)
-    url = f"http://localhost:8080/svg/{encoded}"
+    url = "".join([plantuml_server, encoded])
     response = requests.get(url)
     if response.status_code == 200:
         return response.text
     else:
         st.error("PlantUMLサーバから図を取得できませんでした。")
+        st.write(response)
+        st.write(url)
         return ""
+
+
+@st.cache_data
+def load_config() -> dict:
+    """Load config from JSON file.
+
+    Returns:
+        dict: Config dictionary
+    """
+    with open(os.path.join("setting", "config.json"), "r", encoding="utf-8") as f:
+        config = hjson.load(f)
+    return config
 
 
 @st.cache_data
@@ -99,7 +114,7 @@ def load_entity_types() -> list[str]:
         list[str]: List of entity types
     """
     with open(os.path.join("setting", "entity_types.json"), "r", encoding="utf-8") as f:
-        entity_types = json.load(f)
+        entity_types = hjson.load(f)
     return entity_types
 
 
@@ -113,7 +128,7 @@ def load_relation_types() -> list[str]:
     with open(
         os.path.join("setting", "relation_types.json"), "r", encoding="utf-8"
     ) as f:
-        relation_types = json.load(f)
+        relation_types = hjson.load(f)
     return relation_types
 
 
@@ -129,7 +144,7 @@ def load_requirement_data(file_path: str) -> list[dict]:
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             try:
-                requirement_data = json.load(f)
+                requirement_data = hjson.load(f)
             except:
                 st.error("JSONファイルの読み込みに失敗しました。")
                 st.stop()
@@ -149,7 +164,7 @@ def update_requirement_data(file_path: str, requirement_data: list[dict]):
     # list内の辞書型データをunique_id順に並び替える
     requirement_data.sort(key=lambda x: x["unique_id"])
     with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(requirement_data, f, ensure_ascii=False, indent=4)
+        hjson.dump(requirement_data, f, ensure_ascii=False, indent=4)
 
 
 @st.cache_data
@@ -246,8 +261,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed",  # サイドバーを閉じた状態で表示
 )
 
+# Configファイルを読み込む
+config_data = load_config()
+
 # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
-plantuml_process = start_plantuml_server()
+if not ("www.plantuml.com" in config_data["plantuml"]):
+    plantuml_process = start_plantuml_server()
 # st.write("PlantUMLサーバが立ち上がっています（プロセスID：", plantuml_process.pid, "）")
 
 # エンティティタイプと関係タイプを読み込む
@@ -337,7 +356,7 @@ with col1:
         plantuml_code = converter.convert_to_puml(
             graph_data.subgraph, title=None, target=target, scale=scale
         )
-        svg_output = get_diagram(plantuml_code)
+        svg_output = get_diagram(plantuml_code, config_data["plantuml"])
         svg_output = svg_output.replace(
             "<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>"
         )

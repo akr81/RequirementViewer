@@ -46,7 +46,7 @@ class ConvertPumlCode:
 
         ret = f"""
 @startuml
-!pragma layout elk
+'!pragma layout elk
 hide circle
 hide empty members
 hide method
