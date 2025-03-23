@@ -378,19 +378,20 @@ with col2:
             )
     with col22:
         destination_unique_id = id_title_dict[
-            st.selectbox("接続先", id_title_dict.keys(), index=len(id_title_dict) - 1)
+            st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
         ]  # 末尾に追加用の空要素を追加
         for i, relation in enumerate(tmp_entity["relations"]):
             relation["destination"] = id_title_dict[
                 st.selectbox(
                     "接続先",
-                    id_title_dict.keys(),
-                    list(id_title_dict.keys()).index(
-                        unique_id_dict[relation["destination"]]
-                    ),
+                    id_title_list,
+                    id_title_list.index(unique_id_dict[relation["destination"]]),
                     key=f"destination{i}",
                 )
             ]
+    tmp_entity["relations"].append(
+        {"type": relation_type, "destination": destination_unique_id}
+    )
 
     space_col, col31, col32, col33 = st.columns([3, 1, 1, 1])
     with col31:
@@ -413,6 +414,7 @@ with col2:
                 requirement_manager.update(tmp_entity)
                 update_requirement_data(file_path, requirement_manager.requirements)
                 st.write("エンティティを更新しました。")
+                st.query_params.selected = tmp_entity["unique_id"]
                 st.rerun()
     with col33:
         # 削除ボタンを表示

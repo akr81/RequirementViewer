@@ -271,18 +271,28 @@
     },
     {
         "type": "functionalRequirement",
-        "id": "AddEntity2",
-        "title": "エンティティ追加2",
-        "text": "エンティティを新規に追加できる2",
-        "unique_id": "ced60636c1854a15bf6689b72e333bb7",
-        "relations": []
-    },
-    {
-        "type": "functionalRequirement",
         "id": "TableViewer",
         "title": "表形式で表示",
         "text": "既存のエンティティを表形式で表示できる",
-        "unique_id": "34af30be3e844cfbba1de39909b15ec9",
-        "relations": []
+        "unique_id": "56091d53d6024c27b070cfa9f6fd8fdc",
+        "relations": [
+            {
+                "type": "containment",
+                "destination": "8e5c01ac216d47f4a34ccd30e9d14a63"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "AddEntity2",
+        "title": "エンティティ追加2",
+        "text": "エンティティを新規に追加できる2",
+        "unique_id": "1912d776e09c4a50be41945473693c13",
+        "relations": [
+            {
+                "type": "deriveReqt",
+                "destination": "56091d53d6024c27b070cfa9f6fd8fdc"
+            }
+        ]
     }
 ]
