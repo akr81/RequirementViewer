@@ -427,11 +427,8 @@ with col2:
                 st.write("エンティティを削除しました。")
                 st.rerun()
 
-# セッション状態に 'graph' キーがなければ初期化
-if "graph_data" not in st.session_state:
-    st.session_state.graph_data = graph_data
-else:
-    st.session_state.graph_data = graph_data
+# セッション状態にgraph_dataを追加
+st.session_state.graph_data = graph_data
 
 # テキストエリアで PlantUML コードが確認可能
 st.text_area("PlantUML コード", value=plantuml_code, height=250)
