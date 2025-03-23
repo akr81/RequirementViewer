@@ -2,6 +2,7 @@ import streamlit as st
 import subprocess
 from src.requirement_graph import RequirementGraph
 from src.convert_puml_code import ConvertPumlCode
+from src.requirement_manager import RequirementManager
 import json
 import os
 import uuid
@@ -138,6 +139,17 @@ def load_requirement_data(file_path: str) -> list[dict]:
     return requirement_data
 
 
+def update_requirement_data(file_path: str, requirement_data: list[dict]):
+    """Update requirements to JSON file.
+
+    Args:
+        file_path (str): Path to JSON file
+        requirement_data (list[dict]): Requirement data list
+    """
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(requirement_data, f, ensure_ascii=False, indent=4)
+
+
 @st.cache_data
 def get_id_title_dict(requirement_data: list[dict]) -> dict:
     """Get ID and title dictionary from requirement data.
@@ -243,6 +255,7 @@ st.title("Requirement Diagram Viewer")
 # テキストでJSONファイルのパスを指定(デフォルトはdefault.json)
 file_path = st.text_input("JSONファイルのパスを入力してください", "default.json")
 requirement_data = load_requirement_data(file_path)
+requirement_manager = RequirementManager(requirement_data)
 
 # IDとタイトルをキー, ユニークIDを値とする辞書とその逆を作成
 id_title_dict = get_id_title_dict(requirement_data)
@@ -444,17 +457,8 @@ with col2:
             if not (tmp_entity["id"] + ": " + tmp_entity["title"]) in id_title_dict:
                 st.error("削除すべきエンティティがありません。")
             else:
-                # 削除
-                # TODO: 関連エンティティも削除する
-                requirement_data.remove(
-                    [
-                        d
-                        for d in requirement_data
-                        if d["unique_id"] == tmp_entity["unique_id"]
-                    ][0]
-                )
-                with open("default.json", "w", encoding="utf-8") as f:
-                    json.dump(requirement_data, f, ensure_ascii=False, indent=4)
+                requirement_manager.remove(tmp_entity["unique_id"])
+                update_requirement_data(file_path, requirement_manager.requirements)
                 st.write("エンティティを削除しました。")
                 st.rerun()
 
