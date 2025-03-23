@@ -218,7 +218,7 @@ def get_default_entity(entity_types: list[str]) -> dict:
         "id": "",
         "title": "",
         "text": "",
-        "unique_id": uuid.uuid4(),
+        "unique_id": f"{uuid.uuid4()}".replace("-", ""),
         "relations": [],
     }
 
@@ -405,22 +405,10 @@ with col2:
             if (tmp_entity["id"] + ": " + tmp_entity["title"]) in id_title_dict:
                 st.error("IDとタイトルが既存のエンティティと重複しています。")
             else:
-                # ユニークID振り直し
-                tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
-                # tmp_entityでdestinationがNoneのものを削除
-                tmp_entity["relations"] = [
-                    relation
-                    for relation in tmp_entity["relations"]
-                    if relation["destination"] != "None"
-                ]
-                if destination_unique_id != "None":
-                    tmp_entity["relations"].append(
-                        {"type": relation_type, "destination": destination_unique_id}
-                    )
-                requirement_data.append(tmp_entity)
-                with open("default.json", "w", encoding="utf-8") as f:
-                    json.dump(requirement_data, f, ensure_ascii=False, indent=4)
+                added_id = requirement_manager.add(tmp_entity)
+                update_requirement_data(file_path, requirement_manager.requirements)
                 st.write("エンティティを追加しました。")
+                st.query_params.selected = added_id
                 st.rerun()
     with col32:
         # 更新ボタンを表示

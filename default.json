@@ -255,5 +255,44 @@
                 "destination": "2f2602c820b74b01912eeda59bf29eb8"
             }
         ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "AddEntity2",
+        "title": "エンティティ追加2",
+        "text": "エンティティを新規に追加できる2",
+        "unique_id": "b673e7527f4f433f9da3e54f68aac29f",
+        "relations": [
+            {
+                "type": "deriveReqt",
+                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "AddEntity3",
+        "title": "エンティティ追加3",
+        "text": "エンティティを新規に追加できる3",
+        "unique_id": "10dbd30d18b84bb1a0be756eabcb22b7",
+        "relations": [
+            {
+                "type": "deriveReqt",
+                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "AddEntity22",
+        "title": "エンティティ追加22",
+        "text": "エンティティを新規に追加できる22",
+        "unique_id": "1b85e67a37b74bd0a2db067d5ada4311",
+        "relations": [
+            {
+                "type": "deriveReqt",
+                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
+            }
+        ]
     }
 ]
