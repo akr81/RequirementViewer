@@ -250,28 +250,29 @@ unique_id_dict = get_unique_id_dict(requirement_data)
 
 id_title_list = get_id_title_list(requirement_data)
 
-# URL のクエリパラメータからスケールを取得
+# URL のクエリからパラメタを取得
 scale = get_scale_from_query_params()
+selected_unique_id = st.query_params.get("selected", [None])
 
 # グラフデータをPlantUMLコードに変換
 config = {"detail": True, "debug": False, "width": 800, "left_to_right": False}
 converter = ConvertPumlCode(config)
 
-# URL のクエリパラメータから、選択されたエンティティを取得
-selected_unique_id = st.query_params.get("selected", [None])
 
-# パラメタがない場合はデフォルトのエンティティを選択してリロード
-selected_entity = {}
+selected_entity = None
 if selected_unique_id == [None]:
+    # エンティティが選択されていない場合はデフォルトのエンティティを選択してリロード
     default_params = {"selected": "default"}
     st.query_params.setdefault("selected", "default")
     st.rerun()
 else:
     if selected_unique_id == "default":
-        selected_entity = None
+        # デフォルトの場合は何もしない
+        pass
     else:
         if selected_unique_id not in unique_id_dict:
-            selected_entity = None
+            # 存在しないユニークIDが指定された場合は何もしない
+            pass
         else:
             selected_entity = [
                 d for d in requirement_data if d["unique_id"] == selected_unique_id
