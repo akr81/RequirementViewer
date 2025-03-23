@@ -304,7 +304,7 @@ col1, col2 = st.columns([4, 1])
 
 target = None
 with col1:
-    col11, col12, col13 = st.columns([3, 1, 1])
+    col11, col12, col13, col14 = st.columns([2, 1, 1, 1])
     with col11:
         st.write("## Requirement Diagram")
         st.write("クリックするとエンティティが選択されます")
@@ -322,9 +322,13 @@ with col1:
 
         # 読み込んだデータをグラフデータに変換
         graph_data = RequirementGraph(requirement_manager.requirements)
-        # グラフをフィルタリング
-        graph_data.extract_subgraph(target)
     with col13:
+        filter_direction = st.selectbox(
+            "フィルタ方向", options=["All", "Upstream", "Downstream"], index=0
+        )
+        # グラフをフィルタリング
+        graph_data.extract_subgraph(target, filter_direction)
+    with col14:
         # 出力svgの拡大縮小倍率を設定
         scale = st.slider(
             "スケール", min_value=0.1, max_value=3.0, value=scale, step=0.1
