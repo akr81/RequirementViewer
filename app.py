@@ -200,6 +200,7 @@ def get_id_title_list(requirement_data: list[dict]) -> list[str]:
         requirement["id"] + ": " + requirement["title"]
         for requirement in requirement_data
     ]
+    id_title_list.sort()
     id_title_list.insert(0, "None")  # 指定がない場合の初期値
     return id_title_list
 
