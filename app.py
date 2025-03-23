@@ -116,6 +116,83 @@ def load_relation_types() -> list[str]:
     return relation_types
 
 
+@st.cache_data
+def load_requirement_data(file_path: str) -> list[dict]:
+    """Load requirement data from JSON file.
+
+    Args:
+        file_path (str): Path to JSON file
+
+    Returns:
+        list[dict]: List of requirement data
+    """
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            try:
+                requirement_data = json.load(f)
+            except:
+                st.error("JSONファイルの読み込みに失敗しました。")
+                st.stop()
+    else:
+        # 存在しない場合は空で始める
+        requirement_data = []
+    return requirement_data
+
+
+@st.cache_data
+def get_id_title_dict(requirement_data: list[dict]) -> dict:
+    """Get ID and title dictionary from requirement data.
+
+    Args:
+        requirement_data (list[dict]): Requirement data list
+
+    Returns:
+        dict: ID and title dictionary
+    """
+    id_title_dict = {
+        requirement["id"] + ": " + requirement["title"]: requirement["unique_id"]
+        for requirement in requirement_data
+    }
+    id_title_dict["None"] = "None"  # 削除用の空要素を追加
+    return id_title_dict
+
+
+@st.cache_data
+def get_unique_id_dict(requirement_data: list[dict]) -> dict:
+    """Get unique ID dictionary from requirement data.
+
+    Args:
+        requirement_data (list[dict]): Requirement data list
+
+    Returns:
+        dict: Unique ID dictionary
+    """
+    unique_id_dict = {
+        requirement["unique_id"]: requirement["id"] + ": " + requirement["title"]
+        for requirement in requirement_data
+    }
+    unique_id_dict["None"] = "None"  # 削除用の空要素を追加
+    return unique_id_dict
+
+
+@st.cache_data
+def get_id_title_list(requirement_data: list[dict]) -> list[str]:
+    """Get ID and title list from requirement data.
+
+    Args:
+        requirement_data (list[dict]): Requirement data list
+
+    Returns:
+        list[str]: ID and title list
+    """
+    id_title_list = [
+        requirement["id"] + ": " + requirement["title"]
+        for requirement in requirement_data
+    ]
+    id_title_list.insert(0, "None")  # 指定がない場合の初期値
+    return id_title_list
+
+
 def get_default_entity(entity_types: list[str]) -> dict:
     """Get default entity data.
 
@@ -143,6 +220,7 @@ st.set_page_config(layout="wide")
 plantuml_process = start_plantuml_server()
 # st.write("PlantUMLサーバが立ち上がっています（プロセスID：", plantuml_process.pid, "）")
 
+# エンティティタイプと関係タイプを読み込む
 entity_types = load_entity_types()
 relation_types = load_relation_types()
 
@@ -151,37 +229,13 @@ st.title("Requirement Diagram Viewer")
 
 # テキストでJSONファイルのパスを指定(デフォルトはdefault.json)
 file_path = st.text_input("JSONファイルのパスを入力してください", "default.json")
+requirement_data = load_requirement_data(file_path)
 
-# ファイルが存在する場合は読み込む
-if os.path.exists(file_path):
-    # JSONファイルを読み込む。文字コードに注意
-    with open(file_path, "r", encoding="utf-8") as f:
-        try:
-            requirement_data = json.load(f)
-        except:
-            st.error("JSONファイルの読み込みに失敗しました。")
-            st.stop()
-else:
-    # 存在しない場合は空で始める
-    requirement_data = []
+# IDとタイトルをキー, ユニークIDを値とする辞書とその逆を作成
+id_title_dict = get_id_title_dict(requirement_data)
+unique_id_dict = get_unique_id_dict(requirement_data)
 
-# 読み込んだデータからIDとタイトルをキーとする辞書を作成
-id_title_dict = {
-    requirement["id"] + ": " + requirement["title"]: requirement["unique_id"]
-    for requirement in requirement_data
-}
-id_title_dict["None"] = "None"
-# 逆にユニークIDをキーとする辞書も作成
-unique_id_dict = {
-    requirement["unique_id"]: requirement["id"] + ": " + requirement["title"]
-    for requirement in requirement_data
-}
-unique_id_dict["None"] = "None"
-
-id_title_list = [
-    requirement["id"] + ": " + requirement["title"] for requirement in requirement_data
-]
-id_title_list.insert(0, "None")
+id_title_list = get_id_title_list(requirement_data)
 
 # URL のクエリパラメータから、選択されたエンティティを取得
 scale = st.query_params.get("scale", [None])
