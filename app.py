@@ -316,7 +316,7 @@ with col1:
         ]
 
         # 読み込んだデータをグラフデータに変換
-        graph_data = RequirementGraph(requirement_data)
+        graph_data = RequirementGraph(requirement_manager.requirements)
         # グラフをフィルタリング
         graph_data.extract_subgraph(target)
     with col13:
@@ -336,15 +336,15 @@ with col1:
     # svg出力のデバッグ
     with open("debug.svg", "w") as out:
         out.writelines(svg_output)
-        # SVG をそのまま表示
-        st.markdown(
-            f"""
-            <div style="width:100%; height:800px; overflow:auto; border:0px solid black;">
-                {svg_output}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    # SVG をそのまま表示
+    st.markdown(
+        f"""
+        <div style="width:100%; height:800px; overflow:auto; border:0px solid black;">
+            {svg_output}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 with col2:
     st.write("## データ操作")
