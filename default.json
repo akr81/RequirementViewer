@@ -143,23 +143,6 @@
     },
     {
         "type": "functionalRequirement",
-        "id": "NotifySelectedEntity",
-        "title": "選択エンティティの通知",
-        "text": "選択されたエンティティを通知する",
-        "unique_id": "e8de592fe5a24ecaaddcf5b60ddbb8b0",
-        "relations": [
-            {
-                "type": "deriveReqt",
-                "destination": "4d83a3d3d26d462d940e14dedc68597b"
-            },
-            {
-                "type": "deriveReqt",
-                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
-            }
-        ]
-    },
-    {
-        "type": "functionalRequirement",
         "id": "DisplaySelectedEntity",
         "title": "選択エンティティの表示",
         "text": "選択されたエンティティの情報を編集パネルに表示する",
@@ -266,6 +249,25 @@
             {
                 "type": "satisfy",
                 "destination": "b1295dab53bd4752884ae7dd2652d6fc"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "NotifySelectedEntity",
+        "title": "選択エンティティの通知",
+        "text": "選択されたエンティティを通知する",
+        "unique_id": "e8de592fe5a24ecaaddcf5b60ddbb8b0",
+        "relations": [
+            {
+                "type": "deriveReqt",
+                "destination": "4d83a3d3d26d462d940e14dedc68597b",
+                "note": "特に問題なし"
+            },
+            {
+                "type": "deriveReqt",
+                "destination": "b1295dab53bd4752884ae7dd2652d6fc",
+                "note": ""
             }
         ]
     }

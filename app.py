@@ -238,9 +238,11 @@ def get_scale_from_query_params() -> float:
     return scale
 
 
-# Streamlit のレイアウトをワイドに設定
-st.set_page_config(layout="wide")
-
+st.set_page_config(
+    layout="wide",
+    page_title="Your App Title",
+    initial_sidebar_state="collapsed",  # サイドバーを閉じた状態で表示
+)
 
 # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
 plantuml_process = start_plantuml_server()
@@ -369,18 +371,22 @@ with col2:
     col21, col22 = st.columns(2)
     with col21:
         relation_type = st.selectbox("関係タイプ", relation_types)
-        for i, relation in enumerate(tmp_entity["relations"]):
+    with col22:
+        destination_unique_id = id_title_dict[
+            st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
+        ]  # 末尾に追加用の空要素を追加
+    relation_note = st.text_input("関係の注釈", "")
+
+    for i, relation in enumerate(tmp_entity["relations"]):
+        col21, col22 = st.columns(2)
+        with col21:
             relation["type"] = st.selectbox(
                 "関係タイプ",
                 relation_types,
                 relation_types.index(relation["type"]),
                 key=f"relation_type{i}",
             )
-    with col22:
-        destination_unique_id = id_title_dict[
-            st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
-        ]  # 末尾に追加用の空要素を追加
-        for i, relation in enumerate(tmp_entity["relations"]):
+        with col22:
             relation["destination"] = id_title_dict[
                 st.selectbox(
                     "接続先",
@@ -389,9 +395,25 @@ with col2:
                     key=f"destination{i}",
                 )
             ]
-    tmp_entity["relations"].append(
-        {"type": relation_type, "destination": destination_unique_id}
-    )
+        if "note" in relation:
+            relation["note"] = st.text_input(
+                "関係の注釈", relation["note"], key=f"relation_note{i}"
+            )
+        else:
+            relation["note"] = st.text_input("関係の注釈", "", key=f"relation_note{i}")
+
+    if not relation_note:
+        tmp_entity["relations"].append(
+            {"type": relation_type, "destination": destination_unique_id}
+        )
+    else:
+        tmp_entity["relations"].append(
+            {
+                "type": relation_type,
+                "destination": destination_unique_id,
+                "note": relation_note,
+            }
+        )
 
     space_col, col31, col32, col33 = st.columns([3, 1, 1, 1])
     with col31:
