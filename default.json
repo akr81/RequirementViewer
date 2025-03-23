@@ -245,32 +245,6 @@
     },
     {
         "type": "functionalRequirement",
-        "id": "AddEntity3",
-        "title": "エンティティ追加3",
-        "text": "エンティティを新規に追加できる3",
-        "unique_id": "10dbd30d18b84bb1a0be756eabcb22b7",
-        "relations": [
-            {
-                "type": "deriveReqt",
-                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
-            }
-        ]
-    },
-    {
-        "type": "functionalRequirement",
-        "id": "AddEntity22",
-        "title": "エンティティ追加22",
-        "text": "エンティティを新規に追加できる22",
-        "unique_id": "1b85e67a37b74bd0a2db067d5ada4311",
-        "relations": [
-            {
-                "type": "deriveReqt",
-                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
-            }
-        ]
-    },
-    {
-        "type": "functionalRequirement",
         "id": "TableViewer",
         "title": "表形式で表示",
         "text": "既存のエンティティを表形式で表示できる",
@@ -279,19 +253,6 @@
             {
                 "type": "containment",
                 "destination": "8e5c01ac216d47f4a34ccd30e9d14a63"
-            }
-        ]
-    },
-    {
-        "type": "functionalRequirement",
-        "id": "AddEntity2",
-        "title": "エンティティ追加2",
-        "text": "エンティティを新規に追加できる2",
-        "unique_id": "1912d776e09c4a50be41945473693c13",
-        "relations": [
-            {
-                "type": "deriveReqt",
-                "destination": "56091d53d6024c27b070cfa9f6fd8fdc"
             }
         ]
     }
