@@ -329,7 +329,7 @@ with col1:
         st.write("クリックするとエンティティが選択されます")
     with col12:
         target = st.query_params.get("target", None)
-        if target == None or target == "None":
+        if target == None or target == "None" or target not in unique_id_dict:
             target = "None"
         target = id_title_dict[
             st.selectbox(
