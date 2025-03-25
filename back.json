@@ -1,0 +1,323 @@
+[
+    {
+        "type": "functionalRequirement",
+        "id": "RequirementDiagramViewer",
+        "title": "要求図の表示",
+        "text": "要求図を表示することができる",
+        "unique_id": "2f2602c820b74b01912eeda59bf29eb8",
+        "relations": [
+            {
+                "note": "",
+                "type": "containment",
+                "destination": "8e5c01ac216d47f4a34ccd30e9d14a63"
+            }
+        ]
+    },
+    {
+        "type": "block",
+        "id": "AddButton",
+        "title": "追加ボタン",
+        "text": "新規のエンティティを追加するボタン",
+        "unique_id": "41500a5e23794ccc908cb6d598f1d50c",
+        "relations": [
+            {
+                "note": "",
+                "type": "satisfy",
+                "destination": "c3ab04141a89444e935a2957124ea6f0"
+            }
+        ]
+    },
+    {
+        "type": "block",
+        "id": "URLParameter",
+        "title": "URLパラメタ",
+        "text": "URLパラメタで受け渡しを行う",
+        "unique_id": "4c45d1ff98ba46d4b920925395fd5601",
+        "relations": [
+            {
+                "note": "",
+                "type": "satisfy",
+                "destination": "e8de592fe5a24ecaaddcf5b60ddbb8b0"
+            },
+            {
+                "note": "",
+                "type": "satisfy",
+                "destination": "63a8022d3d8345abb262869d0428dfe5"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "EntitySelector",
+        "title": "エンティティの選択",
+        "text": "エンティティクリックで、編集対象として選択できる",
+        "unique_id": "4d83a3d3d26d462d940e14dedc68597b",
+        "relations": [
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "e6b49da21d2042f383bfcdc3d132c5bb"
+            },
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "2f2602c820b74b01912eeda59bf29eb8"
+            }
+        ]
+    },
+    {
+        "type": "block",
+        "id": "UpdateButton",
+        "title": "更新ボタン",
+        "text": "既存のエンティティを更新するボタン",
+        "unique_id": "508d38d6a4ba4e5f849eab3e7f2e388e",
+        "relations": [
+            {
+                "note": "",
+                "type": "satisfy",
+                "destination": "991267c83e4542229c5b1747573d8ee2"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "DisplaySelectedEntity",
+        "title": "選択エンティティの表示",
+        "text": "選択されたエンティティの情報を編集パネルに表示する",
+        "unique_id": "54041b54a89d4c108426a8ebc60f4cc9",
+        "relations": [
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "e8de592fe5a24ecaaddcf5b60ddbb8b0"
+            },
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "TableViewer",
+        "title": "表形式で表示",
+        "text": "既存のエンティティを表形式で表示できる",
+        "unique_id": "56091d53d6024c27b070cfa9f6fd8fdc",
+        "relations": [
+            {
+                "note": "",
+                "type": "containment",
+                "destination": "8e5c01ac216d47f4a34ccd30e9d14a63"
+            }
+        ]
+    },
+    {
+        "type": "designConstraint",
+        "id": "TransitionConstraint",
+        "title": "画面遷移制約",
+        "text": "Streamlitはシングルページアプリケーションとして\n設計されているため、JSによる動的な操作や\nパラメタの取得ができない。\n画面遷移時にパラメタを引き継ぐ必要がある。",
+        "unique_id": "63a8022d3d8345abb262869d0428dfe5",
+        "relations": []
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "FilterRequirement",
+        "title": "表示する要求の絞り込み",
+        "text": "要求図に出力する要求を絞り込むことができる",
+        "unique_id": "6f35dead4e74439e85acd6f1ae20e8d2",
+        "relations": [
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "2f2602c820b74b01912eeda59bf29eb8"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "CreateRequirementDiagram",
+        "title": "要求図の生成",
+        "text": "ユーザーが指定したデータから\n要求図を生成することができる",
+        "unique_id": "7a433eb5beb8480f84e86bcec671439b",
+        "relations": [
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "2f2602c820b74b01912eeda59bf29eb8"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "RequirementDiagramViewerApplication",
+        "title": "要求図アプリ",
+        "text": "要求図を表示し、必要に応じて編集することができる",
+        "unique_id": "8e5c01ac216d47f4a34ccd30e9d14a63",
+        "relations": []
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "UpdateEntity",
+        "title": "エンティティ更新",
+        "text": "既存のエンティティを更新できる",
+        "unique_id": "991267c83e4542229c5b1747573d8ee2",
+        "relations": [
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "RemoveEntity",
+        "title": "エンティティ削除",
+        "text": "既存のエンティティを削除できる",
+        "unique_id": "9f8e301729024e918fad55461a6851b4",
+        "relations": [
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
+            }
+        ]
+    },
+    {
+        "type": "block",
+        "id": "RemoveButton",
+        "title": "削除ボタン",
+        "text": "既存のエンティティを削除するボタン",
+        "unique_id": "a06c324c362e4551a73c545a4fc6c652",
+        "relations": [
+            {
+                "note": "",
+                "type": "satisfy",
+                "destination": "9f8e301729024e918fad55461a6851b4"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "ChangeDiagramScale",
+        "title": "図のスケール変更",
+        "text": "要求図の表示スケールを変更できる",
+        "unique_id": "af1526cb17224290ad77372654cf4344",
+        "relations": [
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "2f2602c820b74b01912eeda59bf29eb8"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "EntityEditorPanel",
+        "title": "エンティティ編集パネル",
+        "text": "エンティティ編集のためのパネルを表示する",
+        "unique_id": "b1295dab53bd4752884ae7dd2652d6fc",
+        "relations": [
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "e6b49da21d2042f383bfcdc3d132c5bb"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "AddEntity",
+        "title": "エンティティ追加",
+        "text": "エンティティを新規に追加できる",
+        "unique_id": "c3ab04141a89444e935a2957124ea6f0",
+        "relations": [
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "EntityEditor",
+        "title": "エンティティの編集",
+        "text": "要求図のエンティティを編集することができる",
+        "unique_id": "e6b49da21d2042f383bfcdc3d132c5bb",
+        "relations": [
+            {
+                "note": "",
+                "type": "containment",
+                "destination": "8e5c01ac216d47f4a34ccd30e9d14a63"
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "NotifySelectedEntity",
+        "title": "選択エンティティの通知",
+        "text": "選択されたエンティティを通知する",
+        "unique_id": "e8de592fe5a24ecaaddcf5b60ddbb8b0",
+        "relations": [
+            {
+                "type": "deriveReqt",
+                "destination": "4d83a3d3d26d462d940e14dedc68597b",
+                "note": ""
+            },
+            {
+                "type": "deriveReqt",
+                "destination": "b1295dab53bd4752884ae7dd2652d6fc",
+                "note": ""
+            }
+        ]
+    },
+    {
+        "type": "functionalRequirement",
+        "id": "RelationBaseFilter",
+        "title": "関係ベースのフィルタリング",
+        "text": "指定したエンティティから上流・下流に辿れる\nエンティティをすべて表示することができる\n(トレーサビリティを考慮)",
+        "unique_id": "e9686305464946cfaa909521aabc529e",
+        "relations": [
+            {
+                "note": "",
+                "type": "deriveReqt",
+                "destination": "6f35dead4e74439e85acd6f1ae20e8d2"
+            }
+        ]
+    },
+    {
+        "type": "block",
+        "id": "EditPanel",
+        "title": "データ編集パネル",
+        "text": "データ操作・更新のためのパネル",
+        "unique_id": "f345d4d8044f408187a8bcc71e6d552f",
+        "relations": [
+            {
+                "note": "",
+                "type": "satisfy",
+                "destination": "54041b54a89d4c108426a8ebc60f4cc9"
+            },
+            {
+                "note": "",
+                "type": "satisfy",
+                "destination": "b1295dab53bd4752884ae7dd2652d6fc"
+            }
+        ]
+    },
+    {
+        "type": "block",
+        "id": "NetworkX",
+        "title": "NetworkXライブラリ",
+        "text": "関係を扱うのにはグラフが向いている。\nここではNetworkXを利用する。",
+        "unique_id": "fde3cc5d20434e30a1515062cacd6b12",
+        "relations": [
+            {
+                "note": "機能的には問題なさそう",
+                "type": "satisfy",
+                "destination": "e9686305464946cfaa909521aabc529e"
+            }
+        ]
+    }
+]

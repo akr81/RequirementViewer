@@ -11,6 +11,7 @@ import atexit
 import requests
 import zlib
 import copy
+import shutil
 
 
 # PlantUMLサーバをバックグラウンドプロセスとして起動し、キャッシュする
@@ -277,7 +278,13 @@ relation_types = load_relation_types()
 st.title("Requirement Diagram Viewer")
 
 # テキストでJSONファイルのパスを指定(デフォルトはdefault.json)
-file_path = st.text_input("JSONファイルのパスを入力してください", "default.json")
+# file_path = st.text_input("JSONファイルのパスを入力してください", "default.json")
+# 元に戻すボタンを表示
+if st.button("元に戻す"):
+    # バックアップのJSONファイルをデフォルトに上書きコピー
+    shutil.copyfile("backup.json", "default.json")
+file_path = "default.json"
+
 requirement_data = load_requirement_data(file_path)
 requirement_manager = RequirementManager(requirement_data)
 
