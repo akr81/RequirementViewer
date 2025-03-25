@@ -282,7 +282,7 @@ st.title("Requirement Diagram Viewer")
 # 元に戻すボタンを表示
 if st.button("元に戻す"):
     # バックアップのJSONファイルをデフォルトに上書きコピー
-    shutil.copyfile("backup.json", "default.json")
+    shutil.copyfile("back.json", "default.json")
     st.rerun()
 file_path = "default.json"
 
