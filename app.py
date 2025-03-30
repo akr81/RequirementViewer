@@ -327,16 +327,18 @@ else:
 if not selected_entity:
     selected_entity = get_default_entity(entity_types)
 
-# 2つのカラムに表示を分割
-col1, col2 = st.columns([4, 1])
+# Requirement diagram表示とデータ編集のレイアウトを設定
+diagram_column, edit_column = st.columns([4, 1])
 
 target = None
-with col1:
-    col11, col12, col13, col14 = st.columns([2, 1, 1, 1])
-    with col11:
+with diagram_column:
+    title_column, filter_column, filter_direction_column, scale_column = st.columns(
+        [2, 1, 1, 1]
+    )
+    with title_column:
         st.write("## Requirement Diagram")
         st.write("クリックするとエンティティが選択されます")
-    with col12:
+    with filter_column:
         target = st.query_params.get("target", None)
         if target == None or target == "None" or target not in unique_id_dict:
             target = "None"
@@ -350,7 +352,7 @@ with col1:
 
         # 読み込んだデータをグラフデータに変換
         graph_data = RequirementGraph(requirement_manager.requirements)
-    with col13:
+    with filter_direction_column:
         filter_direction_list = ["All", "Upstream", "Downstream"]
         filter_direction = st.selectbox(
             "フィルタ方向",
@@ -359,7 +361,7 @@ with col1:
         )
         # グラフをフィルタリング
         graph_data.extract_subgraph(target, filter_direction)
-    with col14:
+    with scale_column:
         # 出力svgの拡大縮小倍率を設定
         scale = st.slider(
             "スケール", min_value=0.1, max_value=3.0, value=scale, step=0.1
@@ -390,7 +392,7 @@ with col1:
         unsafe_allow_html=True,
     )
 
-with col2:
+with edit_column:
     st.write("## データ編集")
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
@@ -408,18 +410,18 @@ with col2:
     # 関係は複数ありえるため、繰り返し表示させる
     # また、関係の追加を行うケースがあるため、最初の項目は空にしておき2つめ以後は設定されているデータを表示する
 
-    col21, col22 = st.columns(2)
+    relation_column, destination_column = st.columns(2)
 
     for i, relation in enumerate(tmp_entity["relations"]):
-        col21, col22 = st.columns(2)
-        with col21:
+        relation_column, destination_column = st.columns(2)
+        with relation_column:
             relation["type"] = st.selectbox(
                 "関係タイプ",
                 relation_types,
                 relation_types.index(relation["type"]),
                 key=f"relation_type{i}",
             )
-        with col22:
+        with destination_column:
             relation["destination"] = id_title_dict[
                 st.selectbox(
                     "接続先",
@@ -440,11 +442,11 @@ with col2:
                 )
 
     # 関係追加の操作があるため、1つは常に表示
-    col221, col222 = st.columns(2)
+    relation_column_new, destination_column_new = st.columns(2)
 
-    with col221:
+    with relation_column_new:
         relation_type = st.selectbox("関係タイプ", relation_types)
-    with col222:
+    with destination_column_new:
         destination_unique_id = id_title_dict[
             st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
         ]  # 末尾に追加用の空要素を追加
