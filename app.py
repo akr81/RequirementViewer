@@ -439,7 +439,7 @@ with edit_column:
     tmp_entity["type"] = st.selectbox(
         "エンティティタイプ",
         entity_types,
-        index := entity_types.index(tmp_entity["type"]),
+        index=entity_types.index(tmp_entity["type"]),
     )
     tmp_entity["id"] = st.text_input("ID", tmp_entity["id"])
     tmp_entity["title"] = st.text_input("タイトル", tmp_entity["title"])
