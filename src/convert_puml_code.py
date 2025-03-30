@@ -300,8 +300,13 @@ scale {scale}
         else:
             raise ValueError(f"No implement exist for relation kind: {kind}")
 
-        if note:
-            ret += f"\nnote on link #business: {note}"
+        if note and note["text"] != "":
+            ret += "\n"
+            ret += f"note on link\n"
+            if note["type"] != "None":
+                ret += f"<<{note['type']}>>\n"
+            ret += f"{note['text']}\n"
+            ret += f"end note\n"
         return ret
 
     def _convert_note_edge(self, note_id: str, nodes: List[Dict[str, Any]]) -> str:
