@@ -315,7 +315,7 @@ selected_unique_id = st.query_params.get("selected", [None])
 filter_direction = st.query_params.get("filter_direction", "All")
 
 # グラフデータをPlantUMLコードに変換
-config = {"detail": True, "debug": False, "width": 800, "left_to_right": False}
+config = {"detail": True, "debug": False, "width": 1200, "left_to_right": False}
 converter = ConvertPumlCode(config)
 
 
@@ -399,7 +399,7 @@ with diagram_column:
     # SVG をそのまま表示
     st.markdown(
         f"""
-        <div style="width:100%; height:800px; overflow:auto; border:0px solid black;">
+        <div style="width:100%; height:{config_data['viewer_height']}px; overflow:auto; border:0px solid black;">
             {svg_output}
         </div>
         """,

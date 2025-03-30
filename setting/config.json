@@ -1,7 +1,8 @@
 {
     "demo": "True",
-    "plantuml": "https://www.plantuml.com/plantuml/svg/",
     "requirement_data": "default.json"
+     "plantuml": "https://www.plantuml.com/plantuml/svg/",
+    "viewer_height": "1600",
     // "plantuml": "http://localhost:8080/svg/",
-    // "requirement_data": "user_data.json"
+    // "requirement_data": "user_data.json",
 }

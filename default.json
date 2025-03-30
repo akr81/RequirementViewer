@@ -121,7 +121,11 @@
         relations:
         [
             {
-                note: {}
+                note:
+                {
+                    type: None
+                    text: ""
+                }
                 type: containment
                 destination: 8e5c01ac216d47f4a34ccd30e9d14a63
             }
