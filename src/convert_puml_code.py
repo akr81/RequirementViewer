@@ -98,10 +98,13 @@ scale {scale}
         ret += "\n}\n@enduml\n"
         return ret
 
-    def _convert_parameters_dict(self, parameters_dict: Dict) -> str:
+    def _convert_parameters_dict(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
         """Convert parameters dict to PlantUML code.
 
         Args:
+            node (Tuple[str, Dict]): Node information.
             parameters_dict (Dict): Parameters for link.
 
         Returns:
@@ -115,7 +118,7 @@ scale {scale}
                 is_first = False
             else:
                 ret += f"&{key}={value}"
-        ret += "]]"
+        ret += f"&selected={node[1]['unique_id']}]]"
         return ret
 
     def _convert_node(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
@@ -128,7 +131,7 @@ scale {scale}
         Returns:
             str: PlantUML code.
         """
-        parameters = self._convert_parameters_dict(parameters_dict)
+        parameters = self._convert_parameters_dict(node, parameters_dict)
         print("===")
         print(node)
         print("===")
