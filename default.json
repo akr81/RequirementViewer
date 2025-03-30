@@ -1,6 +1,25 @@
 [
     {
         type: functionalRequirement
+        id: FilterDistance
+        title: 距離指定
+        text: 距離でフィルタすることができる
+        unique_id: 20cfb2a4c53244288628a860761a1f64
+        relations:
+        [
+            {
+                note:
+                {
+                    type: None
+                    text: ""
+                }
+                type: deriveReqt
+                destination: e9686305464946cfaa909521aabc529e
+            }
+        ]
+    }
+    {
+        type: functionalRequirement
         id: RequirementDiagramViewer
         title: 要求図の表示
         text: 要求図を表示することができる
@@ -26,6 +45,38 @@
                 note: {}
                 type: satisfy
                 destination: c3ab04141a89444e935a2957124ea6f0
+            }
+        ]
+    }
+    {
+        type: block
+        id: FilterSlider
+        title: 距離フィルタスライダー
+        text:
+            '''
+            フィルタ対象エンティティからの
+            上流・下流の距離を指定できる
+            '''
+        unique_id: 4731815c091846588dc85783b5d13746
+        relations:
+        [
+            {
+                note:
+                {
+                    type: None
+                    text: ""
+                }
+                type: satisfy
+                destination: 20cfb2a4c53244288628a860761a1f64
+            }
+            {
+                type: satisfy
+                destination: e784ce0e2f56466083d8216216038ad6
+                note:
+                {
+                    type: None
+                    text: ""
+                }
             }
         ]
     }
@@ -157,6 +208,38 @@
                 note: {}
                 type: deriveReqt
                 destination: 2f2602c820b74b01912eeda59bf29eb8
+            }
+        ]
+    }
+    {
+        type: testCase
+        id: FilterDistanceTest
+        title: 距離フィルタ試験
+        text:
+            '''
+            上流・下流ごとに距離指定して
+            フィルタできることを確認する
+            '''
+        unique_id: 77b5a0ac0a184524a36471d7ac3a08d6
+        relations:
+        [
+            {
+                type: verify
+                destination: 20cfb2a4c53244288628a860761a1f64
+                note:
+                {
+                    type: None
+                    text: ""
+                }
+            }
+            {
+                type: verify
+                destination: e784ce0e2f56466083d8216216038ad6
+                note:
+                {
+                    type: None
+                    text: ""
+                }
             }
         ]
     }
@@ -294,6 +377,29 @@
     }
     {
         type: functionalRequirement
+        id: Up/DownStreamFilter
+        title: 上流・下流のフィルタリング
+        text:
+            '''
+            上流・下流方向をフィルタリングする
+            ことができる
+            '''
+        unique_id: e784ce0e2f56466083d8216216038ad6
+        relations:
+        [
+            {
+                note:
+                {
+                    type: None
+                    text: ""
+                }
+                type: deriveReqt
+                destination: e9686305464946cfaa909521aabc529e
+            }
+        ]
+    }
+    {
+        type: functionalRequirement
         id: NotifySelectedEntity
         title: 選択エンティティの通知
         text: 選択されたエンティティを通知する
@@ -319,14 +425,18 @@
         text:
             '''
             指定したエンティティから上流・下流に辿れる
-            エンティティをすべて表示することができる
+            エンティティを表示することができる
             (トレーサビリティを考慮)
             '''
         unique_id: e9686305464946cfaa909521aabc529e
         relations:
         [
             {
-                note: {}
+                note:
+                {
+                    type: None
+                    text: ""
+                }
                 type: deriveReqt
                 destination: 6f35dead4e74439e85acd6f1ae20e8d2
             }
