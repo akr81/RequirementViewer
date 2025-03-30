@@ -470,9 +470,14 @@ with edit_column:
                 )
             ]
         expander_title = (
-            "関係の注釈" if relation["note"]["text"] != "" else "関係の注釈(なし)"
+            "関係の注釈"
+            if "text" in relation["note"] and relation["note"]["text"] != ""
+            else "関係の注釈(なし)"
         )
-        with st.expander(expander_title, expanded=bool(relation["note"]["text"])):
+        with st.expander(
+            expander_title,
+            expanded=bool("text" in relation["note"] and relation["note"]["text"]),
+        ):
             relation["note"]["type"] = st.selectbox(
                 "注釈タイプ",
                 note_types,
