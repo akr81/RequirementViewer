@@ -1,8 +1,10 @@
 {
     "demo": "True",
     "requirement_data": "default.json"
+    "viewer_height": 1600,
+    "upstream_filter_max": 5,
+    "downstream_filter_max": 5,
      "plantuml": "https://www.plantuml.com/plantuml/svg/",
-    "viewer_height": "1600",
     // "plantuml": "http://localhost:8080/svg/",
     // "requirement_data": "user_data.json",
 }
