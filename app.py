@@ -133,6 +133,18 @@ def load_relation_types() -> list[str]:
     return relation_types
 
 
+@st.cache_data
+def load_note_types() -> list[str]:
+    """Load note types from JSON file.
+
+    Returns:
+        list[str]: List of entity types
+    """
+    with open(os.path.join("setting", "note_types.json"), "r", encoding="utf-8") as f:
+        note_types = hjson.load(f)
+    return note_types
+
+
 def load_requirement_data(file_path: str) -> list[dict]:
     """Load requirement data from JSON file.
 
@@ -273,6 +285,7 @@ if not ("www.plantuml.com" in config_data["plantuml"]):
 # エンティティタイプと関係タイプを読み込む
 entity_types = load_entity_types()
 relation_types = load_relation_types()
+note_types = load_note_types()
 
 
 st.title("Requirement Diagram Viewer")
@@ -432,14 +445,13 @@ with edit_column:
             ]
         expander_title = "関係の注釈" if bool(relation["note"]) else "関係の注釈(なし)"
         with st.expander(expander_title, expanded=bool(relation["note"])):
+            st.selectbox("注釈タイプ", note_types, key=f"note_type{i}")
             if "note" in relation:
-                relation["note"] = st.text_input(
-                    "関係の注釈", relation["note"], key=f"relation_note{i}"
+                relation["note"] = st.text_area(
+                    "説明", relation["note"], key=f"relation_note{i}"
                 )
             else:
-                relation["note"] = st.text_input(
-                    "関係の注釈", "", key=f"relation_note{i}"
-                )
+                relation["note"] = st.text_area("説明", "", key=f"relation_note{i}")
 
     # 関係追加の操作があるため、1つは常に表示
     relation_column_new, destination_column_new = st.columns(2)
@@ -451,7 +463,8 @@ with edit_column:
             st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
         ]  # 末尾に追加用の空要素を追加
     with st.expander("関係の注釈", expanded=True):
-        relation_note = st.text_input("関係の注釈", "")
+        st.selectbox("注釈タイプ", note_types)
+        relation_note = st.text_area("説明", "")
 
     if not relation_note:
         tmp_entity["relations"].append(
