@@ -30,12 +30,15 @@ class RequirementGraph:
                     note=relation["note"],
                 )
 
-    def extract_subgraph(self, target_node: str, filter_direction: str):
+    def extract_subgraph(
+        self, target_node: str, upstream_distance: int, downstream_distance: int
+    ):
         """Extract subgraph from graph with target node.
 
         Args:
             target_node (str): Target node to extract subgraph
-            filter_direction (str): Filter direction of subgraph
+            upstream_distance (int): Distance of upstream nodes
+            downstream_distance (int): Distance of downstream nodes
 
         """
         # Store graph itself as subgraph if target_node is None
@@ -46,17 +49,23 @@ class RequirementGraph:
         reachable_upper_nodes = None
         reachable_lower_nodes = None
         reachable_nodes = None
-        if filter_direction == "All":
-            reachable_upper_nodes = nx.descendants(self.graph, target_node)
-            reachable_lower_nodes = nx.ancestors(self.graph, target_node)
-            reachable_nodes = reachable_upper_nodes.union(reachable_lower_nodes)
-        elif filter_direction == "Upstream":
-            reachable_upper_nodes = nx.descendants(self.graph, target_node)
-            reachable_nodes = reachable_upper_nodes
-        elif filter_direction == "Downstream":
-            reachable_lower_nodes = nx.ancestors(self.graph, target_node)
-            reachable_nodes = reachable_lower_nodes
-        reachable_nodes.add(target_node)  # 自分自身も含める
+
+        # Downstream
+        lengths = nx.single_source_shortest_path_length(self.graph, target_node)
+        reachable_lower_nodes = {
+            node for node, length in lengths.items() if length <= upstream_distance
+        }
+
+        # Upstream
+        lengths_reverse = nx.single_source_shortest_path_length(
+            self.graph.reverse(), target_node
+        )
+        reachable_upper_nodes = {
+            node
+            for node, length in lengths_reverse.items()
+            if length <= downstream_distance
+        }
+        reachable_nodes = reachable_upper_nodes.union(reachable_lower_nodes)
 
         # これらのノードを含むサブグラフを作成
         self.subgraph = self.graph.subgraph(reachable_nodes).copy()

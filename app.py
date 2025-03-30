@@ -313,6 +313,12 @@ id_title_list = get_id_title_list(requirement_data)
 scale = get_scale_from_query_params()
 selected_unique_id = st.query_params.get("selected", [None])
 filter_direction = st.query_params.get("filter_direction", "All")
+upstream_distance = st.query_params.get(
+    "upstream_distance", config_data["upstream_filter_max"]
+)
+downstream_distance = st.query_params.get(
+    "downstream_distance", config_data["downstream_filter_max"]
+)
 
 # グラフデータをPlantUMLコードに変換
 config = {"detail": True, "debug": False, "width": 1200, "left_to_right": False}
@@ -346,9 +352,13 @@ diagram_column, edit_column = st.columns([4, 1])
 
 target = None
 with diagram_column:
-    title_column, filter_column, filter_direction_column, scale_column = st.columns(
-        [2, 1, 1, 1]
-    )
+    (
+        title_column,
+        filter_column,
+        upstream_distance_column,
+        downstream_distance_column,
+        scale_column,
+    ) = st.columns([2, 2, 1, 1, 1])
     with title_column:
         st.write("## Requirement Diagram")
         st.write("クリックするとエンティティが選択されます")
@@ -366,15 +376,28 @@ with diagram_column:
 
         # 読み込んだデータをグラフデータに変換
         graph_data = RequirementGraph(requirement_manager.requirements)
-    with filter_direction_column:
-        filter_direction_list = ["All", "Upstream", "Downstream"]
-        filter_direction = st.selectbox(
-            "フィルタ方向",
-            options=filter_direction_list,
-            index=filter_direction_list.index(filter_direction),
+    with upstream_distance_column:
+        upstream_distance = st.slider(
+            "上流フィルタ距離",
+            min_value=0,
+            max_value=config_data["upstream_filter_max"],
+            value=int(upstream_distance),
+            step=1,
         )
-        # グラフをフィルタリング
-        graph_data.extract_subgraph(target, filter_direction)
+    with downstream_distance_column:
+        downstream_distance = st.slider(
+            "下流フィルタ距離",
+            min_value=0,
+            max_value=config_data["downstream_filter_max"],
+            value=int(downstream_distance),
+            step=1,
+        )
+    # グラフをフィルタリング
+    graph_data.extract_subgraph(
+        target,
+        upstream_distance=upstream_distance,
+        downstream_distance=downstream_distance,
+    )
     with scale_column:
         # 出力svgの拡大縮小倍率を設定
         scale = st.slider(
@@ -385,6 +408,8 @@ with diagram_column:
         parameters_dict["scale"] = scale
         parameters_dict["target"] = target
         parameters_dict["filter_direction"] = filter_direction
+        parameters_dict["upstream_distance"] = upstream_distance
+        parameters_dict["downstream_distance"] = downstream_distance
         plantuml_code = converter.convert_to_puml(
             graph_data.subgraph, title=None, parameters_dict=parameters_dict
         )
