@@ -408,15 +408,7 @@ with col2:
     # 関係は複数ありえるため、繰り返し表示させる
     # また、関係の追加を行うケースがあるため、最初の項目は空にしておき2つめ以後は設定されているデータを表示する
 
-    # 関係追加の操作があるため、1つは常に表示
     col21, col22 = st.columns(2)
-    with col21:
-        relation_type = st.selectbox("関係タイプ", relation_types)
-    with col22:
-        destination_unique_id = id_title_dict[
-            st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
-        ]  # 末尾に追加用の空要素を追加
-    relation_note = st.text_input("関係の注釈", "")
 
     for i, relation in enumerate(tmp_entity["relations"]):
         col21, col22 = st.columns(2)
@@ -436,12 +428,28 @@ with col2:
                     key=f"destination{i}",
                 )
             ]
-        if "note" in relation:
-            relation["note"] = st.text_input(
-                "関係の注釈", relation["note"], key=f"relation_note{i}"
-            )
-        else:
-            relation["note"] = st.text_input("関係の注釈", "", key=f"relation_note{i}")
+        expander_title = "関係の注釈" if bool(relation["note"]) else "関係の注釈(なし)"
+        with st.expander(expander_title, expanded=bool(relation["note"])):
+            if "note" in relation:
+                relation["note"] = st.text_input(
+                    "関係の注釈", relation["note"], key=f"relation_note{i}"
+                )
+            else:
+                relation["note"] = st.text_input(
+                    "関係の注釈", "", key=f"relation_note{i}"
+                )
+
+    # 関係追加の操作があるため、1つは常に表示
+    col221, col222 = st.columns(2)
+
+    with col221:
+        relation_type = st.selectbox("関係タイプ", relation_types)
+    with col222:
+        destination_unique_id = id_title_dict[
+            st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
+        ]  # 末尾に追加用の空要素を追加
+    with st.expander("関係の注釈", expanded=True):
+        relation_note = st.text_input("関係の注釈", "")
 
     if not relation_note:
         tmp_entity["relations"].append(
