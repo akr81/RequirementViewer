@@ -445,10 +445,17 @@ with edit_column:
             ]
         expander_title = "関係の注釈" if bool(relation["note"]) else "関係の注釈(なし)"
         with st.expander(expander_title, expanded=bool(relation["note"])):
-            st.selectbox("注釈タイプ", note_types, key=f"note_type{i}")
+            relation["note"]["type"] = st.selectbox(
+                "注釈タイプ",
+                note_types,
+                key=f"note_type{i}",
+                index=note_types.index(relation.get("note").get("type", "None")),
+            )
             if "note" in relation:
-                relation["note"] = st.text_area(
-                    "説明", relation["note"], key=f"relation_note{i}"
+                relation["note"]["text"] = st.text_area(
+                    "説明",
+                    relation.get("note").get("text", ""),
+                    key=f"relation_note{i}",
                 )
             else:
                 relation["note"] = st.text_area("説明", "", key=f"relation_note{i}")
@@ -463,12 +470,13 @@ with edit_column:
             st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
         ]  # 末尾に追加用の空要素を追加
     with st.expander("関係の注釈", expanded=True):
-        st.selectbox("注釈タイプ", note_types)
-        relation_note = st.text_area("説明", "")
+        relation_note = {}
+        relation_note["type"] = st.selectbox("注釈タイプ", note_types, key="note_type")
+        relation_note["text"] = st.text_area("説明", "", key="relation_text")
 
     if not relation_note:
         tmp_entity["relations"].append(
-            {"type": relation_type, "destination": destination_unique_id}
+            {"type": relation_type, "destination": destination_unique_id, "note": {}}
         )
     else:
         tmp_entity["relations"].append(
