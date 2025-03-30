@@ -1,7 +1,7 @@
 {
     "demo": "True",
     "requirement_data": "default.json"
-    "viewer_height": 1600,
+    "viewer_height": 1200,
     "upstream_filter_max": 5,
     "downstream_filter_max": 5,
      "plantuml": "https://www.plantuml.com/plantuml/svg/",
