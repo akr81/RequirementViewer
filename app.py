@@ -288,16 +288,17 @@ relation_types = load_relation_types()
 note_types = load_note_types()
 
 
-st.title("Requirement Diagram Viewer")
+if config_data["demo"] == "True":
+    st.title("Requirement Diagram Viewer")
 
-# テキストでJSONファイルのパスを指定(デフォルトはdefault.json)
-# file_path = st.text_input("JSONファイルのパスを入力してください", "default.json")
-# 元に戻すボタンを表示
-if st.button("元に戻す"):
-    # バックアップのJSONファイルをデフォルトに上書きコピー
-    shutil.copyfile("back.json", "default.json")
-    st.rerun()
-file_path = "default.json"
+    # テキストでJSONファイルのパスを指定(デフォルトはdefault.json)
+    # file_path = st.text_input("JSONファイルのパスを入力してください", "default.json")
+    # 元に戻すボタンを表示
+    if st.button("元に戻す"):
+        # バックアップのJSONファイルをデフォルトに上書きコピー
+        shutil.copyfile("back.json", "default.json")
+        st.rerun()
+file_path = config_data["requirement_data"]
 
 requirement_data = load_requirement_data(file_path)
 requirement_manager = RequirementManager(requirement_data)
