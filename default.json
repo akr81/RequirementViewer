@@ -7,7 +7,7 @@
         "unique_id": "2f2602c820b74b01912eeda59bf29eb8",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "containment",
                 "destination": "8e5c01ac216d47f4a34ccd30e9d14a63"
             }
@@ -21,7 +21,7 @@
         "unique_id": "41500a5e23794ccc908cb6d598f1d50c",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "satisfy",
                 "destination": "c3ab04141a89444e935a2957124ea6f0"
             }
@@ -35,12 +35,12 @@
         "unique_id": "4c45d1ff98ba46d4b920925395fd5601",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "satisfy",
                 "destination": "e8de592fe5a24ecaaddcf5b60ddbb8b0"
             },
             {
-                "note": "",
+                "note": {},
                 "type": "satisfy",
                 "destination": "63a8022d3d8345abb262869d0428dfe5"
             }
@@ -54,12 +54,12 @@
         "unique_id": "4d83a3d3d26d462d940e14dedc68597b",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "e6b49da21d2042f383bfcdc3d132c5bb"
             },
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "2f2602c820b74b01912eeda59bf29eb8"
             }
@@ -73,7 +73,7 @@
         "unique_id": "508d38d6a4ba4e5f849eab3e7f2e388e",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "satisfy",
                 "destination": "991267c83e4542229c5b1747573d8ee2"
             }
@@ -87,12 +87,12 @@
         "unique_id": "54041b54a89d4c108426a8ebc60f4cc9",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "e8de592fe5a24ecaaddcf5b60ddbb8b0"
             },
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "b1295dab53bd4752884ae7dd2652d6fc"
             }
@@ -106,7 +106,7 @@
         "unique_id": "56091d53d6024c27b070cfa9f6fd8fdc",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "containment",
                 "destination": "8e5c01ac216d47f4a34ccd30e9d14a63"
             }
@@ -128,7 +128,7 @@
         "unique_id": "6f35dead4e74439e85acd6f1ae20e8d2",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "2f2602c820b74b01912eeda59bf29eb8"
             }
@@ -142,7 +142,7 @@
         "unique_id": "7a433eb5beb8480f84e86bcec671439b",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "2f2602c820b74b01912eeda59bf29eb8"
             }
@@ -164,7 +164,7 @@
         "unique_id": "991267c83e4542229c5b1747573d8ee2",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "b1295dab53bd4752884ae7dd2652d6fc"
             }
@@ -178,7 +178,7 @@
         "unique_id": "9f8e301729024e918fad55461a6851b4",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "b1295dab53bd4752884ae7dd2652d6fc"
             }
@@ -192,7 +192,7 @@
         "unique_id": "a06c324c362e4551a73c545a4fc6c652",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "satisfy",
                 "destination": "9f8e301729024e918fad55461a6851b4"
             }
@@ -206,7 +206,7 @@
         "unique_id": "af1526cb17224290ad77372654cf4344",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "2f2602c820b74b01912eeda59bf29eb8"
             }
@@ -220,7 +220,7 @@
         "unique_id": "b1295dab53bd4752884ae7dd2652d6fc",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "e6b49da21d2042f383bfcdc3d132c5bb"
             }
@@ -234,7 +234,7 @@
         "unique_id": "c3ab04141a89444e935a2957124ea6f0",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "b1295dab53bd4752884ae7dd2652d6fc"
             }
@@ -248,7 +248,7 @@
         "unique_id": "e6b49da21d2042f383bfcdc3d132c5bb",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "containment",
                 "destination": "8e5c01ac216d47f4a34ccd30e9d14a63"
             }
@@ -281,7 +281,7 @@
         "unique_id": "e9686305464946cfaa909521aabc529e",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "deriveReqt",
                 "destination": "6f35dead4e74439e85acd6f1ae20e8d2"
             }
@@ -295,12 +295,12 @@
         "unique_id": "f345d4d8044f408187a8bcc71e6d552f",
         "relations": [
             {
-                "note": "",
+                "note": {},
                 "type": "satisfy",
                 "destination": "54041b54a89d4c108426a8ebc60f4cc9"
             },
             {
-                "note": "",
+                "note": {},
                 "type": "satisfy",
                 "destination": "b1295dab53bd4752884ae7dd2652d6fc"
             }
@@ -314,7 +314,7 @@
         "unique_id": "fde3cc5d20434e30a1515062cacd6b12",
         "relations": [
             {
-                "note": "機能的には問題なさそう",
+                "note": {"type": "None", "text": "機能的には問題なさそう"},
                 "type": "satisfy",
                 "destination": "e9686305464946cfaa909521aabc529e"
             }
