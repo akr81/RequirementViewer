@@ -1,8 +1,10 @@
 [
     "None",
     "deriveReqt",
-    "satisfy",
-    "refine",
     "containment",
-    "problem"
+    "satisfy",
+    "verify",
+    "refine",
+    "copy",
+    "trace"
 ]
