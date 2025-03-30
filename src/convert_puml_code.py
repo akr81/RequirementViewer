@@ -19,23 +19,21 @@ class ConvertPumlCode:
         self.left_to_right = config["left_to_right"]
 
     def convert_to_puml(
-        self, graph: nx.DiGraph, title: str, target: str, scale: float
+        self, graph: nx.DiGraph, title: str, parameters_dict: Dict
     ) -> str:
         """Convert graph to requirement diagram as PlantUML code string.
 
         Args:
             graph (nx.DiGraph): Graph of requirements.
             title (str): Title of diagram.
-            target (str): Target requirement.
-            scale (float): Image scale.
+            parameters_dict (Dict): Parameters for link.
 
         Returns:
             str: PlantUML code
         """
-        print(f"target: {target}")
+        target = parameters_dict.get("target", None)
+        scale = parameters_dict.get("scale", 1.0)
         if not title:
-            print(f"target: {target}")
-            print(f"target: {not target}")
             if target == None or target == "None":
                 title = '"req Requirements [all]"'
             else:
@@ -89,7 +87,7 @@ scale {scale}
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            ret += self._convert_node(node, scale, target) + "\n"
+            ret += self._convert_node(node, parameters_dict) + "\n"
 
         # Convert edges
         for edge in graph.edges(data=True):
@@ -100,15 +98,37 @@ scale {scale}
         ret += "\n}\n@enduml\n"
         return ret
 
-    def _convert_node(self, node: Tuple[str, Dict], scale: float, target: str) -> str:
-        """Convert node information to PlantUML code.
+    def _convert_parameters_dict(self, parameters_dict: Dict) -> str:
+        """Convert parameters dict to PlantUML code.
 
         Args:
-            node (Tuple[str, Dict]): Node information.
+            parameters_dict (Dict): Parameters for link.
 
         Returns:
             str: PlantUML code.
         """
+        is_first = True
+        ret = "[["
+        for key, value in parameters_dict.items():
+            if is_first:
+                ret += f"?{key}={value}"
+                is_first = False
+            else:
+                ret += f"&{key}={value}"
+        ret += "]]"
+        return ret
+
+    def _convert_node(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
+        """Convert node information to PlantUML code.
+
+        Args:
+            node (Tuple[str, Dict]): Node information.
+            parameters_dict (Dict): Parameters for link.
+
+        Returns:
+            str: PlantUML code.
+        """
+        parameters = self._convert_parameters_dict(parameters_dict)
         print("===")
         print(node)
         print("===")
@@ -125,9 +145,9 @@ scale {scale}
             or type == "physicalRequirement"
             or type == "designConstraint"
         ):
-            ret = self._convert_requirement(attr, type, scale, target)
+            ret = self._convert_requirement(attr, type, parameters)
         elif type == "block" or type == "testCase":
-            ret = self._convert_block(attr, type, scale, target)
+            ret = self._convert_block(attr, type, parameters)
         elif type == "rationale" or type == "problem":
             ret = self._convert_note_entity(attr)
         else:
@@ -153,13 +173,14 @@ scale {scale}
         return ret
 
     def _convert_requirement(
-        self, data: Dict[str, Any], type: str, scale, target
+        self, data: Dict[str, Any], type: str, parameters: str
     ) -> str:
         """Convert requirement information to PlantUML code.
 
         Args:
             data (Dict[str, Any]): Requirement information
             type (str): Type of requirement
+            parameters (str): Parameter string for link
 
         Returns:
             str: PlantUML code
@@ -170,7 +191,7 @@ scale {scale}
         if self.detail or self.debug:
             # Ignore () as method using {field}
             ret = (
-                f"class \"{title}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}&target={target}]]"
+                f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters}"
                 + "{\n"
             )
 
@@ -183,23 +204,22 @@ scale {scale}
             ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<requirement>>"
         return ret
 
-    def _convert_block(
-        self, data: Dict[str, Any], type: str, scale: float, target: str
-    ) -> str:
+    def _convert_block(self, data: Dict[str, Any], type: str, parameters: str) -> str:
         """Convert block information to PlantUML code.
 
         Args:
             data (Dict[str, Any]): Block information
             type (str): Type information
+            parameters (str): Parameter string for link
 
         Returns:
             str: PlantUML code
         """
         title = self._insert_newline(data["title"])
         if self.debug:
-            ret = f"class \"unique_id=\"{data['unique_id']}\"\\n{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}&target={target}]]"
+            ret = f"class \"unique_id=\"{data['unique_id']}\"\\n{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> {parameters}"
         else:
-            ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> [[?selected={data['unique_id']}&scale={scale}&target={target}]]"
+            ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> {parameters}"
         return ret
 
     def _convert_note_entity(self, data: Dict[str, Any]) -> str:

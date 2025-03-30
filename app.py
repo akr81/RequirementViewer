@@ -298,6 +298,7 @@ id_title_list = get_id_title_list(requirement_data)
 # URL のクエリからパラメタを取得
 scale = get_scale_from_query_params()
 selected_unique_id = st.query_params.get("selected", [None])
+filter_direction = st.query_params.get("filter_direction", "All")
 
 # グラフデータをPlantUMLコードに変換
 config = {"detail": True, "debug": False, "width": 800, "left_to_right": False}
@@ -350,8 +351,11 @@ with col1:
         # 読み込んだデータをグラフデータに変換
         graph_data = RequirementGraph(requirement_manager.requirements)
     with col13:
+        filter_direction_list = ["All", "Upstream", "Downstream"]
         filter_direction = st.selectbox(
-            "フィルタ方向", options=["All", "Upstream", "Downstream"], index=0
+            "フィルタ方向",
+            options=filter_direction_list,
+            index=filter_direction_list.index(filter_direction),
         )
         # グラフをフィルタリング
         graph_data.extract_subgraph(target, filter_direction)
@@ -361,8 +365,12 @@ with col1:
             "スケール", min_value=0.1, max_value=3.0, value=scale, step=0.1
         )
         # ローカルで PlantUML コードから SVG を生成
+        parameters_dict = {}
+        parameters_dict["scale"] = scale
+        parameters_dict["target"] = target
+        parameters_dict["filter_direction"] = filter_direction
         plantuml_code = converter.convert_to_puml(
-            graph_data.subgraph, title=None, target=target, scale=scale
+            graph_data.subgraph, title=None, parameters_dict=parameters_dict
         )
         svg_output = get_diagram(plantuml_code, config_data["plantuml"])
         svg_output = svg_output.replace(
