@@ -19,17 +19,35 @@ class ConvertPumlCode:
         self.left_to_right = config["left_to_right"]
 
     def convert_to_puml(
-        self, graph: nx.DiGraph, title: str, parameters_dict: Dict
+        self, page_title: str, graph: nx.DiGraph, title: str, parameters_dict: Dict
     ) -> str:
         """Convert graph to requirement diagram as PlantUML code string.
 
         Args:
+            page_title (str): Page title.
             graph (nx.DiGraph): Graph of requirements.
             title (str): Title of diagram.
             parameters_dict (Dict): Parameters for link.
 
         Returns:
             str: PlantUML code
+        """
+        if page_title == "Requirement Diagram":
+            return self._convert_requirements_to_uml(graph, title, parameters_dict)
+        elif page_title == "Strategy and Tactics Tree":
+            return self._convert_strategy_and_tactics(graph, title, parameters_dict)
+        else:
+            raise ValueError("Invalid title specified.")
+
+    def _convert_requirements_to_uml(
+        self, graph: nx.DiGraph, title: str, parameters_dict: Dict
+    ) -> str:
+        """Convert requirement graph to PlantUML code.
+        Args:
+
+            graph (nx.DiGraph): Graph of requirements.
+            title (str): Title of diagram.
+            parameters_dict (Dict): Parameters for link.
         """
         target = parameters_dict.get("target", None)
         scale = parameters_dict.get("scale", 1.0)
@@ -432,3 +450,74 @@ scale {scale}
             else:
                 break
         return string, stored
+
+    def _convert_strategy_and_tactics(
+        self, graph: nx.DiGraph, title: str, parameters_dict: Dict
+    ) -> str:
+        """Convert graph to strategy and tactics tree diagram as PlantUML code string.
+
+        Args:
+            graph (nx.DiGraph): Graph of requirements.
+            title (str): Title of diagram.
+            parameters_dict (Dict): Parameters for link.
+
+        Returns:
+            str: PlantUML code
+        """
+        target = parameters_dict.get("target", None)
+        scale = parameters_dict.get("scale", 1.0)
+
+        ret = f"""
+@startuml
+skinparam linetype polyline
+skinparam linetype ortho
+skinparam HyperlinkUnderline false
+skinparam card {{
+BackgroundColor White
+ArrowColor Black
+BorderColor Black
+FontSize 12
+}}
+skinparam note {{
+BackgroundColor White
+ArrowColor Black
+BorderColor Black
+FontSize 12
+}}
+allowmixing
+
+scale {scale}
+
+"""
+
+        # Convert all nodes
+        for node in graph.nodes(data=True):
+            print(node)
+            ret += self._convert_card(node, parameters_dict) + "\n"
+
+        # Convert edges
+        for edge in graph.edges(data=True):
+            ret += self._convert_card_edge(edge) + "\n"
+
+        ret += "\n}\n@enduml\n"
+        return ret
+
+    def _convert_card(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
+        parameters = self._convert_parameters_dict(node, parameters_dict)
+        ret = f"""card {node[1]["unique_id"]} {parameters} [
+{node[1]["id"]}
+---
+{node[1]["strategy"]}
+---
+{node[1]["tactics"]}
+]
+"""
+        return ret
+
+    def _convert_card_edge(self, data: Dict[str, Any]):
+        print(data)
+        src = data[0]
+        dst = data[1]
+        ret = f"{dst} <-- {src}"
+
+        return ret

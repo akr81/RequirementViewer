@@ -3,7 +3,7 @@ import networkx as nx
 
 
 class RequirementGraph:
-    def __init__(self, entities: List[Dict]):
+    def __init__(self, entities: List[Dict], title):
         self.entities = entities
 
         # 要求図全体のグラフ
@@ -13,7 +13,34 @@ class RequirementGraph:
         self.subgraph = nx.DiGraph()
 
         # グラフの構築
-        for entity in entities:
+        if title == "Requirement Diagram":
+            self._convert_requirements()
+        elif title == "Strategy and Tactics Tree":
+            self._convert_strategy_and_tactics()
+        else:
+            raise ValueError("Invalid title specified.")
+
+    def _convert_strategy_and_tactics(self):
+        for entity in self.entities:
+            self.graph.add_node(
+                entity["unique_id"],
+                id=entity["id"],
+                necessary_assumption=entity["necessary_assumption"],
+                strategy=entity["strategy"],
+                parallel_assumption=entity["parallel_assumption"],
+                tactics=entity["tactics"],
+                sufficient_assumption=entity["sufficient_assumption"],
+                unique_id=entity["unique_id"],
+            )
+            for relation in entity["relations"]:
+                self.graph.add_edge(
+                    entity["unique_id"],
+                    relation["destination"],
+                )
+
+    def _convert_requirements(self):
+        """Convert requirements to graph."""
+        for entity in self.entities:
             self.graph.add_node(
                 entity["unique_id"],
                 id=entity["id"],
