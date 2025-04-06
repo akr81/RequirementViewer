@@ -101,9 +101,21 @@ def get_default_entity() -> dict:
     """
     return {
         "id": "",
+        "color": "None",
         "unique_id": f"{uuid.uuid4()}".replace("-", ""),
         "relations": [],
     }
+
+
+color_list = [
+    "None",
+    "Blue",
+    "Yellow",
+    "Red",
+    "Green",
+    "Orange",
+    "Purple",
+]
 
 
 st.set_page_config(
@@ -188,8 +200,13 @@ with edit_column:
     st.write("## データ編集")
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
+    if "color" not in tmp_entity:
+        tmp_entity["color"] = "None"
 
     tmp_entity["id"] = st.text_area("課題・状況", tmp_entity["id"])
+    tmp_entity["color"] = st.selectbox(
+        "色", color_list, index=color_list.index(tmp_entity["color"])
+    )
 
     for i, relation in enumerate(tmp_entity["relations"]):
         relation["destination"] = id_title_dict[

@@ -65,6 +65,7 @@ class RequirementGraph:
             self.graph.add_node(
                 entity["unique_id"],
                 id=entity["id"],
+                color=(entity["color"] if "color" in entity else "None"),
                 unique_id=entity["unique_id"],
                 type="card",
             )
@@ -74,9 +75,6 @@ class RequirementGraph:
                     and relation["and"] != None
                     and relation["and"] != "None"
                 ):
-                    print("====")
-                    print(relation)
-                    print("====")
                     self.graph.add_node(
                         relation["and"],
                         id=relation["and"],

@@ -3,6 +3,15 @@ import networkx as nx
 import re
 import unicodedata
 
+color_to_archimate = {
+    "Blue": "#application",
+    "Yellow": "#business",
+    "Red": "#implementation",
+    "Green": "#technology",
+    "Orange": "#strategy",
+    "Purple": "#motivation",
+}
+
 
 class ConvertPumlCode:
     """Convert graph to PlantUML code."""
@@ -574,7 +583,6 @@ scale {scale}
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            print(node)
             if node[1]["type"] == "and":
                 # Convert and node
                 ret += (
@@ -592,7 +600,11 @@ scale {scale}
 
     def _convert_card_crt(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
         parameters = self._convert_parameters_dict(node, parameters_dict)
-        ret = f"""card {node[1]["unique_id"]} {parameters} [
+        if node[1]["color"] != "None":
+            color = color_to_archimate[node[1]["color"]]
+        else:
+            color = ""
+        ret = f"""card {node[1]["unique_id"]} {parameters} {color} [
 {node[1]["id"]}
 ]
 """
