@@ -19,6 +19,8 @@ class RequirementGraph:
             self._convert_strategy_and_tactics()
         elif title == "Current Reality Tree":
             self._convert_current_reality()
+        elif title == "Process Flow Diagram":
+            self._convert_process_flow()
         else:
             raise ValueError("Invalid title specified.")
 
@@ -33,6 +35,21 @@ class RequirementGraph:
                 tactics=entity["tactics"],
                 sufficient_assumption=entity["sufficient_assumption"],
                 unique_id=entity["unique_id"],
+            )
+            for relation in entity["relations"]:
+                self.graph.add_edge(
+                    entity["unique_id"],
+                    relation["destination"],
+                )
+
+    def _convert_process_flow(self):
+        for entity in self.entities:
+            self.graph.add_node(
+                entity["unique_id"],
+                id=entity["id"],
+                unique_id=entity["unique_id"],
+                type=entity["type"],
+                color=entity["color"],
             )
             for relation in entity["relations"]:
                 self.graph.add_edge(

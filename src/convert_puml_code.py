@@ -47,6 +47,8 @@ class ConvertPumlCode:
             return self._convert_strategy_and_tactics(graph, title, parameters_dict)
         elif page_title == "Current Reality Tree":
             return self._convert_current_reality(graph, title, parameters_dict)
+        elif page_title == "Process Flow Diagram":
+            return self._convert_process_flow(graph, title, parameters_dict)
         else:
             raise ValueError("Invalid title specified.")
 
@@ -520,10 +522,13 @@ scale {scale}
 """
         return ret
 
-    def _convert_card_edge(self, data: Dict[str, Any]):
+    def _convert_card_edge(self, data: Dict[str, Any], reverse=False):
         src = data[0]
         dst = data[1]
-        ret = f"{dst} <-- {src}"
+        if reverse:
+            ret = f"{src} --> {dst}"
+        else:
+            ret = f"{dst} <-- {src}"
 
         return ret
 
@@ -600,4 +605,83 @@ scale {scale}
 {node[1]["id"]}
 ]
 """
+        return ret
+
+    def _convert_process_flow(
+        self, graph: nx.DiGraph, title: str, parameters_dict: Dict
+    ) -> str:
+        """Convert graph to process_flow diagram as PlantUML code string.
+
+        Args:
+            graph (nx.DiGraph): Graph of requirements.
+            title (str): Title of diagram.
+            parameters_dict (Dict): Parameters for link.
+
+        Returns:
+            str: PlantUML code
+        """
+        target = parameters_dict.get("target", None)
+        scale = parameters_dict.get("scale", 1.0)
+
+        ret = f"""
+@startuml
+skinparam HyperlinkUnderline false
+skinparam nodesep 20
+skinparam ranksep 20
+
+skinparam card {{
+BackgroundColor White
+ArrowColor Black
+BorderColor Black
+FontSize 12
+}}
+skinparam usecase {{
+BackgroundColor White
+ArrowColor Black
+BorderColor Black
+FontSize 12
+}}
+skinparam note {{
+BackgroundColor White
+ArrowColor Black
+BorderColor Black
+FontSize 12
+}}
+allowmixing
+
+scale {scale}
+
+"""
+
+        # Convert all nodes
+        for node in graph.nodes(data=True):
+            if node[1]["type"] == "process":
+                ret += self._convert_usecase(node, parameters_dict) + "\n"
+            else:
+                ret += self._convert_card_crt(node, parameters_dict) + "\n"
+
+        # Convert edges
+        for edge in graph.edges(data=True):
+            ret += self._convert_card_edge(edge, reverse=True) + "\n"
+
+        ret += "\n}\n@enduml\n"
+        return ret
+
+    def _convert_usecase(self, node: Dict[str, Any], parameters_dict: Dict) -> str:
+        """Convert usecase information to PlantUML code.
+
+        Args:
+            data (Dict[str, Any]): Usecase information
+
+        Returns:
+            str: PlantUML code
+        """
+        parameters = self._convert_parameters_dict(node, parameters_dict)
+        if node[1]["color"] != "None":
+            color = color_to_archimate[node[1]["color"]]
+        else:
+            color = ""
+        if node[1]["type"] == "process":
+            # Convert and node
+            ret = f"usecase \"{node[1]['id']}\" as {node[1]['unique_id']} {parameters} {color}\n"
         return ret
