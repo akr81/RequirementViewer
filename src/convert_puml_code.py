@@ -36,6 +36,8 @@ class ConvertPumlCode:
             return self._convert_requirements_to_uml(graph, title, parameters_dict)
         elif page_title == "Strategy and Tactics Tree":
             return self._convert_strategy_and_tactics(graph, title, parameters_dict)
+        elif page_title == "Current Reality Tree":
+            return self._convert_current_reality(graph, title, parameters_dict)
         else:
             raise ValueError("Invalid title specified.")
 
@@ -136,6 +138,8 @@ scale {scale}
                 is_first = False
             else:
                 ret += f"&{key}={value}"
+        print("----")
+        print(node)
         ret += f"&selected={node[1]['unique_id']}]]"
         return ret
 
@@ -520,4 +524,76 @@ scale {scale}
         dst = data[1]
         ret = f"{dst} <-- {src}"
 
+        return ret
+
+    def _convert_current_reality(
+        self, graph: nx.DiGraph, title: str, parameters_dict: Dict
+    ) -> str:
+        """Convert graph to strategy and tactics tree diagram as PlantUML code string.
+
+        Args:
+            graph (nx.DiGraph): Graph of requirements.
+            title (str): Title of diagram.
+            parameters_dict (Dict): Parameters for link.
+
+        Returns:
+            str: PlantUML code
+        """
+        target = parameters_dict.get("target", None)
+        scale = parameters_dict.get("scale", 1.0)
+
+        ret = f"""
+@startuml
+skinparam HyperlinkUnderline false
+skinparam nodesep 20
+skinparam ranksep 20
+
+skinparam card {{
+BackgroundColor White
+ArrowColor Black
+BorderColor Black
+FontSize 12
+}}
+skinparam usecase {{
+BackgroundColor White
+ArrowColor Black
+BorderColor Black
+FontSize 12
+}}
+skinparam note {{
+BackgroundColor White
+ArrowColor Black
+BorderColor Black
+FontSize 12
+}}
+allowmixing
+
+scale {scale}
+
+"""
+
+        # Convert all nodes
+        for node in graph.nodes(data=True):
+            print(node)
+            if node[1]["type"] == "and":
+                # Convert and node
+                ret += (
+                    f"usecase \"AND{node[1]['unique_id']}\" as {node[1]['unique_id']}\n"
+                )
+            else:
+                ret += self._convert_card_crt(node, parameters_dict) + "\n"
+
+        # Convert edges
+        for edge in graph.edges(data=True):
+            ret += self._convert_card_edge(edge) + "\n"
+
+        ret += "\n}\n@enduml\n"
+        return ret
+
+    def _convert_card_crt(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
+        parameters = self._convert_parameters_dict(node, parameters_dict)
+        ret = f"""card {node[1]["unique_id"]} {parameters} [
+{node[1]["id"]}
+]
+"""
         return ret

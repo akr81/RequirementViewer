@@ -17,6 +17,8 @@ class RequirementGraph:
             self._convert_requirements()
         elif title == "Strategy and Tactics Tree":
             self._convert_strategy_and_tactics()
+        elif title == "Current Reality Tree":
+            self._convert_current_reality()
         else:
             raise ValueError("Invalid title specified.")
 
@@ -56,6 +58,45 @@ class RequirementGraph:
                     type=relation["type"],
                     note=relation["note"],
                 )
+
+    def _convert_current_reality(self):
+        """Convert current reality tree to graph."""
+        for entity in self.entities:
+            self.graph.add_node(
+                entity["unique_id"],
+                id=entity["id"],
+                unique_id=entity["unique_id"],
+                type="card",
+            )
+            for relation in entity["relations"]:
+                if (
+                    "and" in relation
+                    and relation["and"] != None
+                    and relation["and"] != "None"
+                ):
+                    print("====")
+                    print(relation)
+                    print("====")
+                    self.graph.add_node(
+                        relation["and"],
+                        id=relation["and"],
+                        unique_id=relation["and"],
+                        type="and",
+                    )
+                    # and経由の関係を追加
+                    self.graph.add_edge(
+                        entity["unique_id"],
+                        relation["and"],
+                    )
+                    self.graph.add_edge(
+                        relation["and"],
+                        relation["destination"],
+                    )
+                else:
+                    self.graph.add_edge(
+                        entity["unique_id"],
+                        relation["destination"],
+                    )
 
     def extract_subgraph(
         self, target_node: str, upstream_distance: int, downstream_distance: int
