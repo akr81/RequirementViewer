@@ -149,7 +149,7 @@ if demo:
     # 元に戻すボタンを表示
     if st.button("元に戻す"):
         # バックアップのJSONファイルをデフォルトに上書きコピー
-        shutil.copyfile("back.json", "default.json")
+        shutil.copyfile("default/back.json", "default/requirement.json")
         st.rerun()
 file_path = config_data["requirement_data"]
 

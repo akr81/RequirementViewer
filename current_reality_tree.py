@@ -85,7 +85,6 @@ def get_and_number(add_list, number) -> str:
     if number == "New":
         for i in range(1, 100):
             if str(i) not in add_list:
-                print(f"return string number {i}")
                 return str(i)
     elif not number:
         return "None"

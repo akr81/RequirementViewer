@@ -147,8 +147,6 @@ scale {scale}
                 is_first = False
             else:
                 ret += f"&{key}={value}"
-        print("----")
-        print(node)
         ret += f"&selected={node[1]['unique_id']}]]"
         return ret
 
@@ -163,9 +161,6 @@ scale {scale}
             str: PlantUML code.
         """
         parameters = self._convert_parameters_dict(node, parameters_dict)
-        print("===")
-        print(node)
-        print("===")
         attr = node[1]
         type = attr["type"]
         ret = ""
@@ -308,7 +303,6 @@ scale {scale}
         Returns:
             str: PlantUML string
         """
-        print(data)
         src = data[0]
         dst = data[1]
         kind = data[2]["type"]
@@ -505,7 +499,6 @@ scale {scale}
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            print(node)
             ret += self._convert_card(node, parameters_dict) + "\n"
 
         # Convert edges
@@ -528,7 +521,6 @@ scale {scale}
         return ret
 
     def _convert_card_edge(self, data: Dict[str, Any]):
-        print(data)
         src = data[0]
         dst = data[1]
         ret = f"{dst} <-- {src}"
