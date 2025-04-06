@@ -125,7 +125,7 @@ pfd_type_list = [
 
 st.set_page_config(
     layout="wide",
-    page_title="Current Reality Tree Viewer",
+    page_title="Process Flow Diagram Viewer",
     initial_sidebar_state="collapsed",  # サイドバーを閉じた状態で表示
 )
 
