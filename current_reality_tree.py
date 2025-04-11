@@ -106,6 +106,8 @@ def get_default_entity() -> dict:
     }
 
 
+entity_list = ["entity", "note"]
+
 color_list = [
     "None",
     "Blue",
@@ -201,7 +203,12 @@ with edit_column:
     tmp_entity = copy.deepcopy(selected_entity)
     if "color" not in tmp_entity:
         tmp_entity["color"] = "None"
+    if "type" not in tmp_entity:
+        tmp_entity["type"] = "entity"
 
+    tmp_entity["type"] = st.selectbox(
+        "タイプ", entity_list, index=entity_list.index(tmp_entity["type"])
+    )
     tmp_entity["id"] = st.text_area("課題・状況", tmp_entity["id"])
     tmp_entity["color"] = st.selectbox(
         "色", color_list, index=color_list.index(tmp_entity["color"])

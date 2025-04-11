@@ -79,38 +79,52 @@ class RequirementGraph:
     def _convert_current_reality(self):
         """Convert current reality tree to graph."""
         for entity in self.entities:
-            self.graph.add_node(
-                entity["unique_id"],
-                id=entity["id"],
-                color=(entity["color"] if "color" in entity else "None"),
-                unique_id=entity["unique_id"],
-                type="card",
-            )
+            is_entity = False
+            if "type" not in entity or entity["type"] == "entity":
+                is_entity = True
+            if is_entity:
+                self.graph.add_node(
+                    entity["unique_id"],
+                    id=entity["id"],
+                    color=(entity["color"] if "color" in entity else "None"),
+                    unique_id=entity["unique_id"],
+                    type="card",
+                )
+            else:
+                self.graph.add_node(
+                    entity["unique_id"],
+                    id=entity["id"],
+                    color=(entity["color"] if "color" in entity else "None"),
+                    unique_id=entity["unique_id"],
+                    type="note",
+                )
             for relation in entity["relations"]:
-                if (
-                    "and" in relation
-                    and relation["and"] != None
-                    and relation["and"] != "None"
-                ):
-                    self.graph.add_node(
-                        relation["and"],
-                        id=relation["and"],
-                        unique_id=relation["and"],
-                        type="and",
-                    )
-                    # and経由の関係を追加
-                    self.graph.add_edge(
-                        entity["unique_id"],
-                        relation["and"],
-                    )
-                    self.graph.add_edge(
-                        relation["and"],
-                        relation["destination"],
-                    )
+                if is_entity:
+                    if (
+                        "and" in relation
+                        and relation["and"] != None
+                        and relation["and"] != "None"
+                    ):
+                        self.graph.add_node(
+                            relation["and"],
+                            id=relation["and"],
+                            unique_id=relation["and"],
+                            type="and",
+                        )
+                        # and経由の関係を追加
+                        self.graph.add_edge(
+                            entity["unique_id"], relation["and"], type="arrow"
+                        )
+                        self.graph.add_edge(
+                            relation["and"], relation["destination"], type="arrow"
+                        )
+                    else:
+                        self.graph.add_edge(
+                            entity["unique_id"], relation["destination"], type="arrow"
+                        )
                 else:
                     self.graph.add_edge(
-                        entity["unique_id"],
-                        relation["destination"],
+                        entity["unique_id"], relation["destination"], type="flat"
                     )
 
     def extract_subgraph(

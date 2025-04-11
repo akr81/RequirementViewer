@@ -523,12 +523,16 @@ scale {scale}
         return ret
 
     def _convert_card_edge(self, data: Dict[str, Any], reverse=False):
+        print(data)
         src = data[0]
         dst = data[1]
-        if reverse:
-            ret = f"{src} --> {dst}"
-        else:
-            ret = f"{dst} <-- {src}"
+        if data[2]["type"] == "arrow":
+            if reverse:
+                ret = f"{src} --> {dst}"
+            else:
+                ret = f"{dst} <-- {src}"
+        elif data[2]["type"] == "flat":
+            ret = f"{dst} . {src}"
 
         return ret
 
@@ -601,10 +605,19 @@ scale {scale}
             color = color_to_archimate[node[1]["color"]]
         else:
             color = ""
-        ret = f"""card {node[1]["unique_id"]} {parameters} {color} [
+
+        if "type" not in node[1] or node[1]["type"] == "card":
+            ret = f"""card {node[1]["unique_id"]} {parameters} {color} [
 {node[1]["id"]}
 ]
 """
+        else:
+            parameters = parameters[:-2] + " *]]"
+            ret = f"""note as {node[1]["unique_id"]} {color}
+{node[1]["id"]}{parameters}
+end note
+"""
+
         return ret
 
     def _convert_process_flow(
