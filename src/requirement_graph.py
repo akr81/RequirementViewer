@@ -123,9 +123,17 @@ class RequirementGraph:
                             entity["unique_id"], relation["destination"], type="arrow"
                         )
                 else:
-                    self.graph.add_edge(
-                        entity["unique_id"], relation["destination"], type="flat"
-                    )
+                    # note
+                    if len(entity["relations"]) > 1:
+                        self.graph.add_edge(
+                            entity["unique_id"],
+                            relation["destination"],
+                            type="flat_long",
+                        )
+                    else:
+                        self.graph.add_edge(
+                            entity["unique_id"], relation["destination"], type="flat"
+                        )
 
     def extract_subgraph(
         self, target_node: str, upstream_distance: int, downstream_distance: int

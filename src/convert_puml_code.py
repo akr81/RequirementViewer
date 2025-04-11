@@ -523,7 +523,6 @@ scale {scale}
         return ret
 
     def _convert_card_edge(self, data: Dict[str, Any], reverse=False):
-        print(data)
         src = data[0]
         dst = data[1]
         if data[2]["type"] == "arrow":
@@ -533,6 +532,8 @@ scale {scale}
                 ret = f"{dst} <-- {src}"
         elif data[2]["type"] == "flat":
             ret = f"{dst} . {src}"
+        elif data[2]["type"] == "flat_long":
+            ret = f"{dst} .. {src}"
 
         return ret
 
