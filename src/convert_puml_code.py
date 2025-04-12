@@ -47,36 +47,47 @@ class ConvertPumlCode:
         else:
             raise ValueError("Invalid title specified.")
 
-    def _convert_requirements_to_uml(
-        self, graph: nx.DiGraph, title: str, parameters_dict: Dict
+    def _add_common_parameter_setting(
+        self, scale: float, ortho: bool = True, sep: int = 0
     ) -> str:
-        """Convert requirement graph to PlantUML code.
-        Args:
+        ortho_str = (
+            """
+skinparam linetype polyline
+skinparam linetype ortho
+"""
+            if ortho
+            else ""
+        )
+        sep_str = (
+            f"""
+skinparam nodesep {sep}
+skinparam ranksep {sep}
+"""
+            if sep != 0
+            else ""
+        )
 
-            graph (nx.DiGraph): Graph of requirements.
-            title (str): Title of diagram.
-            parameters_dict (Dict): Parameters for link.
-        """
-        target = parameters_dict.get("target", None)
-        scale = parameters_dict.get("scale", 1.0)
-        if not title:
-            if target == None or target == "None":
-                title = '"req Requirements [all]"'
-            else:
-                target_title = graph.nodes(data=True)[target]["title"]
-                title = f'"req {target_title} ' + 'related requirements"'
-        else:
-            title = f'"req {title}"'
-
-        ret = f"""
+        return f"""
 @startuml
 '!pragma layout elk
 hide circle
 hide empty members
 hide method
-skinparam linetype polyline
-skinparam linetype ortho
+{ortho_str}
+{sep_str}
 skinparam HyperlinkUnderline false
+skinparam usecase {{
+BackgroundColor White
+ArrowColor Black
+BorderColor Black
+FontSize 12
+}}
+skinparam card {{
+BackgroundColor White
+ArrowColor Black
+BorderColor Black
+FontSize 12
+}}
 skinparam usecase {{
 BackgroundColor White
 ArrowColor Black
@@ -97,8 +108,32 @@ FontSize 12
 allowmixing
 
 scale {scale}
-
 """
+
+    def _convert_requirements_to_uml(
+        self, graph: nx.DiGraph, title: str, parameters_dict: Dict
+    ) -> str:
+        """Convert requirement graph to PlantUML code.
+        Args:
+
+            target (str): Target node that filters the graph.
+            graph (nx.DiGraph): Graph of requirements.
+            title (str): Title of diagram.
+            parameters_dict (Dict): Parameters for link.
+        """
+        target = parameters_dict.get("target", None)
+        scale = parameters_dict.get("scale", 1.0)
+        if not title:
+            if target == None or target == "None":
+                title = '"req Requirements [all]"'
+            else:
+                target_title = graph.nodes(data=True)[target]["title"]
+                title = f'"req {target_title} ' + 'related requirements"'
+        else:
+            title = f'"req {title}"'
+
+        ret = self._add_common_parameter_setting(scale)
+
         if self.left_to_right:
             ret += "left to right direction\n"
 
@@ -459,43 +494,20 @@ scale {scale}
         return string, stored
 
     def _convert_strategy_and_tactics(
-        self, graph: nx.DiGraph, title: str, parameters_dict: Dict
+        self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
         """Convert graph to strategy and tactics tree diagram as PlantUML code string.
 
         Args:
             graph (nx.DiGraph): Graph of requirements.
-            title (str): Title of diagram.
             parameters_dict (Dict): Parameters for link.
 
         Returns:
             str: PlantUML code
         """
-        target = parameters_dict.get("target", None)
         scale = parameters_dict.get("scale", 1.0)
 
-        ret = f"""
-@startuml
-skinparam linetype polyline
-skinparam linetype ortho
-skinparam HyperlinkUnderline false
-skinparam card {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam note {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-allowmixing
-
-scale {scale}
-
-"""
+        ret = self._add_common_parameter_setting(scale)
 
         # Convert all nodes
         for node in graph.nodes(data=True):
@@ -540,50 +552,20 @@ scale {scale}
         return ret
 
     def _convert_current_reality(
-        self, graph: nx.DiGraph, title: str, parameters_dict: Dict
+        self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
         """Convert graph to strategy and tactics tree diagram as PlantUML code string.
 
         Args:
             graph (nx.DiGraph): Graph of requirements.
-            title (str): Title of diagram.
             parameters_dict (Dict): Parameters for link.
 
         Returns:
             str: PlantUML code
         """
-        target = parameters_dict.get("target", None)
         scale = parameters_dict.get("scale", 1.0)
 
-        ret = f"""
-@startuml
-skinparam HyperlinkUnderline false
-skinparam nodesep 20
-skinparam ranksep 20
-
-skinparam card {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam usecase {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam note {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-allowmixing
-
-scale {scale}
-
-"""
+        ret = self._add_common_parameter_setting(scale, ortho=False, sep=20)
 
         # Convert all nodes
         for node in graph.nodes(data=True):
@@ -643,35 +625,7 @@ end note
         target = parameters_dict.get("target", None)
         scale = parameters_dict.get("scale", 1.0)
 
-        ret = f"""
-@startuml
-skinparam HyperlinkUnderline false
-skinparam nodesep 20
-skinparam ranksep 20
-
-skinparam card {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam usecase {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam note {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-allowmixing
-
-scale {scale}
-
-"""
+        ret = self._add_common_parameter_setting(scale, ortho=False, sep=20)
 
         # Convert all nodes
         for node in graph.nodes(data=True):
