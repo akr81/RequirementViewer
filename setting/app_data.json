@@ -3,7 +3,7 @@
         "data": "requirement_data",
         "postfix": "req"
     },
-    "S&T Tree Viewer": {
+    "Strategy and Tactics Tree Viewer": {
         "data": "strategy_and_tactics_data",
         "postfix": "stt"
     },

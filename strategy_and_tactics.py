@@ -4,6 +4,8 @@ from src.utility import (
     start_plantuml_server,
     load_config,
     load_source_data,
+    load_app_data,
+    load_colors,
 )
 from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
@@ -79,14 +81,21 @@ def get_default_entity() -> dict:
     }
 
 
+color_list = load_colors()
+
+st.session_state.app_name = "Strategy and Tactics Tree Viewer"
+
 st.set_page_config(
     layout="wide",
-    page_title="S&T Tree Viewer",
+    page_title=st.session_state.app_name,
     initial_sidebar_state="collapsed",  # サイドバーを閉じた状態で表示
 )
 
 # Configファイルを読み込む
 config_data, demo = load_config()
+st.session_state.config_data = config_data
+app_data = load_app_data()
+st.session_state.app_data = app_data
 
 # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
 if not ("www.plantuml.com" in config_data["plantuml"]):
@@ -95,8 +104,17 @@ if not ("www.plantuml.com" in config_data["plantuml"]):
 
 
 if demo:
-    st.title("Strategy and Tactics Tree Viewer")
-file_path = config_data["strategy_and_tactics_data"]
+    st.title(st.session_state.app_name)
+
+data_key = st.session_state.app_data[st.session_state.app_name]["data"]
+if data_key not in config_data:
+    st.error(
+        """設定ファイルにデータファイル設定がありません。
+        settingからファイルを設定してください。"""
+    )
+    st.stop()
+
+file_path = config_data[data_key]
 
 requirement_data = load_source_data(file_path)
 requirement_manager = RequirementManager(requirement_data)
@@ -144,7 +162,7 @@ if not selected_entity:
 diagram_column, edit_column = st.columns([4, 1])
 
 graph_data, plantuml_code = draw_diagram_column(
-    "Strategy and Tactics Tree",
+    st.session_state.app_name,
     diagram_column,
     unique_id_dict,
     id_title_dict,
@@ -160,6 +178,7 @@ with edit_column:
     st.write("## データ編集")
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
+    tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
 
     tmp_entity["id"] = st.text_input("ID", tmp_entity["id"])
     tmp_entity["necessary_assumption"] = st.text_area(
@@ -177,6 +196,9 @@ with edit_column:
     tmp_entity["sufficient_assumption"] = st.text_area(
         "なぜより詳細な具体策とアクションが必要なのか？",
         tmp_entity["sufficient_assumption"],
+    )
+    tmp_entity["color"] = st.selectbox(
+        "色", color_list, index=color_list.index(tmp_entity["color"])
     )
 
     for i, relation in enumerate(tmp_entity["relations"]):

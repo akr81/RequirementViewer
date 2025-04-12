@@ -15,7 +15,7 @@ class RequirementGraph:
         # グラフの構築
         if title == "Requirement Diagram Viewer":
             self._convert_requirements()
-        elif title == "Strategy and Tactics Tree":
+        elif title == "Strategy and Tactics Tree Viewer":
             self._convert_strategy_and_tactics()
         elif title == "Current Reality Tree Viewer":
             self._convert_current_reality()
@@ -26,20 +26,14 @@ class RequirementGraph:
 
     def _convert_strategy_and_tactics(self):
         for entity in self.entities:
-            self.graph.add_node(
-                entity["unique_id"],
-                id=entity["id"],
-                necessary_assumption=entity["necessary_assumption"],
-                strategy=entity["strategy"],
-                parallel_assumption=entity["parallel_assumption"],
-                tactics=entity["tactics"],
-                sufficient_assumption=entity["sufficient_assumption"],
-                unique_id=entity["unique_id"],
-            )
+            entity.setdefault("color", "None")  # colorがない場合はNoneを設定
+            self.graph.add_node(entity["unique_id"], **entity)
             for relation in entity["relations"]:
+                relation.setdefault("type", "arrow")  # typeがない場合はarrowを設定
                 self.graph.add_edge(
                     entity["unique_id"],
                     relation["destination"],
+                    type=relation["type"],
                 )
 
     def _convert_process_flow(self):
@@ -78,30 +72,30 @@ class RequirementGraph:
                     note=relation["note"],
                 )
 
+    def _add_note_edge(self, entity, relation):
+        """Add edge for note type entity.
+        Note type entity is connected to destination with flat or flat_long edge.
+        """
+        if len(entity["relations"]) > 1:
+            self.graph.add_edge(
+                entity["unique_id"],
+                relation["destination"],
+                type="flat_long",
+            )
+        else:
+            self.graph.add_edge(
+                entity["unique_id"], relation["destination"], type="flat"
+            )
+
     def _convert_current_reality(self):
         """Convert current reality tree to graph."""
         for entity in self.entities:
-            is_entity = False
+            entity.setdefault("color", "None")  # colorがない場合はNoneを設定
             if "type" not in entity or entity["type"] == "entity":
-                is_entity = True
-            if is_entity:
-                self.graph.add_node(
-                    entity["unique_id"],
-                    id=entity["id"],
-                    color=(entity["color"] if "color" in entity else "None"),
-                    unique_id=entity["unique_id"],
-                    type="card",
-                )
-            else:
-                self.graph.add_node(
-                    entity["unique_id"],
-                    id=entity["id"],
-                    color=(entity["color"] if "color" in entity else "None"),
-                    unique_id=entity["unique_id"],
-                    type="note",
-                )
+                entity["type"] = "card"  # cardとして描画する
+            self.graph.add_node(entity["unique_id"], **entity)
             for relation in entity["relations"]:
-                if is_entity:
+                if entity["type"] == "card":
                     if (
                         "and" in relation
                         and relation["and"] != None
@@ -125,17 +119,7 @@ class RequirementGraph:
                             entity["unique_id"], relation["destination"], type="arrow"
                         )
                 else:
-                    # note
-                    if len(entity["relations"]) > 1:
-                        self.graph.add_edge(
-                            entity["unique_id"],
-                            relation["destination"],
-                            type="flat_long",
-                        )
-                    else:
-                        self.graph.add_edge(
-                            entity["unique_id"], relation["destination"], type="flat"
-                        )
+                    self._add_note_edge(entity, relation)
 
     def extract_subgraph(
         self, target_node: str, upstream_distance: int, downstream_distance: int

@@ -38,7 +38,7 @@ class ConvertPumlCode:
         """
         if page_title == "Requirement Diagram Viewer":
             return self._convert_requirements_to_uml(graph, title, parameters_dict)
-        elif page_title == "Strategy and Tactics Tree":
+        elif page_title == "Strategy and Tactics Tree Viewer":
             return self._convert_strategy_and_tactics(graph, title, parameters_dict)
         elif page_title == "Current Reality Tree Viewer":
             return self._convert_current_reality(graph, title, parameters_dict)
@@ -510,7 +510,11 @@ scale {scale}
 
     def _convert_card(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
         parameters = self._convert_parameters_dict(node, parameters_dict)
-        ret = f"""card {node[1]["unique_id"]} {parameters} [
+        if node[1]["color"] != "None":
+            color = color_to_archimate[node[1]["color"]]
+        else:
+            color = ""
+        ret = f"""card {node[1]["unique_id"]} {parameters} {color} [
 {node[1]["id"]}
 ---
 {node[1]["strategy"]}
