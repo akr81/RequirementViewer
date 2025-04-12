@@ -5,6 +5,7 @@ from src.utility import (
     load_config,
     load_source_data,
     load_app_data,
+    load_colors,
 )
 from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
@@ -117,6 +118,7 @@ def get_default_entity(entity_types: list[str]) -> dict:
         "id": "",
         "title": "",
         "text": "",
+        "color": "",
         "unique_id": f"{uuid.uuid4()}".replace("-", ""),
         "relations": [],
     }
@@ -135,6 +137,7 @@ config_data, demo = load_config()
 st.session_state.config_data = config_data
 app_data = load_app_data()
 st.session_state.app_data = app_data
+color_list = load_colors()
 
 # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
 if not ("www.plantuml.com" in config_data["plantuml"]):
@@ -223,6 +226,8 @@ with edit_column:
     st.write("## データ編集")
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
+    if "color" not in tmp_entity:
+        tmp_entity["color"] = "None"
 
     tmp_entity["type"] = st.selectbox(
         "エンティティタイプ",
@@ -232,6 +237,9 @@ with edit_column:
     tmp_entity["id"] = st.text_input("ID", tmp_entity["id"])
     tmp_entity["title"] = st.text_input("タイトル", tmp_entity["title"])
     tmp_entity["text"] = st.text_area("説明", tmp_entity["text"])
+    tmp_entity["color"] = st.selectbox(
+        "色", color_list, index=color_list.index(tmp_entity["color"])
+    )
 
     # テキストエリアでエンティティの詳細情報を入力
     # 関係は複数ありえるため、繰り返し表示させる

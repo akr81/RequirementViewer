@@ -217,7 +217,7 @@ scale {scale}
         if self.detail or self.debug:
             # Ignore () as method using {field}
             ret = (
-                f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters}"
+                f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color_to_archimate[data['color']]} "
                 + "{\n"
             )
 
