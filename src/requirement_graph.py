@@ -21,8 +21,24 @@ class RequirementGraph:
             self._convert_current_reality()
         elif title == "Process Flow Diagram Viewer":
             self._convert_process_flow()
+        elif title == "Evaporating Cloud Viewer":
+            self._convert_evaporating_cloud()
+        elif title == "Evaporating Cloud Viewer":
+            self._convert_evaporating_cloud()
         else:
             raise ValueError("Invalid title specified.")
+
+    def _convert_evaporating_cloud(self):
+        for entity in self.entities:
+            entity.setdefault("color", "None")  # colorがない場合はNoneを設定
+            self.graph.add_node(entity["unique_id"], **entity)
+            for relation in entity["relations"]:
+                relation.setdefault("type", "arrow")  # typeがない場合はarrowを設定
+                self.graph.add_edge(
+                    entity["unique_id"],
+                    relation["destination"],
+                    type=relation["type"],
+                )
 
     def _convert_strategy_and_tactics(self):
         for entity in self.entities:

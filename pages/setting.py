@@ -1,6 +1,7 @@
 import streamlit as st
 import hjson
 import datetime
+import shutil
 
 # Streamlit のレイアウトをワイドに設定
 st.set_page_config(layout="wide")
@@ -36,8 +37,12 @@ if create_new:
     now = datetime.datetime.now()
     file_path = now.strftime("%Y%m%d_%H%M%S") + f"_{postfix_new_file}.json"
 
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write("[]")
+    if st.session_state.app_name == "Evaporating Cloud Viewer":
+        # defaultファイルをコピー
+        shutil.copyfile("default/ec.json", file_path)
+    else:
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write("[]")
 
 if file_path is not None:
     # ファイルが選択された場合、configに保存

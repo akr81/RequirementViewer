@@ -8,4 +8,5 @@
     "strategy_and_tactics_data": "default/st.json",
     "current_reality_tree_data": "default/crt.json",
     "process_flow_diagram_data": "default/pfd.json",
+    "evaporating_cloud_data": "default/ec.json"
 }

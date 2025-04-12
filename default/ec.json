@@ -83,7 +83,7 @@
     }
     {
         id: right_hand_to_shoulder
-        title: ""
+        title: 仮定
         unique_id: right_hand_to_shoulder
         relations: []
         color: None

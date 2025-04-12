@@ -191,7 +191,12 @@ with edit_column:
     )
 
     add_operate_buttons(
-        tmp_entity, requirement_manager, file_path, id_title_dict, unique_id_dict
+        tmp_entity,
+        requirement_manager,
+        file_path,
+        id_title_dict,
+        unique_id_dict,
+        no_add=True,
     )
 
 # セッション状態にgraph_dataを追加

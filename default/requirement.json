@@ -373,12 +373,16 @@
         relations:
         [
             {
-                note: {}
+                note:
+                {
+                    type: None
+                    text: ""
+                }
                 type: deriveReqt
                 destination: b1295dab53bd4752884ae7dd2652d6fc
             }
         ]
-        color: None
+        color: Gray
     }
     {
         type: functionalRequirement
@@ -431,15 +435,23 @@
             {
                 type: deriveReqt
                 destination: 4d83a3d3d26d462d940e14dedc68597b
-                note: {}
+                note:
+                {
+                    type: None
+                    text: ""
+                }
             }
             {
                 type: deriveReqt
                 destination: b1295dab53bd4752884ae7dd2652d6fc
-                note: {}
+                note:
+                {
+                    type: None
+                    text: ""
+                }
             }
         ]
-        color: None
+        color: Purple
     }
     {
         type: functionalRequirement

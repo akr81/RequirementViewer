@@ -42,6 +42,8 @@ class ConvertPumlCode:
             return self._convert_current_reality(graph, title, parameters_dict)
         elif page_title == "Process Flow Diagram Viewer":
             return self._convert_process_flow_diagram(graph, title, parameters_dict)
+        elif page_title == "Evaporating Cloud Viewer":
+            return self._convert_evaporating_cloud(graph, title, parameters_dict)
         else:
             raise ValueError("Invalid title specified.")
 
@@ -169,6 +171,56 @@ scale {scale}
             else:
                 ret += f"&{key}={value}"
         ret += f"&selected={node[1]['unique_id']}]]"
+        return ret
+
+    def _convert_evaporating_cloud(
+        self, graph: nx.DiGraph, _: str, parameters_dict: Dict
+    ) -> str:
+        scale = parameters_dict.get("scale", 1.0)
+
+        ret = self._add_common_parameter_setting(scale, ortho=False)
+
+        # Convert all nodes
+        for node in graph.nodes(data=True):
+            ret += self._convert_evaporating_cloud_card(node, parameters_dict) + "\n"
+
+        # Convert edges
+        for edge in graph.edges(data=True):
+            ret += self._convert_card_edge(edge) + "\n"
+
+        # conflict
+        ret += """
+left_hand <=> right_hand #red
+left_shoulder <=> right_shoulder #red
+left_shoulder <.. right_hand #blue
+right_shoulder <.. left_hand #blue
+left_hand .. left_hand_note
+right_hand .. right_hand_note
+left_hand_to_shoulder .r. left_shoulder
+left_hand_to_shoulder .. left_hand
+right_hand_to_shoulder .l. right_shoulder
+right_hand_to_shoulder .. right_hand
+left_shoulder_to_head .r. head
+left_shoulder_to_head .. left_shoulder
+right_shoulder_to_head .l. head
+right_shoulder_to_head .. right_shoulder
+"""
+
+        ret += "\n}\n@enduml\n"
+        return ret
+
+    def _convert_evaporating_cloud_card(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        parameters = self._convert_parameters_dict(node, parameters_dict)
+        if node[1]["color"] != "None":
+            color = color_to_archimate[node[1]["color"]]
+        else:
+            color = ""
+        ret = f"""card {node[1]["unique_id"]} {parameters} {color} [
+{node[1]["title"]}
+]
+"""
         return ret
 
     def _convert_requirement_node(

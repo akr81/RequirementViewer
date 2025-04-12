@@ -3,22 +3,28 @@ from src.utility import update_source_data
 
 
 def add_operate_buttons(
-    tmp_entity, requirement_manager, file_path, id_title_dict, unique_id_dict
+    tmp_entity,
+    requirement_manager,
+    file_path,
+    id_title_dict,
+    unique_id_dict,
+    no_add=False,
 ):
     _, add_button_column, update_button_column, remove_button_column = st.columns(
         [2, 1, 1, 1]
     )
     with add_button_column:
-        # 追加ボタンを表示
-        if st.button("追加"):
-            if (tmp_entity["id"]) in id_title_dict:
-                st.error("IDが既存のエンティティと重複しています。")
-            else:
-                added_id = requirement_manager.add(tmp_entity)
-                update_source_data(file_path, requirement_manager.requirements)
-                st.write("エンティティを追加しました。")
-                st.query_params.selected = added_id
-                st.rerun()
+        if not no_add:
+            # 追加ボタンを表示
+            if st.button("追加"):
+                if (tmp_entity["id"]) in id_title_dict:
+                    st.error("IDが既存のエンティティと重複しています。")
+                else:
+                    added_id = requirement_manager.add(tmp_entity)
+                    update_source_data(file_path, requirement_manager.requirements)
+                    st.write("エンティティを追加しました。")
+                    st.query_params.selected = added_id
+                    st.rerun()
     with update_button_column:
         # 更新ボタンを表示
         if st.button("更新"):

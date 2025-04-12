@@ -14,5 +14,9 @@
     "Process Flow Diagram Viewer": {
         "data": "process_flow_diagram_data",
         "postfix": "pfd"
+    },
+    "Evaporating Cloud Viewer": {
+        "data": "evaporating_cloud_data",
+        "postfix": "ec"
     }
 }
