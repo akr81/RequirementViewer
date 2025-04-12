@@ -1,0 +1,10 @@
+{
+    None: "None"
+    Blue: "#application"
+    Yellow: "#business"
+    Red: "#implementation"
+    Green: "#technology"
+    Orange: "#strategy"
+    Purple: "#motivation"
+    Gray: "#gray"
+}

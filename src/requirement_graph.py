@@ -13,7 +13,7 @@ class RequirementGraph:
         self.subgraph = nx.DiGraph()
 
         # グラフの構築
-        if title == "Requirement Diagram":
+        if title == "Requirement Diagram Viewer":
             self._convert_requirements()
         elif title == "Strategy and Tactics Tree":
             self._convert_strategy_and_tactics()

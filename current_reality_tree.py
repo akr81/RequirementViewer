@@ -5,6 +5,7 @@ from src.utility import (
     load_config,
     load_source_data,
     load_app_data,
+    load_colors,
 )
 from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
@@ -109,15 +110,7 @@ def get_default_entity() -> dict:
 
 entity_list = ["entity", "note"]
 
-color_list = [
-    "None",
-    "Blue",
-    "Yellow",
-    "Red",
-    "Green",
-    "Orange",
-    "Purple",
-]
+color_list = load_colors()
 
 st.session_state.app_name = "Current Reality Tree Viewer"
 
@@ -148,7 +141,8 @@ if "current_reality_tree_data" not in config_data:
         settingからファイルを設定してください。"""
     )
     st.stop()
-file_path = config_data["current_reality_tree_data"]
+data_key = st.session_state.app_data[st.session_state.app_name]["data"]
+file_path = config_data[data_key]
 
 requirement_data = load_source_data(file_path)
 requirement_manager = RequirementManager(requirement_data)

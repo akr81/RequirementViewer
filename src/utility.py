@@ -89,6 +89,17 @@ def get_diagram(plantuml_code: str, plantuml_server: str) -> str:
         return ""
 
 
+def load_colors() -> list:
+    """Load colors from JSON file.
+
+    Returns:
+        list: List of colors
+    """
+    with open("setting/colors.json", "r", encoding="utf-8") as f:
+        colors = hjson.load(f)
+    return list(colors.keys())
+
+
 def load_config() -> Tuple[dict, bool]:
     """Load config from JSON file.
 

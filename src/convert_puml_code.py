@@ -2,15 +2,10 @@ from typing import Dict, List, Tuple, Any
 import networkx as nx
 import re
 import unicodedata
+import hjson
 
-color_to_archimate = {
-    "Blue": "#application",
-    "Yellow": "#business",
-    "Red": "#implementation",
-    "Green": "#technology",
-    "Orange": "#strategy",
-    "Purple": "#motivation",
-}
+with open("setting/colors.json", "r", encoding="utf-8") as f:
+    color_to_archimate = hjson.load(f)
 
 
 class ConvertPumlCode:
@@ -41,7 +36,7 @@ class ConvertPumlCode:
         Returns:
             str: PlantUML code
         """
-        if page_title == "Requirement Diagram":
+        if page_title == "Requirement Diagram Viewer":
             return self._convert_requirements_to_uml(graph, title, parameters_dict)
         elif page_title == "Strategy and Tactics Tree":
             return self._convert_strategy_and_tactics(graph, title, parameters_dict)
