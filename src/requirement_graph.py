@@ -44,13 +44,7 @@ class RequirementGraph:
 
     def _convert_process_flow(self):
         for entity in self.entities:
-            self.graph.add_node(
-                entity["unique_id"],
-                id=entity["id"],
-                unique_id=entity["unique_id"],
-                type=entity["type"],
-                color=entity["color"],
-            )
+            self.graph.add_node(entity["unique_id"], **entity)
             for relation in entity["relations"]:
                 relation.setdefault("type", "arrow")  # typeがない場合はarrowを設定
                 if entity["type"] == "note":
