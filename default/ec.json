@@ -1,0 +1,114 @@
+[
+    {
+        id: head
+        title: 共通目的
+        unique_id: head
+        relations: []
+        color: None
+        type: entity
+    }
+    {
+        id: left_hand
+        title: 行動
+        unique_id: left_hand
+        relations:
+        [
+            {
+                destination: left_shoulder
+                type: arrow
+            }
+        ]
+        color: None
+        type: entity
+    }
+    {
+        id: left_hand_note
+        title: 仮定
+        unique_id: left_hand_note
+        relations: []
+        color: None
+        type: note
+    }
+    {
+        id: left_hand_to_shoulder
+        title: 仮定
+        unique_id: left_hand_to_shoulder
+        relations: []
+        color: None
+        type: note
+    }
+    {
+        id: left_shoulder
+        title: 要望
+        unique_id: left_shoulder
+        relations:
+        [
+            {
+                destination: head
+                type: arrow
+            }
+        ]
+        color: None
+        type: entity
+    }
+    {
+        id: left_shoulder_to_head
+        title: 仮定
+        unique_id: left_shoulder_to_head
+        relations: []
+        color: None
+        type: note
+    }
+    {
+        id: right_hand
+        title: 行動
+        unique_id: right_hand
+        relations:
+        [
+            {
+                destination: right_shoulder
+                type: arrow
+            }
+        ]
+        color: None
+        type: entity
+    }
+    {
+        id: right_hand_note
+        title: 仮定
+        unique_id: right_hand_note
+        relations: []
+        color: None
+        type: note
+    }
+    {
+        id: right_hand_to_shoulder
+        title: ""
+        unique_id: right_hand_to_shoulder
+        relations: []
+        color: None
+        type: note
+    }
+    {
+        id: right_shoulder
+        title: 要望
+        unique_id: right_shoulder
+        relations:
+        [
+            {
+                destination: head
+                type: arrow
+            }
+        ]
+        color: None
+        type: entity
+    }
+    {
+        id: right_shoulder_to_head
+        title: 仮定
+        unique_id: right_shoulder_to_head
+        relations: []
+        color: None
+        type: note
+    }
+]
