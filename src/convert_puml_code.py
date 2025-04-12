@@ -19,8 +19,6 @@ class ConvertPumlCode:
         """
         self.detail = config["detail"]
         self.debug = config["debug"]
-        self.width = config["width"]
-        self.left_to_right = config["left_to_right"]
 
     def convert_to_puml(
         self, page_title: str, graph: nx.DiGraph, title: str, parameters_dict: Dict
@@ -37,13 +35,13 @@ class ConvertPumlCode:
             str: PlantUML code
         """
         if page_title == "Requirement Diagram Viewer":
-            return self._convert_requirements_to_uml(graph, title, parameters_dict)
+            return self._convert_requirement_diagram(graph, title, parameters_dict)
         elif page_title == "Strategy and Tactics Tree Viewer":
             return self._convert_strategy_and_tactics(graph, title, parameters_dict)
         elif page_title == "Current Reality Tree Viewer":
             return self._convert_current_reality(graph, title, parameters_dict)
         elif page_title == "Process Flow Diagram Viewer":
-            return self._convert_process_flow(graph, title, parameters_dict)
+            return self._convert_process_flow_diagram(graph, title, parameters_dict)
         else:
             raise ValueError("Invalid title specified.")
 
@@ -110,7 +108,7 @@ allowmixing
 scale {scale}
 """
 
-    def _convert_requirements_to_uml(
+    def _convert_requirement_diagram(
         self, graph: nx.DiGraph, title: str, parameters_dict: Dict
     ) -> str:
         """Convert requirement graph to PlantUML code.
@@ -121,8 +119,8 @@ scale {scale}
             title (str): Title of diagram.
             parameters_dict (Dict): Parameters for link.
         """
+        # Draw package as frame
         target = parameters_dict.get("target", None)
-        scale = parameters_dict.get("scale", 1.0)
         if not title:
             if target == None or target == "None":
                 title = '"req Requirements [all]"'
@@ -132,29 +130,20 @@ scale {scale}
         else:
             title = f'"req {title}"'
 
+        # Add common parameter setting
+        scale = parameters_dict.get("scale", 1.0)
         ret = self._add_common_parameter_setting(scale)
 
-        if self.left_to_right:
-            ret += "left to right direction\n"
-
         # Add title as package
-        # req Title [setting]
         ret += f"package {title} <<Frame>> " + "{\n"
-
-        # Convert nodes other than orphan
-        # for node in graph.nodes(data=True):
-        #     if node[0] not in nx.isolates(graph):
-        #         ret += self._convert_node(node) + "\n"
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            ret += self._convert_node(node, parameters_dict) + "\n"
+            ret += self._convert_requirement_node(node, parameters_dict) + "\n"
 
         # Convert edges
         for edge in graph.edges(data=True):
-            ret += self._convert_edge(edge) + "\n"
-            # if "note" in edge[2] and edge[2]["note"] != "":
-            #     ret += self._convert_note_edge(edge[2]["note"], graph.nodes(data=True))
+            ret += self._convert_requirement_edge(edge) + "\n"
 
         ret += "\n}\n@enduml\n"
         return ret
@@ -182,8 +171,10 @@ scale {scale}
         ret += f"&selected={node[1]['unique_id']}]]"
         return ret
 
-    def _convert_node(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
-        """Convert node information to PlantUML code.
+    def _convert_requirement_node(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        """Convert requirement node information to PlantUML code.
 
         Args:
             node (Tuple[str, Dict]): Node information.
@@ -212,7 +203,9 @@ scale {scale}
         elif type == "rationale" or type == "problem":
             ret = self._convert_note_entity(attr)
         else:
-            raise ValueError(f"No implement error: Unknown type specified: {type}")
+            raise ValueError(
+                f"No convert rule defined error: Unknown type specified: {type}"
+            )
 
         return ret
 
@@ -227,10 +220,7 @@ scale {scale}
         """
         # For PlantUML, the "usecase" entity cannot used on class diagram
         title = data["title"]
-        if self.debug:
-            ret = f"usecase \"unique_id=\"{data['unique_id']}\"\\n{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<usecase>>"
-        else:
-            ret = f"usecase \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<usecase>>"
+        ret = f"usecase \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<usecase>>"
         return ret
 
     def _convert_requirement(
@@ -252,20 +242,15 @@ scale {scale}
         if color == "None":
             color = ""
 
-        if self.detail or self.debug:
-            # Ignore () as method using {field}
-            ret = (
-                f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color} "
-                + "{\n"
-            )
+        # Ignore () as method using {field}
+        ret = (
+            f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color} "
+            + "{\n"
+        )
 
-            if self.debug:
-                ret += "{field}" + f"unique_id=\"{data['unique_id']}\"\n"
-            ret += "{field}" + f"id=\"{data['id']}\"\n"
-            ret += "{field}" + f'text="{text}"\n'
-            ret += "}\n"
-        else:
-            ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<requirement>>"
+        ret += "{field}" + f"id=\"{data['id']}\"\n"
+        ret += "{field}" + f'text="{text}"\n'
+        ret += "}\n"
         return ret
 
     def _convert_block(self, data: Dict[str, Any], type: str, parameters: str) -> str:
@@ -280,10 +265,7 @@ scale {scale}
             str: PlantUML code
         """
         title = data["title"]
-        if self.debug:
-            ret = f"class \"unique_id=\"{data['unique_id']}\"\\n{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> {parameters}"
-        else:
-            ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> {parameters}"
+        ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> {parameters}"
         return ret
 
     def _convert_note_entity(self, data: Dict[str, Any]) -> str:
@@ -302,12 +284,9 @@ scale {scale}
         else:
             string = data["text"]
 
-        string = string.replace("\\n", "\n")
         ret = ""
         ret += f"note as {data['unique_id']}\n"
         ret += f"<<{data['type']}>>\n"
-        if self.debug:
-            ret += f"unique_id=\"{data['unique_id']}\"\n"
         ret += f"{string}\n"
         ret += f"end note\n"
 
@@ -328,7 +307,7 @@ scale {scale}
         else:
             return f"{title}"
 
-    def _convert_edge(self, data: Dict[str, Any]):
+    def _convert_requirement_edge(self, data: Dict[str, Any]):
         """Return relationship string
 
         Args:
@@ -339,25 +318,25 @@ scale {scale}
         """
         src = data[0]
         dst = data[1]
-        kind = data[2]["type"]
+        type = data[2]["type"]
         note = data[2]["note"]
         ret = ""
-        if kind == "containment":
+        if type == "containment":
             ret = f"{dst} +-- {src}"
         elif (
-            kind == "refine"
-            or kind == "deriveReqt"
-            or kind == "satisfy"
-            or kind == "verify"
-            or kind == "copy"
-            or kind == "trace"
+            type == "refine"
+            or type == "deriveReqt"
+            or type == "satisfy"
+            or type == "verify"
+            or type == "copy"
+            or type == "trace"
         ):
-            ret = f"{dst} <.. {src}: <<{kind}>>"
-        elif kind == "problem" or kind == "rationale":
+            ret = f"{dst} <.. {src}: <<{type}>>"
+        elif type == "problem" or type == "rationale":
             # For rationale and problem (entity) only
             ret = f"{dst} .. {src}"
         else:
-            raise ValueError(f"No implement exist for relation kind: {kind}")
+            raise ValueError(f"No implement exist for relation type: {type}")
 
         if note and note["text"] != "":
             ret += "\n"
@@ -514,20 +493,18 @@ end note
 
         return ret
 
-    def _convert_process_flow(
-        self, graph: nx.DiGraph, title: str, parameters_dict: Dict
+    def _convert_process_flow_diagram(
+        self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
         """Convert graph to process_flow diagram as PlantUML code string.
 
         Args:
             graph (nx.DiGraph): Graph of requirements.
-            title (str): Title of diagram.
             parameters_dict (Dict): Parameters for link.
 
         Returns:
             str: PlantUML code
         """
-        target = parameters_dict.get("target", None)
         scale = parameters_dict.get("scale", 1.0)
 
         ret = self._add_common_parameter_setting(scale, ortho=False, sep=20)
