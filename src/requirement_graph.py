@@ -69,15 +69,7 @@ class RequirementGraph:
         """Convert requirements to graph."""
         for entity in self.entities:
             entity.setdefault("color", "None")  # colorがない場合はNoneを設定
-            self.graph.add_node(
-                entity["unique_id"],
-                id=entity["id"],
-                title=entity["title"],
-                text=entity["text"],
-                unique_id=entity["unique_id"],
-                type=entity["type"],
-                color=entity["color"],
-            )
+            self.graph.add_node(entity["unique_id"], **entity)
             for relation in entity["relations"]:
                 self.graph.add_edge(
                     entity["unique_id"],

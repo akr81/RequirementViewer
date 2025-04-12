@@ -213,11 +213,14 @@ scale {scale}
         """
         title = self._insert_newline(data["title"])
         text = self._insert_newline(data["text"])
+        color = color_to_archimate[data["color"]]
+        if color == "None":
+            color = ""
 
         if self.detail or self.debug:
             # Ignore () as method using {field}
             ret = (
-                f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color_to_archimate[data['color']]} "
+                f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color} "
                 + "{\n"
             )
 

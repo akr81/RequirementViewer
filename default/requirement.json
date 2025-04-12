@@ -17,6 +17,7 @@
                 destination: e9686305464946cfaa909521aabc529e
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -32,6 +33,7 @@
                 destination: 8e5c01ac216d47f4a34ccd30e9d14a63
             }
         ]
+        color: None
     }
     {
         type: block
@@ -47,6 +49,7 @@
                 destination: c3ab04141a89444e935a2957124ea6f0
             }
         ]
+        color: None
     }
     {
         type: block
@@ -79,6 +82,7 @@
                 }
             }
         ]
+        color: None
     }
     {
         type: block
@@ -107,6 +111,7 @@
                 destination: 63a8022d3d8345abb262869d0428dfe5
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -127,6 +132,7 @@
                 destination: 2f2602c820b74b01912eeda59bf29eb8
             }
         ]
+        color: None
     }
     {
         type: block
@@ -142,6 +148,7 @@
                 destination: 991267c83e4542229c5b1747573d8ee2
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -162,6 +169,7 @@
                 destination: b1295dab53bd4752884ae7dd2652d6fc
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -181,6 +189,7 @@
                 destination: 8e5c01ac216d47f4a34ccd30e9d14a63
             }
         ]
+        color: None
     }
     {
         type: designConstraint
@@ -195,6 +204,7 @@
             '''
         unique_id: 63a8022d3d8345abb262869d0428dfe5
         relations: []
+        color: None
     }
     {
         type: functionalRequirement
@@ -210,6 +220,7 @@
                 destination: 2f2602c820b74b01912eeda59bf29eb8
             }
         ]
+        color: None
     }
     {
         type: testCase
@@ -242,6 +253,7 @@
                 }
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -261,6 +273,7 @@
                 destination: 2f2602c820b74b01912eeda59bf29eb8
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -269,6 +282,7 @@
         text: 要求図を表示し、必要に応じて編集することができる
         unique_id: 8e5c01ac216d47f4a34ccd30e9d14a63
         relations: []
+        color: None
     }
     {
         type: functionalRequirement
@@ -284,6 +298,7 @@
                 destination: b1295dab53bd4752884ae7dd2652d6fc
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -299,6 +314,7 @@
                 destination: b1295dab53bd4752884ae7dd2652d6fc
             }
         ]
+        color: None
     }
     {
         type: block
@@ -314,6 +330,7 @@
                 destination: 9f8e301729024e918fad55461a6851b4
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -329,6 +346,7 @@
                 destination: 2f2602c820b74b01912eeda59bf29eb8
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -344,6 +362,7 @@
                 destination: e6b49da21d2042f383bfcdc3d132c5bb
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -359,6 +378,7 @@
                 destination: b1295dab53bd4752884ae7dd2652d6fc
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -374,6 +394,7 @@
                 destination: 8e5c01ac216d47f4a34ccd30e9d14a63
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -397,6 +418,7 @@
                 destination: e9686305464946cfaa909521aabc529e
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -417,6 +439,7 @@
                 note: {}
             }
         ]
+        color: None
     }
     {
         type: functionalRequirement
@@ -441,6 +464,7 @@
                 destination: 6f35dead4e74439e85acd6f1ae20e8d2
             }
         ]
+        color: None
     }
     {
         type: block
@@ -461,6 +485,7 @@
                 destination: b1295dab53bd4752884ae7dd2652d6fc
             }
         ]
+        color: None
     }
     {
         type: block
@@ -484,5 +509,6 @@
                 destination: e9686305464946cfaa909521aabc529e
             }
         ]
+        color: None
     }
 ]

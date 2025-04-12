@@ -118,7 +118,7 @@ def get_default_entity(entity_types: list[str]) -> dict:
         "id": "",
         "title": "",
         "text": "",
-        "color": "",
+        "color": "None",
         "unique_id": f"{uuid.uuid4()}".replace("-", ""),
         "relations": [],
     }
@@ -226,7 +226,8 @@ with edit_column:
     st.write("## データ編集")
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
-    if "color" not in tmp_entity:
+    print(tmp_entity)
+    if "color" not in tmp_entity or tmp_entity["color"] == "":
         tmp_entity["color"] = "None"
 
     tmp_entity["type"] = st.selectbox(
