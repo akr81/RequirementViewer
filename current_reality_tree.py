@@ -4,6 +4,7 @@ from src.utility import (
     start_plantuml_server,
     load_config,
     load_source_data,
+    load_app_data,
 )
 from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
@@ -118,15 +119,19 @@ color_list = [
     "Purple",
 ]
 
+st.session_state.app_name = "Current Reality Tree Viewer"
 
 st.set_page_config(
     layout="wide",
-    page_title="Current Reality Tree Viewer",
+    page_title=st.session_state.app_name,
     initial_sidebar_state="collapsed",  # サイドバーを閉じた状態で表示
 )
 
 # Configファイルを読み込む
 config_data, demo = load_config()
+st.session_state.config_data = config_data
+app_data = load_app_data()
+st.session_state.app_data = app_data
 
 # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
 if not ("www.plantuml.com" in config_data["plantuml"]):
@@ -135,7 +140,14 @@ if not ("www.plantuml.com" in config_data["plantuml"]):
 
 
 if demo:
-    st.title("Current Reality Tree Viewer")
+    st.title(st.session_state.app_name)
+
+if "current_reality_tree_data" not in config_data:
+    st.error(
+        """設定ファイルにデータファイル設定がありません。
+        settingからファイルを設定してください。"""
+    )
+    st.stop()
 file_path = config_data["current_reality_tree_data"]
 
 requirement_data = load_source_data(file_path)
@@ -185,7 +197,7 @@ if not selected_entity:
 diagram_column, edit_column = st.columns([4, 1])
 
 graph_data, plantuml_code = draw_diagram_column(
-    "Current Reality Tree",
+    st.session_state.app_name,
     diagram_column,
     unique_id_dict,
     id_title_dict,

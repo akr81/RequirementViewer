@@ -45,7 +45,7 @@ class ConvertPumlCode:
             return self._convert_requirements_to_uml(graph, title, parameters_dict)
         elif page_title == "Strategy and Tactics Tree":
             return self._convert_strategy_and_tactics(graph, title, parameters_dict)
-        elif page_title == "Current Reality Tree":
+        elif page_title == "Current Reality Tree Viewer":
             return self._convert_current_reality(graph, title, parameters_dict)
         elif page_title == "Process Flow Diagram":
             return self._convert_process_flow(graph, title, parameters_dict)

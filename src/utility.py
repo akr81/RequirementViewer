@@ -89,7 +89,6 @@ def get_diagram(plantuml_code: str, plantuml_server: str) -> str:
         return ""
 
 
-@st.cache_data
 def load_config() -> Tuple[dict, bool]:
     """Load config from JSON file.
 
@@ -105,6 +104,17 @@ def load_config() -> Tuple[dict, bool]:
     with open(config_file, "r", encoding="utf-8") as f:
         config = hjson.load(f)
     return config, demo
+
+
+def load_app_data() -> dict:
+    """Load app_data from JSON file.
+
+    Returns:
+        dict: Config dictionary
+    """
+    with open("setting/app_data.json", "r", encoding="utf-8") as f:
+        app_data = hjson.load(f)
+    return app_data
 
 
 def load_source_data(file_path: str) -> list[dict]:

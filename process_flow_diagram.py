@@ -140,8 +140,23 @@ if not ("www.plantuml.com" in config_data["plantuml"]):
 
 if demo:
     st.title("Process Flow Diagram Viewer")
-file_path = config_data["process_flow_diagram_data"]
 
+if "file_path" not in st.session_state:
+    file_path = st.file_uploader(
+        "ファイル読み込み・アップロード", type=["json", "hjson"]
+    )
+    create_new = st.button("新規ファイル作成")
+    if create_new:
+        # ファイルが選択された場合、セッション状態に保存
+        file_path = "20240112_crt.json"
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write("[]")
+
+    st.session_state.file_path = file_path
+
+
+# file_path = config_data["process_flow_diagram_data"]
+file_path = st.session_state.file_path
 requirement_data = load_source_data(file_path)
 requirement_manager = RequirementManager(requirement_data)
 

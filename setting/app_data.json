@@ -1,0 +1,18 @@
+{
+    "Requirement Diagram Viewer": {
+        "data": "requirement_data",
+        "postfix": "req"
+    },
+    "S&T Tree Viewer": {
+        "data": "strategy_and_tactics_data",
+        "postfix": "stt"
+    },
+    "Current Reality Tree Viewer": {
+        "data": "current_reality_tree_data",
+        "postfix": "crt"
+    },
+    "Process Flow Diagram Viewer": {
+        "data": "process_flow_diagram_data",
+        "postfix": "pfd"
+    }
+}

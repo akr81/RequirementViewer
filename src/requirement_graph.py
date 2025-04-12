@@ -17,7 +17,7 @@ class RequirementGraph:
             self._convert_requirements()
         elif title == "Strategy and Tactics Tree":
             self._convert_strategy_and_tactics()
-        elif title == "Current Reality Tree":
+        elif title == "Current Reality Tree Viewer":
             self._convert_current_reality()
         elif title == "Process Flow Diagram":
             self._convert_process_flow()
