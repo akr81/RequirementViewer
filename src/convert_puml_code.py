@@ -42,7 +42,7 @@ class ConvertPumlCode:
             return self._convert_strategy_and_tactics(graph, title, parameters_dict)
         elif page_title == "Current Reality Tree Viewer":
             return self._convert_current_reality(graph, title, parameters_dict)
-        elif page_title == "Process Flow Diagram":
+        elif page_title == "Process Flow Diagram Viewer":
             return self._convert_process_flow(graph, title, parameters_dict)
         else:
             raise ValueError("Invalid title specified.")
@@ -602,7 +602,11 @@ scale {scale}
         else:
             color = ""
 
-        if "type" not in node[1] or node[1]["type"] == "card":
+        if (
+            "type" not in node[1]
+            or node[1]["type"] == "card"
+            or node[1]["type"] == "deliverable"
+        ):
             ret = f"""card {node[1]["unique_id"]} {parameters} {color} [
 {node[1]["id"]}
 ]

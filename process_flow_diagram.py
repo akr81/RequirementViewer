@@ -4,6 +4,8 @@ from src.utility import (
     start_plantuml_server,
     load_config,
     load_source_data,
+    load_app_data,
+    load_colors,
 )
 from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
@@ -107,30 +109,23 @@ def get_default_entity() -> dict:
     }
 
 
-color_list = [
-    "None",
-    "Blue",
-    "Yellow",
-    "Red",
-    "Green",
-    "Orange",
-    "Purple",
-]
+pfd_type_list = ["deliverable", "process", "note"]
 
-pfd_type_list = [
-    "deliverable",
-    "process",
-]
+color_list = load_colors()
 
+st.session_state.app_name = "Process Flow Diagram Viewer"
 
 st.set_page_config(
     layout="wide",
-    page_title="Process Flow Diagram Viewer",
+    page_title=st.session_state.app_name,
     initial_sidebar_state="collapsed",  # サイドバーを閉じた状態で表示
 )
 
 # Configファイルを読み込む
 config_data, demo = load_config()
+st.session_state.config_data = config_data
+app_data = load_app_data()
+st.session_state.app_data = app_data
 
 # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
 if not ("www.plantuml.com" in config_data["plantuml"]):
@@ -139,24 +134,18 @@ if not ("www.plantuml.com" in config_data["plantuml"]):
 
 
 if demo:
-    st.title("Process Flow Diagram Viewer")
+    st.title(st.session_state.app_name)
 
-if "file_path" not in st.session_state:
-    file_path = st.file_uploader(
-        "ファイル読み込み・アップロード", type=["json", "hjson"]
+
+if "process_flow_diagram_data" not in config_data:
+    st.error(
+        """設定ファイルにデータファイル設定がありません。
+        settingからファイルを設定してください。"""
     )
-    create_new = st.button("新規ファイル作成")
-    if create_new:
-        # ファイルが選択された場合、セッション状態に保存
-        file_path = "20240112_crt.json"
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write("[]")
+    st.stop()
 
-    st.session_state.file_path = file_path
-
-
-# file_path = config_data["process_flow_diagram_data"]
-file_path = st.session_state.file_path
+data_key = st.session_state.app_data[st.session_state.app_name]["data"]
+file_path = config_data[data_key]
 requirement_data = load_source_data(file_path)
 requirement_manager = RequirementManager(requirement_data)
 
@@ -204,7 +193,7 @@ if not selected_entity:
 diagram_column, edit_column = st.columns([4, 1])
 
 graph_data, plantuml_code = draw_diagram_column(
-    "Process Flow Diagram",
+    st.session_state.app_name,
     diagram_column,
     unique_id_dict,
     id_title_dict,

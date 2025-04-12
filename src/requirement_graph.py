@@ -19,7 +19,7 @@ class RequirementGraph:
             self._convert_strategy_and_tactics()
         elif title == "Current Reality Tree Viewer":
             self._convert_current_reality()
-        elif title == "Process Flow Diagram":
+        elif title == "Process Flow Diagram Viewer":
             self._convert_process_flow()
         else:
             raise ValueError("Invalid title specified.")
@@ -52,10 +52,24 @@ class RequirementGraph:
                 color=entity["color"],
             )
             for relation in entity["relations"]:
-                self.graph.add_edge(
-                    entity["unique_id"],
-                    relation["destination"],
-                )
+                relation.setdefault("type", "arrow")  # typeがない場合はarrowを設定
+                if entity["type"] == "note":
+                    if len(entity["relations"]) > 1:
+                        self.graph.add_edge(
+                            entity["unique_id"],
+                            relation["destination"],
+                            type="flat_long",
+                        )
+                    else:
+                        self.graph.add_edge(
+                            entity["unique_id"], relation["destination"], type="flat"
+                        )
+                else:
+                    self.graph.add_edge(
+                        entity["unique_id"],
+                        relation["destination"],
+                        type=relation["type"],
+                    )
 
     def _convert_requirements(self):
         """Convert requirements to graph."""
