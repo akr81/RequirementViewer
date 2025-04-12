@@ -226,7 +226,7 @@ scale {scale}
             str: PlantUML code
         """
         # For PlantUML, the "usecase" entity cannot used on class diagram
-        title = self._insert_newline(data["title"])
+        title = data["title"]
         if self.debug:
             ret = f"usecase \"unique_id=\"{data['unique_id']}\"\\n{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<usecase>>"
         else:
@@ -246,8 +246,8 @@ scale {scale}
         Returns:
             str: PlantUML code
         """
-        title = self._insert_newline(data["title"])
-        text = self._insert_newline(data["text"])
+        title = data["title"]
+        text = data["text"]
         color = color_to_archimate[data["color"]]
         if color == "None":
             color = ""
@@ -279,7 +279,7 @@ scale {scale}
         Returns:
             str: PlantUML code
         """
-        title = self._insert_newline(data["title"])
+        title = data["title"]
         if self.debug:
             ret = f"class \"unique_id=\"{data['unique_id']}\"\\n{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> {parameters}"
         else:
@@ -302,7 +302,6 @@ scale {scale}
         else:
             string = data["text"]
 
-        string = self._insert_newline(string)
         string = string.replace("\\n", "\n")
         ret = ""
         ret += f"note as {data['unique_id']}\n"
@@ -388,7 +387,6 @@ scale {scale}
                 else:
                     string = node[1]["text"]
 
-                string = self._insert_newline(string)
                 string = string.replace("\\n", "\n")
 
                 ret = ""
@@ -399,99 +397,6 @@ scale {scale}
                 ret += f"{string}\n"
                 ret += f"end note\n"
         return ret
-
-    def _insert_newline(self, string: str) -> str:
-        """Insert newline to long string to save width
-
-        Args:
-            string (str): long string
-
-        Returns:
-            str: inserted string
-        """
-        char_list = list(string)
-        english_flag = True
-        for char in char_list:
-            if unicodedata.east_asian_width(char) == "W":
-                # Japanese char exist
-                english_flag = False
-                break
-
-        # Convert link to plantuml
-        string = self._convert_link(string)
-        string, stored = self._replace_link(string, "$")
-
-        if english_flag:
-            # For English text
-            words = string.split(" ")
-            string = ""
-            temp_string = ""
-            for _ in range(len(words)):
-                word = words.pop(0)
-                temp_string += word + " "
-                if len(temp_string) > self.width:
-                    string += temp_string.strip() + "\\n"
-                    temp_string = ""
-            string += temp_string.strip()
-        else:
-            # For Japanese text
-            index_list = sorted(
-                list(range(0, len(string), int(self.width * 0.66))), reverse=True
-            )
-            string_as_list = list(string)
-            for index in index_list:
-                if index == 0:
-                    break
-                else:
-                    string_as_list.insert(index, "\\n")
-            string = "".join(string_as_list)
-
-        # Return unique char to link
-        for link in stored:
-            string = string.replace("$", link, 1)
-
-        return string
-
-    def _convert_link(self, string: str) -> str:
-        """Convert markdown type link to PlantUML type link.
-
-        Args:
-            string (str): String possibly include link.
-
-        Returns:
-            str: Converted string
-        """
-        for _ in range(100):
-            matched = re.findall(r".*(\[.*\]\(.*\)).*", string)
-            if matched:
-                target = matched[0]
-                target_matched = re.findall(r"\[(.*)\]\((.*)\)", target)
-                string = string.replace(
-                    target, f"[[{target_matched[0][1]} {target_matched[0][0]}]]"
-                )
-            else:
-                break
-        return string
-
-    def _replace_link(self, string: str, unique: str = "$") -> Tuple[str, List[str]]:
-        """Replace PlantUML type link to unique char.
-
-        Args:
-            string (str): String possibly include link.
-
-        Returns:
-            str: Converted string
-        """
-        stored = []
-        for _ in range(100):
-            matched = re.findall(r".*(\[\[.*\]\]).*", string)
-            if matched:
-                target = matched[0]
-                stored.append(target)
-                string = string.replace(target, unique)
-            else:
-                break
-        return string, stored
 
     def _convert_strategy_and_tactics(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
