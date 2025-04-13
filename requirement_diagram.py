@@ -226,7 +226,6 @@ with edit_column:
     st.write("## データ編集")
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
-    print(tmp_entity)
     if "color" not in tmp_entity or tmp_entity["color"] == "":
         tmp_entity["color"] = "None"
 

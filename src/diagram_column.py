@@ -2,6 +2,7 @@ import streamlit as st
 from src.utility import get_diagram
 from src.requirement_graph import RequirementGraph
 from src.convert_puml_code import ConvertPumlCode
+import copy
 
 
 def draw_diagram_column(
@@ -16,9 +17,6 @@ def draw_diagram_column(
     downstream_distance,
     scale,
 ):
-    # グラフデータをPlantUMLコードに変換
-    config = {"detail": True, "debug": False, "width": 1200, "left_to_right": False}
-    converter = ConvertPumlCode(config)
 
     target = None
     with column:
@@ -45,7 +43,8 @@ def draw_diagram_column(
             ]
 
             # 読み込んだデータをグラフデータに変換
-            graph_data = RequirementGraph(requirements, page_title)
+            # グラフ変換時に描画を意識した前処理を行うため、元データを維持するためコピーを渡す
+            graph_data = RequirementGraph(copy.deepcopy(requirements), page_title)
         with upstream_distance_column:
             upstream_distance = st.slider(
                 "上流フィルタ距離",
@@ -79,6 +78,15 @@ def draw_diagram_column(
             parameters_dict["target"] = target
             parameters_dict["upstream_distance"] = upstream_distance
             parameters_dict["downstream_distance"] = downstream_distance
+
+            # グラフデータをPlantUMLコードに変換
+            config = {
+                "detail": True,
+                "debug": False,
+                "width": 1200,
+                "left_to_right": False,
+            }
+            converter = ConvertPumlCode(config)
             plantuml_code = converter.convert_to_puml(
                 page_title,
                 graph_data.subgraph,
