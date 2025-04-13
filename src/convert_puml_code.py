@@ -173,6 +173,23 @@ scale {scale}
         ret += f"&selected={node[1]['unique_id']}]]"
         return ret
 
+    def _convert_evaporating_cloud_note(self, node, parameters_dict):
+        # Get parameters string and modify for note
+        parameters = self._convert_parameters_dict(node, parameters_dict)
+        parameters = parameters[:-2] + " *]]"
+
+        # Get color string
+        if node[1]["color"] != "None":
+            color = color_to_archimate[node[1]["color"]]
+        else:
+            color = ""
+
+        return f"""
+note as {node[1]['unique_id']} {color}
+{node[1]['title']} {parameters}
+end note
+"""
+
     def _convert_evaporating_cloud(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
@@ -182,7 +199,14 @@ scale {scale}
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            ret += self._convert_evaporating_cloud_card(node, parameters_dict) + "\n"
+            if node[1]["type"] == "note":
+                ret += (
+                    self._convert_evaporating_cloud_note(node, parameters_dict) + "\n"
+                )
+            else:
+                ret += (
+                    self._convert_evaporating_cloud_card(node, parameters_dict) + "\n"
+                )
 
         # Convert edges
         for edge in graph.edges(data=True):
