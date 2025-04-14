@@ -615,5 +615,7 @@ end note
             color = ""
         if node[1]["type"] == "process":
             # Convert and node
-            ret = f"usecase \"{node[1]['id']}\" as {node[1]['unique_id']} {parameters} {color}\n"
+            id = node[1]["id"]
+            id = id.replace("\n", "\\n")
+            ret = f"usecase \"{id}\" as {node[1]['unique_id']} {parameters} {color}\n"
         return ret
