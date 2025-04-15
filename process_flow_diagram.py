@@ -222,6 +222,27 @@ with edit_column:
         "色", color_list, index=color_list.index(tmp_entity["color"])
     )
 
+    from_relations = []
+    for i, from_relation in enumerate(
+        list(graph_data.graph.predecessors(tmp_entity["unique_id"]))
+    ):
+        from_relations.append(
+            id_title_dict[
+                st.selectbox(
+                    "接続元",
+                    id_title_list,
+                    id_title_list.index(unique_id_dict[from_relation]),
+                    key=f"from{i}",
+                )
+            ]
+        )
+    # 関係追加の操作があるため、1つは常に表示
+    from_relations.append(
+        id_title_dict[
+            st.selectbox("接続元", id_title_list, index=id_title_list.index("None"))
+        ]
+    )
+
     for i, relation in enumerate(tmp_entity["relations"]):
         relation["destination"] = id_title_dict[
             st.selectbox(
@@ -244,7 +265,12 @@ with edit_column:
     )
 
     add_operate_buttons(
-        tmp_entity, requirement_manager, file_path, id_title_dict, unique_id_dict
+        tmp_entity,
+        requirement_manager,
+        file_path,
+        id_title_dict,
+        unique_id_dict,
+        from_relations=from_relations,
     )
 
 # セッション状態にgraph_dataを追加

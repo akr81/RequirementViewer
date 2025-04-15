@@ -61,3 +61,35 @@ class RequirementManager:
 
         # 新しい要求を追加する
         self.add(requirement, update_unique_id=False)
+
+    def update_reverse_relations(self, unique_id: str, from_relations: List):
+        """Update reverse relations for requirement with specified unique_id.
+
+        Args:
+            unique_id (str): Unique ID of requirement to update
+            from_relations (List): List of relations to update
+        """
+        if from_relations is None:
+            return
+
+        # 指定されたunique_idへの接続を追加・削除する
+        for requirement in self.requirements:
+            temp_unique_id = requirement["unique_id"]
+            if temp_unique_id in from_relations:
+                # 接続先にunique_idがなければ追加
+                if unique_id not in [
+                    rel["destination"] for rel in requirement["relations"]
+                ]:
+                    requirement["relations"].append({"destination": unique_id})
+            else:
+                # 接続先にunique_idがあれば削除
+                if unique_id in [
+                    rel["destination"] for rel in requirement["relations"]
+                ]:
+                    requirement["relations"].remove(
+                        [
+                            rel
+                            for rel in requirement["relations"]
+                            if rel["destination"] == unique_id
+                        ][0]
+                    )

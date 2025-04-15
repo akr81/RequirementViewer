@@ -9,6 +9,7 @@ def add_operate_buttons(
     id_title_dict,
     unique_id_dict,
     no_add=False,
+    from_relations=None,
 ):
     _, add_button_column, update_button_column, remove_button_column = st.columns(
         [2, 1, 1, 1]
@@ -21,6 +22,9 @@ def add_operate_buttons(
                     st.error("IDが既存のエンティティと重複しています。")
                 else:
                     added_id = requirement_manager.add(tmp_entity)
+                    requirement_manager.update_reverse_relations(
+                        tmp_entity["unique_id"], from_relations
+                    )
                     update_source_data(file_path, requirement_manager.requirements)
                     st.write("エンティティを追加しました。")
                     st.query_params.selected = added_id
@@ -32,6 +36,9 @@ def add_operate_buttons(
                 st.error("更新すべきエンティティがありません。")
             else:
                 requirement_manager.update(tmp_entity)
+                requirement_manager.update_reverse_relations(
+                    tmp_entity["unique_id"], from_relations
+                )
                 update_source_data(file_path, requirement_manager.requirements)
                 st.write("エンティティを更新しました。")
                 st.query_params.selected = tmp_entity["unique_id"]
