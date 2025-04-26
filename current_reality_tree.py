@@ -135,10 +135,8 @@ with edit_column:
     st.write("## データ編集")
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
-    if "color" not in tmp_entity:
-        tmp_entity["color"] = "None"
-    if "type" not in tmp_entity:
-        tmp_entity["type"] = "entity"
+    tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
+    tmp_entity.setdefault("type", "entity")  # typeがない場合はentityを設定
 
     tmp_entity["type"] = st.selectbox(
         "タイプ", entity_list, index=entity_list.index(tmp_entity["type"])
