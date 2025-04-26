@@ -152,6 +152,7 @@ with edit_column:
     # ANDの情報の場合はさらにもう1ホップ遡る必要がある
     temp_predecessors = list(graph_data.graph.predecessors(tmp_entity["unique_id"]))
     predecessors = copy.deepcopy(temp_predecessors)
+    and_predecessors = []
     for temp_predecessor in temp_predecessors:
         try:
             int(temp_predecessor)
@@ -160,31 +161,45 @@ with edit_column:
             predecessors = predecessors + list(
                 graph_data.graph.predecessors(temp_predecessor)
             )
+            and_predecessors.append(
+                (
+                    list(graph_data.graph.predecessors(temp_predecessor)),
+                    temp_predecessor,
+                )
+            )
         except:
             # 失敗した場合は何もしない
             pass
 
-    print(predecessors)
-    print(list(graph_data.graph.predecessors("1")))
     for i, from_relation in enumerate(predecessors):
-        from_relations.append(
-            id_title_dict[
-                st.selectbox(
-                    "接続元",
-                    id_title_list,
-                    index=id_title_list.index(unique_id_dict[from_relation]),
-                    key=f"from{i}",
-                )
-            ]
+        temp_from_relation = {"from": None, "and": None}
+        temp_from_relation["from"] = id_title_dict[
+            st.selectbox(
+                "接続元",
+                id_title_list,
+                index=id_title_list.index(unique_id_dict[from_relation]),
+                key=f"from{i}",
+            )
+        ]
+        print(and_predecessors)
+        dest = "None"
+        for and_predecessor in and_predecessors:
+            srcs = and_predecessor[0]
+            dest = and_predecessor[1]
+        temp_from_relation["and"] = st.selectbox(
+            "and", add_list, add_list.index(dest), key=f"and_from{i}"
         )
-        # TODO ANDの情報を取得する
+        from_relations.append(temp_from_relation)
 
     # 関係追加の操作があるため、1つは常に表示
-    from_relations.append(
-        id_title_dict[
-            st.selectbox("接続元", id_title_list, index=id_title_list.index("None"))
-        ]
+    temp_from_relation = {"from": None, "and": None}
+    temp_from_relation["from"] = id_title_dict[
+        st.selectbox("接続元", id_title_list, index=id_title_list.index("None"))
+    ]
+    temp_from_relation["and"] = st.selectbox(
+        "and", add_list, add_list.index("None"), key=f"and_from"
     )
+    from_relations.append(temp_from_relation)
 
     for i, relation in enumerate(tmp_entity["relations"]):
         relation["destination"] = id_title_dict[
