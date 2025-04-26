@@ -169,60 +169,73 @@ with edit_column:
             # 失敗した場合は何もしない
             pass
 
+    source_column_loop, source_and_column_loop = st.columns([7, 2])
     for i, from_relation in enumerate(predecessors):
-        temp_from_relation = {"from": None, "and": None}
-        temp_from_relation["from"] = id_title_dict[
-            st.selectbox(
-                "接続元",
-                id_title_list,
-                index=id_title_list.index(unique_id_dict[from_relation]),
-                key=f"from{i}",
+        with source_column_loop:
+            temp_from_relation = {"from": None, "and": None}
+            temp_from_relation["from"] = id_title_dict[
+                st.selectbox(
+                    "接続元",
+                    id_title_list,
+                    index=id_title_list.index(unique_id_dict[from_relation]),
+                    key=f"from{i}",
+                )
+            ]
+            print(and_predecessors)
+            dest = "None"
+            for and_predecessor in and_predecessors:
+                srcs = and_predecessor[0]
+                dest = and_predecessor[1]
+        with source_and_column_loop:
+            temp_from_relation["and"] = st.selectbox(
+                "and", add_list, add_list.index(dest), key=f"and_from{i}"
             )
-        ]
-        print(and_predecessors)
-        dest = "None"
-        for and_predecessor in and_predecessors:
-            srcs = and_predecessor[0]
-            dest = and_predecessor[1]
-        temp_from_relation["and"] = st.selectbox(
-            "and", add_list, add_list.index(dest), key=f"and_from{i}"
-        )
         from_relations.append(temp_from_relation)
 
     # 関係追加の操作があるため、1つは常に表示
     temp_from_relation = {"from": None, "and": None}
-    temp_from_relation["from"] = id_title_dict[
-        st.selectbox("接続元", id_title_list, index=id_title_list.index("None"))
-    ]
-    temp_from_relation["and"] = st.selectbox(
-        "and", add_list, add_list.index("None"), key=f"and_from"
-    )
+    source_column, source_and_column = st.columns([7, 2])
+    with source_column:
+        temp_from_relation["from"] = id_title_dict[
+            st.selectbox("接続元", id_title_list, index=id_title_list.index("None"))
+        ]
+    with source_and_column:
+        temp_from_relation["and"] = st.selectbox(
+            "and", add_list, add_list.index("None"), key=f"and_from"
+        )
     from_relations.append(temp_from_relation)
 
-    for i, relation in enumerate(tmp_entity["relations"]):
-        relation["destination"] = id_title_dict[
-            st.selectbox(
-                "接続先",
-                id_title_list,
-                id_title_list.index(unique_id_dict[relation["destination"]]),
-                key=f"destination{i}",
+    loop_destination_column, loop_destination_and_column = st.columns([7, 2])
+    with loop_destination_column:
+        for i, relation in enumerate(tmp_entity["relations"]):
+            relation["destination"] = id_title_dict[
+                st.selectbox(
+                    "接続先",
+                    id_title_list,
+                    id_title_list.index(unique_id_dict[relation["destination"]]),
+                    key=f"destination{i}",
+                )
+            ]
+    with loop_destination_and_column:
+        for i, relation in enumerate(tmp_entity["relations"]):
+            relation["and"] = st.selectbox(
+                "and", add_list, add_list.index(relation["and"]), key=f"and{i}"
             )
-        ]
-        relation["and"] = st.selectbox(
-            "and", add_list, add_list.index(relation["and"]), key=f"and{i}"
-        )
-        relation["and"] = get_next_and_number(add_list, relation["and"])
-        if not relation["and"]:
-            relation["and"] = "None"
+            relation["and"] = get_next_and_number(add_list, relation["and"])
+            if not relation["and"]:
+                relation["and"] = "None"
 
     # 関係追加の操作があるため、1つは常に表示
-    destination_unique_id = id_title_dict[
-        st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
-    ]  # 末尾に追加用の空要素を追加
-    destination_and = st.selectbox("and", add_list, add_list.index("None"))
-    destination_and = get_next_and_number(add_list, destination_and)
-    if not destination_and:
-        destination_and = "None"
+    destination_column, destination_and_column = st.columns([7, 2])
+    with destination_column:
+        destination_unique_id = id_title_dict[
+            st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
+        ]
+    with destination_and_column:
+        destination_and = st.selectbox("and", add_list, add_list.index("None"))
+        destination_and = get_next_and_number(add_list, destination_and)
+        if not destination_and:
+            destination_and = "None"
 
     tmp_entity["relations"].append(
         {
