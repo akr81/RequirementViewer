@@ -72,10 +72,16 @@ class RequirementManager:
         if from_relations is None:
             return
 
+        from_unique_id_list = []
+        for from_relation in from_relations:
+            from_unique_id = from_relation["from"]
+            if from_unique_id != "None":
+                from_unique_id_list.append(from_unique_id)
+
         # 指定されたunique_idへの接続を追加・削除する
         for requirement in self.requirements:
             temp_unique_id = requirement["unique_id"]
-            if temp_unique_id in from_relations:
+            if temp_unique_id in from_unique_id_list:
                 # 接続先にunique_idがなければ追加
                 if unique_id not in [
                     rel["destination"] for rel in requirement["relations"]

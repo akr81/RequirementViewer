@@ -231,6 +231,9 @@ with edit_column:
         }
     )
 
+    print("====")
+    print(from_relations)
+    print("====")
     add_operate_buttons(
         tmp_entity,
         requirement_manager,
