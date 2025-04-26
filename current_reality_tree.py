@@ -220,6 +220,44 @@ with edit_column:
         "色", color_list, index=color_list.index(tmp_entity["color"])
     )
 
+    from_relations = []
+    # ANDの情報の場合はさらにもう1ホップ遡る必要がある
+    temp_predecessors = list(graph_data.graph.predecessors(tmp_entity["unique_id"]))
+    predecessors = copy.deepcopy(temp_predecessors)
+    for temp_predecessor in temp_predecessors:
+        try:
+            int(temp_predecessor)
+            # 成功した場合はANDなので、候補から削除して、さらに遡る
+            predecessors.remove(temp_predecessor)
+            predecessors = predecessors + list(
+                graph_data.graph.predecessors(temp_predecessor)
+            )
+        except:
+            # 失敗した場合は何もしない
+            pass
+
+    print(predecessors)
+    print(list(graph_data.graph.predecessors("1")))
+    for i, from_relation in enumerate(predecessors):
+        from_relations.append(
+            id_title_dict[
+                st.selectbox(
+                    "接続元",
+                    id_title_list,
+                    index=id_title_list.index(unique_id_dict[from_relation]),
+                    key=f"from{i}",
+                )
+            ]
+        )
+        # TODO ANDの情報を取得する
+
+    # 関係追加の操作があるため、1つは常に表示
+    from_relations.append(
+        id_title_dict[
+            st.selectbox("接続元", id_title_list, index=id_title_list.index("None"))
+        ]
+    )
+
     for i, relation in enumerate(tmp_entity["relations"]):
         relation["destination"] = id_title_dict[
             st.selectbox(
@@ -253,7 +291,12 @@ with edit_column:
     )
 
     add_operate_buttons(
-        tmp_entity, requirement_manager, file_path, id_title_dict, unique_id_dict
+        tmp_entity,
+        requirement_manager,
+        file_path,
+        id_title_dict,
+        unique_id_dict,
+        from_relations=from_relations,
     )
 
 # セッション状態にgraph_dataを追加
