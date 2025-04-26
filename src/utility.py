@@ -5,7 +5,7 @@ import zlib
 import requests
 import hjson
 import os
-from typing import Tuple
+from typing import Tuple, List, Dict, Tuple, Any, Optional
 
 
 # PlantUMLサーバをバックグラウンドプロセスとして起動し、キャッシュする
@@ -161,3 +161,73 @@ def update_source_data(file_path: str, source_data: list[dict]):
     source_data.sort(key=lambda x: x["unique_id"])
     with open(file_path, "w", encoding="utf-8") as f:
         hjson.dump(source_data, f, ensure_ascii=False, indent=4)
+
+
+def build_mapping(
+    items: List[Dict[str, Any]],
+    key_field: str,
+    value_field: str,
+    *,
+    add_empty: bool = False,
+    empty_key: str = "None",
+    empty_value: str = "None"
+) -> Dict[str, str]:
+    """
+    items の各 dict から key_field→value_field マッピングを作成。
+    add_empty=True なら空要素を追加。
+    """
+    mapping = {item[key_field]: item[value_field] for item in items}
+    if add_empty:
+        mapping[empty_key] = empty_value
+    return mapping
+
+
+def build_sorted_list(
+    items: List[Dict[str, Any]], field: str, *, prepend: Optional[List[str]] = None
+) -> List[str]:
+    """
+    items の各 dict から field を取り出してソートしたリストを返す。
+    prepend が渡されれば、先頭に順番に挿入。
+    """
+    lst = sorted(item[field] for item in items)
+    if prepend:
+        for x in reversed(prepend):
+            lst.insert(0, x)
+    return lst
+
+
+def extract_and_list(
+    items: List[Dict[str, Any]], *, prepend: Optional[List[str]] = None
+) -> List[str]:
+    """
+    全 requirements の relations[].and をユニークに集めてソートしたリスト。
+    prepend（例: ["None","New"]）を先頭に挿入可能。
+    """
+    vals = {
+        str(rel["and"])
+        for item in items
+        for rel in item.get("relations", [])
+        if rel.get("and") not in (None, "", "None")
+    }
+    sorted_vals = sorted(vals, key=lambda v: (not v.isdigit(), v))
+    if prepend:
+        for x in reversed(prepend):
+            sorted_vals.insert(0, x)
+    return sorted_vals
+
+
+def get_next_and_number(existing: List[str], candidate: str) -> str:
+    """
+    candidate=="New" → 1〜99 の空き番号を返す。
+    candidate=="" → "None"
+    それ以外はそのまま返す。
+    """
+    if candidate == "New":
+        for i in range(1, 100):
+            s = str(i)
+            if s not in existing:
+                return s
+        return "None"
+    if not candidate:
+        return "None"
+    return candidate
