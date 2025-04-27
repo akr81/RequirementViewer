@@ -181,7 +181,6 @@ with edit_column:
                     key=f"from{i}",
                 )
             ]
-            print(and_predecessors)
             dest = "None"
             for and_predecessor in and_predecessors:
                 srcs = and_predecessor[0]
@@ -244,9 +243,6 @@ with edit_column:
         }
     )
 
-    print("====")
-    print(from_relations)
-    print("====")
     add_operate_buttons(
         tmp_entity,
         requirement_manager,

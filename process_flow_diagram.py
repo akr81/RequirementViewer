@@ -6,92 +6,14 @@ from src.utility import (
     load_source_data,
     load_app_data,
     load_colors,
+    build_mapping,
+    build_sorted_list,
+    extract_and_list,
 )
 from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
 import uuid
 import copy
-
-
-@st.cache_data
-def get_id_title_dict(requirement_data: list[dict]) -> dict:
-    """Get ID and title dictionary from requirement data.
-
-    Args:
-        requirement_data (list[dict]): Requirement data list
-
-    Returns:
-        dict: ID and title dictionary
-    """
-    id_title_dict = {
-        requirement["id"]: requirement["unique_id"] for requirement in requirement_data
-    }
-    id_title_dict["None"] = "None"  # 削除用の空要素を追加
-    return id_title_dict
-
-
-@st.cache_data
-def get_unique_id_dict(requirement_data: list[dict]) -> dict:
-    """Get unique ID dictionary from requirement data.
-
-    Args:
-        requirement_data (list[dict]): Requirement data list
-
-    Returns:
-        dict: Unique ID dictionary
-    """
-    unique_id_dict = {
-        requirement["unique_id"]: requirement["id"] for requirement in requirement_data
-    }
-    unique_id_dict["None"] = "None"  # 削除用の空要素を追加
-    return unique_id_dict
-
-
-@st.cache_data
-def get_id_title_list(requirement_data: list[dict]) -> list[str]:
-    """Get ID and title list from requirement data.
-
-    Args:
-        requirement_data (list[dict]): Requirement data list
-
-    Returns:
-        list[str]: ID and title list
-    """
-    id_title_list = [requirement["id"] for requirement in requirement_data]
-    id_title_list.sort()
-    id_title_list.insert(0, "None")  # 指定がない場合の初期値
-    return id_title_list
-
-
-def get_and_list(requirement_data: list[dict]) -> list[str]:
-    """Get and list from requirement data.
-
-    Args:
-        requirement_data (list[dict]): Requirement data list
-    Returns:
-        list[str]: and list
-    """
-    add_list = []
-    for requirement in requirement_data:
-        for relation in requirement["relations"]:
-            if "and" in relation and relation["and"] != "None":
-                add_list.append(str(relation["and"]))
-    add_list = list(set(add_list))
-    add_list.sort()
-    add_list.insert(0, "New")  # 新規追加用
-    add_list.insert(0, "None")  # 指定がない場合の初期値
-    return add_list
-
-
-def get_and_number(add_list, number) -> str:
-    if number == "New":
-        for i in range(1, 100):
-            if str(i) not in add_list:
-                return str(i)
-    elif not number:
-        return "None"
-    else:
-        return number
 
 
 def get_default_entity() -> dict:
@@ -150,11 +72,16 @@ requirement_data = load_source_data(file_path)
 requirement_manager = RequirementManager(requirement_data)
 
 # IDとタイトルをキー, ユニークIDを値とする辞書とその逆を作成
-id_title_dict = get_id_title_dict(requirement_data)
-unique_id_dict = get_unique_id_dict(requirement_data)
-
-id_title_list = get_id_title_list(requirement_data)
-add_list = get_and_list(requirement_data)
+id_title_dict = st.cache_data(
+    lambda: build_mapping(requirement_data, "id", "unique_id", add_empty=True)
+)()
+unique_id_dict = st.cache_data(
+    lambda: build_mapping(requirement_data, "unique_id", "id", add_empty=True)
+)()
+id_title_list = st.cache_data(
+    lambda: build_sorted_list(requirement_data, "id", prepend=["None"])
+)()
+add_list = extract_and_list(requirement_data, prepend=["None", "New"])
 
 # URL のクエリからパラメタを取得
 scale = float(st.query_params.get("scale", 1.0))
