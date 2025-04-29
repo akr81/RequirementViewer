@@ -529,6 +529,7 @@ right_shoulder_to_head .. right_shoulder
 
         # Convert all nodes
         for node in graph.nodes(data=True):
+            print(node)
             if node[1]["type"] == "and":
                 # Convert and node
                 ret += (

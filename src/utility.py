@@ -177,6 +177,7 @@ def build_mapping(
     add_empty=True なら空要素を追加。
     """
     mapping = {item[key_field]: item[value_field] for item in items}
+
     if add_empty:
         mapping[empty_key] = empty_value
     return mapping

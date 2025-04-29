@@ -108,10 +108,13 @@ class RequirementGraph:
         for entity in self.entities:
             entity.setdefault("color", "None")  # colorがない場合はNoneを設定
             if "type" not in entity or entity["type"] == "entity":
-                entity["type"] = "card"  # cardとして描画する
+                # entity["type"] = "card"  # cardとして描画する
+                pass
             self.graph.add_node(entity["unique_id"], **entity)
+            print(f"added {entity['unique_id']}")
             for relation in entity["relations"]:
-                if entity["type"] == "card":
+                # if entity["type"] == "card":
+                if entity["type"] == "entity":
                     if (
                         "and" in relation
                         and relation["and"] != None

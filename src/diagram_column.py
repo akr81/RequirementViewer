@@ -16,6 +16,8 @@ def draw_diagram_column(
     upstream_distance,
     downstream_distance,
     scale,
+    *,
+    graph_data=None,
 ):
 
     target = None
@@ -44,7 +46,8 @@ def draw_diagram_column(
 
             # 読み込んだデータをグラフデータに変換
             # グラフ変換時に描画を意識した前処理を行うため、元データを維持するためコピーを渡す
-            graph_data = RequirementGraph(copy.deepcopy(requirements), page_title)
+            if graph_data is None:
+                graph_data = RequirementGraph(copy.deepcopy(requirements), page_title)
         with upstream_distance_column:
             upstream_distance = st.slider(
                 "上流フィルタ距離",
