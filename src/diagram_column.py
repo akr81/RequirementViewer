@@ -113,4 +113,4 @@ def draw_diagram_column(
             """,
             unsafe_allow_html=True,
         )
-    return graph_data, plantuml_code
+    return plantuml_code

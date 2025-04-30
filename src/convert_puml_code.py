@@ -529,14 +529,29 @@ right_shoulder_to_head .. right_shoulder
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            print(node)
+            if "color" not in node[1]:
+                node[1]["color"] = "None"
+            parameters = self._convert_parameters_dict(node, parameters_dict)
+            if node[1]["color"] != "None":
+                color = color_to_archimate[node[1]["color"]]
+            else:
+                color = ""
             if node[1]["type"] == "and":
-                # Convert and node
+                # Convert "and" node
                 ret += (
                     f"usecase \"AND{node[1]['unique_id']}\" as {node[1]['unique_id']}\n"
                 )
+            elif node[1]["type"] == "entity":
+                ret += f"""card {node[1]["unique_id"]} {parameters} {color} [
+{node[1]["id"]}
+]
+"""
             else:
-                ret += self._convert_card_crt(node, parameters_dict) + "\n"
+                parameters = parameters[:-2] + " *]]"
+                ret += f"""note as {node[1]["unique_id"]} {color}
+{node[1]["id"]}{parameters}
+end note
+"""
 
         # Convert edges
         for edge in graph.edges(data=True):

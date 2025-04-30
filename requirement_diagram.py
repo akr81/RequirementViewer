@@ -162,7 +162,7 @@ if not selected_entity:
 # Requirement diagram表示とデータ編集のレイアウトを設定
 diagram_column, edit_column = st.columns([4, 1])
 
-_, plantuml_code = draw_diagram_column(
+plantuml_code = draw_diagram_column(
     st.session_state.app_name,
     diagram_column,
     unique_id_dict,
@@ -173,6 +173,7 @@ _, plantuml_code = draw_diagram_column(
     upstream_distance,
     downstream_distance,
     scale,
+    graph_data=graph_data,
 )
 
 with edit_column:
