@@ -168,24 +168,28 @@ with edit_column:
             pass
 
     source_column_loop, source_and_column_loop = st.columns([7, 2])
-    for i, from_relation in enumerate(predecessors):
+    for i, from_unique_id in enumerate(predecessors):
+        temp_from_relation = {"from": None, "and": None}
         with source_column_loop:
-            temp_from_relation = {"from": None, "and": None}
             temp_from_relation["from"] = id_title_dict[
                 st.selectbox(
                     "接続元",
                     id_title_list,
-                    index=id_title_list.index(unique_id_dict[from_relation]),
+                    index=id_title_list.index(unique_id_dict[from_unique_id]),
                     key=f"from{i}",
                 )
             ]
-            dest = "None"
-            for and_predecessor in and_predecessors:
-                srcs = and_predecessor[0]
-                dest = and_predecessor[1]
         with source_and_column_loop:
+            and_id = "None"
+            for and_predecessor in and_predecessors:
+                from_unique_id_list = and_predecessor[0]
+                if from_unique_id in from_unique_id_list:
+                    and_id = and_predecessor[1]
             temp_from_relation["and"] = st.selectbox(
-                "and", add_list, add_list.index(dest), key=f"and_from{i}"
+                "and", add_list, add_list.index(and_id), key=f"and_from{i}"
+            )
+            temp_from_relation["and"] = get_next_and_number(
+                add_list, temp_from_relation["and"]
             )
         from_relations.append(temp_from_relation)
 
@@ -201,6 +205,9 @@ with edit_column:
     with source_and_column:
         temp_from_relation["and"] = st.selectbox(
             "and", add_list, add_list.index("None"), key=f"and_from"
+        )
+        temp_from_relation["and"] = get_next_and_number(
+            add_list, temp_from_relation["and"]
         )
     from_relations.append(temp_from_relation)
 
