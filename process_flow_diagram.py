@@ -149,7 +149,7 @@ with edit_column:
     if tmp_entity["unique_id"] in graph_data.graph.nodes:
         temp_predecessors = list(graph_data.graph.predecessors(tmp_entity["unique_id"]))
     for i, from_relation in enumerate(temp_predecessors):
-        temp_from_relation = {"from": None}
+        temp_from_relation = {"from": None, "comment": None}
         temp_from_relation["from"] = id_title_dict[
             st.selectbox(
                 "接続元",
@@ -158,15 +158,27 @@ with edit_column:
                 key=f"from{i}",
             )
         ]
+        temp_from_comment = ""
+        for edge in graph_data.graph.edges(data=True):
+            if edge[0] == from_relation and edge[1] == tmp_entity["unique_id"]:
+                if "comment" in edge[2]:
+                    temp_from_comment = edge[2]["comment"]
+        temp_from_relation["comment"] = st.text_input(
+            "コメント", temp_from_comment, key=f"comment_from{i}"
+        )
         from_relations.append(temp_from_relation)
     # 関係追加の操作があるため、1つは常に表示
-    temp_from_relation = {"from": None}
+    temp_from_relation = {"from": None, "comment": None}
     temp_from_relation["from"] = id_title_dict[
         st.selectbox("接続元(新規)", id_title_list, index=id_title_list.index("None"))
     ]
+    temp_from_relation["comment"] = st.text_input(
+        "コメント", "", key="comment_from_new"
+    )
     from_relations.append(temp_from_relation)
 
     for i, relation in enumerate(tmp_entity["relations"]):
+        relation.setdefault("comment", "")
         relation["destination"] = id_title_dict[
             st.selectbox(
                 "接続先",
@@ -175,16 +187,21 @@ with edit_column:
                 key=f"destination{i}",
             )
         ]
+        temp_comment = ""
+        if "comment" in relation:
+            temp_comment = relation["comment"]
+        relation["comment"] = st.text_input(
+            "コメント", temp_comment, key=f"comment_to{i}"
+        )
 
     # 関係追加の操作があるため、1つは常に表示
     destination_unique_id = id_title_dict[
         st.selectbox("接続先(新規)", id_title_list, index=id_title_list.index("None"))
     ]  # 末尾に追加用の空要素を追加
+    comment = st.text_input("コメント", "", key="comment_to_new")
 
     tmp_entity["relations"].append(
-        {
-            "destination": destination_unique_id,
-        }
+        {"destination": destination_unique_id, "comment": comment}
     )
 
     add_operate_buttons(

@@ -86,6 +86,7 @@ class RequirementManager:
             if from_unique_id != "None":
                 from_unique_id_list.append(from_unique_id)
 
+        print(from_relations)
         print(connected_to_unique_id)
         print(from_unique_id_list)
         old_set = set(connected_to_unique_id)
