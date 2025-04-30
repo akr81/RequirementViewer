@@ -111,7 +111,6 @@ class RequirementGraph:
                 # entity["type"] = "card"  # cardとして描画する
                 pass
             self.graph.add_node(entity["unique_id"], **entity)
-            print(f"added {entity['unique_id']}")
             for relation in entity["relations"]:
                 # if entity["type"] == "card":
                 if entity["type"] == "entity":

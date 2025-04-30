@@ -22,9 +22,10 @@ def add_operate_buttons(
                     st.error("IDが既存のエンティティと重複しています。")
                 else:
                     added_id = requirement_manager.add(tmp_entity)
-                    requirement_manager.update_reverse_relations(
-                        tmp_entity["unique_id"], from_relations
-                    )
+                    if from_relations is not None:
+                        requirement_manager.update_reverse_relations(
+                            tmp_entity["unique_id"], from_relations
+                        )
                     update_source_data(file_path, requirement_manager.requirements)
                     st.write("エンティティを追加しました。")
                     st.query_params.selected = added_id
@@ -36,9 +37,10 @@ def add_operate_buttons(
                 st.error("更新すべきエンティティがありません。")
             else:
                 requirement_manager.update(tmp_entity)
-                requirement_manager.update_reverse_relations(
-                    tmp_entity["unique_id"], from_relations
-                )
+                if from_relations is not None:
+                    requirement_manager.update_reverse_relations(
+                        tmp_entity["unique_id"], from_relations
+                    )
                 update_source_data(file_path, requirement_manager.requirements)
                 st.write("エンティティを更新しました。")
                 st.query_params.selected = tmp_entity["unique_id"]

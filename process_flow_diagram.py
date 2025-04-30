@@ -1,5 +1,6 @@
 import streamlit as st
 from src.requirement_manager import RequirementManager
+from src.requirement_graph import RequirementGraph
 from src.utility import (
     start_plantuml_server,
     load_config,
@@ -70,17 +71,12 @@ data_key = st.session_state.app_data[st.session_state.app_name]["data"]
 file_path = config_data[data_key]
 requirement_data = load_source_data(file_path)
 requirement_manager = RequirementManager(requirement_data)
+graph_data = RequirementGraph(requirement_data, st.session_state.app_name)
 
 # IDとタイトルをキー, ユニークIDを値とする辞書とその逆を作成
-id_title_dict = st.cache_data(
-    lambda: build_mapping(requirement_data, "id", "unique_id", add_empty=True)
-)()
-unique_id_dict = st.cache_data(
-    lambda: build_mapping(requirement_data, "unique_id", "id", add_empty=True)
-)()
-id_title_list = st.cache_data(
-    lambda: build_sorted_list(requirement_data, "id", prepend=["None"])
-)()
+id_title_dict = build_mapping(requirement_data, "id", "unique_id", add_empty=True)
+unique_id_dict = build_mapping(requirement_data, "unique_id", "id", add_empty=True)
+id_title_list = build_sorted_list(requirement_data, "id", prepend=["None"])
 add_list = extract_and_list(requirement_data, prepend=["None", "New"])
 
 # URL のクエリからパラメタを取得
@@ -119,7 +115,7 @@ if not selected_entity:
 # Requirement diagram表示とデータ編集のレイアウトを設定
 diagram_column, edit_column = st.columns([4, 1])
 
-graph_data, plantuml_code = draw_diagram_column(
+_, plantuml_code = draw_diagram_column(
     st.session_state.app_name,
     diagram_column,
     unique_id_dict,
@@ -136,10 +132,8 @@ with edit_column:
     st.write("## データ編集")
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
-    if "color" not in tmp_entity:
-        tmp_entity["color"] = "None"
-    if "type" not in tmp_entity:
-        tmp_entity["type"] = "deliverable"
+    tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
+    tmp_entity.setdefault("type", "entity")  # typeがない場合はentityを設定
 
     tmp_entity["type"] = st.selectbox(
         "タイプ", pfd_type_list, index=pfd_type_list.index(tmp_entity["type"])
@@ -150,25 +144,26 @@ with edit_column:
     )
 
     from_relations = []
-    for i, from_relation in enumerate(
-        list(graph_data.graph.predecessors(tmp_entity["unique_id"]))
-    ):
-        from_relations.append(
-            id_title_dict[
-                st.selectbox(
-                    "接続元",
-                    id_title_list,
-                    id_title_list.index(unique_id_dict[from_relation]),
-                    key=f"from{i}",
-                )
-            ]
-        )
-    # 関係追加の操作があるため、1つは常に表示
-    from_relations.append(
-        id_title_dict[
-            st.selectbox("接続元", id_title_list, index=id_title_list.index("None"))
+    temp_predecessors = []
+    if tmp_entity["unique_id"] in graph_data.graph.nodes:
+        temp_predecessors = list(graph_data.graph.predecessors(tmp_entity["unique_id"]))
+    for i, from_relation in enumerate(temp_predecessors):
+        temp_from_relation = {"from": None}
+        temp_from_relation["from"] = id_title_dict[
+            st.selectbox(
+                "接続元",
+                id_title_list,
+                id_title_list.index(unique_id_dict[from_relation]),
+                key=f"from{i}",
+            )
         ]
-    )
+        from_relations.append(temp_from_relation)
+    # 関係追加の操作があるため、1つは常に表示
+    temp_from_relation = {"from": None}
+    temp_from_relation["from"] = id_title_dict[
+        st.selectbox("接続元(新規)", id_title_list, index=id_title_list.index("None"))
+    ]
+    from_relations.append(temp_from_relation)
 
     for i, relation in enumerate(tmp_entity["relations"]):
         relation["destination"] = id_title_dict[
@@ -182,7 +177,7 @@ with edit_column:
 
     # 関係追加の操作があるため、1つは常に表示
     destination_unique_id = id_title_dict[
-        st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
+        st.selectbox("接続先(新規)", id_title_list, index=id_title_list.index("None"))
     ]  # 末尾に追加用の空要素を追加
 
     tmp_entity["relations"].append(
