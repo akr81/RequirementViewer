@@ -1,5 +1,6 @@
 from typing import List, Dict
 import networkx as nx
+import copy
 
 
 class RequirementGraph:
@@ -53,27 +54,21 @@ class RequirementGraph:
                 )
 
     def _convert_process_flow(self):
-        for entity in self.entities:
-            self.graph.add_node(entity["unique_id"], **entity)
-            for relation in entity["relations"]:
-                relation.setdefault("type", "arrow")  # typeがない場合はarrowを設定
-                if entity["type"] == "note":
-                    if len(entity["relations"]) > 1:
-                        self.graph.add_edge(
-                            entity["unique_id"],
-                            relation["destination"],
-                            type="flat_long",
-                        )
-                    else:
-                        self.graph.add_edge(
-                            entity["unique_id"], relation["destination"], type="flat"
-                        )
-                else:
-                    self.graph.add_edge(
-                        entity["unique_id"],
-                        relation["destination"],
-                        type=relation["type"],
-                    )
+        for node in self.entities["nodes"]:
+            self.graph.add_node(node["unique_id"], **node)
+        for edge in self.entities["edges"]:
+            edge.setdefault("type", "arrow")
+            print(edge["source"], self.graph.nodes[edge["source"]]["type"])
+            if self.graph.nodes[edge["source"]]["type"] == "note":
+                modified_edge = copy.deepcopy(edge)
+                modified_edge["type"] = "flat_long"
+                self.graph.add_edge(
+                    modified_edge["source"],
+                    modified_edge["destination"],
+                    **modified_edge
+                )
+            else:
+                self.graph.add_edge(edge["source"], edge["destination"], **edge)
 
     def _convert_requirements(self):
         """Convert requirements to graph."""
