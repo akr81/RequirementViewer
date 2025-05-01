@@ -96,6 +96,7 @@ class RequirementManager:
         removed_list = list(old_set - new_set)
         remains_list = list(old_set & new_set)
 
+        # TODO "and"などに依存せず、入力された要素をそのまま追加・更新する
         # 新規追加のものはそのまま追加
         print(f"added: {added_list}")
         for added in added_list:
@@ -129,8 +130,11 @@ class RequirementManager:
             for requirement in self.requirements:
                 if requirement["unique_id"] == remains:
                     for relation in requirement["relations"]:
-                        relation.setdefault("and", "None")
                         if relation["destination"] == unique_id:
-                            relation["and"] = [
-                                d for d in from_relations if d.get("from") == remains
-                            ][0]["and"]
+                            for from_relation in from_relations:
+                                if from_relation["from"] == remains:
+                                    for key, value in from_relation.items():
+                                        if key == "from":
+                                            pass
+                                        else:
+                                            relation[key] = value
