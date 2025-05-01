@@ -128,14 +128,14 @@ def load_app_data() -> dict:
     return app_data
 
 
-def load_source_data(file_path: str) -> list[dict]:
+def load_source_data(file_path: str) -> Dict:
     """Load diagram source data from JSON file.
 
     Args:
         file_path (str): Path to JSON file
 
     Returns:
-        list[dict]: List of source data
+        Dict: Dictionary of source data
     """
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
@@ -147,6 +147,23 @@ def load_source_data(file_path: str) -> list[dict]:
     else:
         # 存在しない場合は空で始める
         source_data = []
+
+    # 古いフォーマットのデータを新しいフォーマットに変換
+    if isinstance(source_data, list):
+        temp_data = {"nodes": [], "edges": []}
+        for item in source_data:
+            temp_node = {}
+            for key, value in item.items():
+                if key == "relations":
+                    for relation in value:
+                        temp_relation = {"source": item["unique_id"]}
+                        temp_relation.update(relation)
+                        temp_data["edges"].append(temp_relation)
+                else:
+                    temp_node[key] = value
+            temp_data["nodes"].append(temp_node)
+        source_data = temp_data
+
     return source_data
 
 
