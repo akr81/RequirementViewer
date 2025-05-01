@@ -6,11 +6,14 @@ class RequirementManager:
     def __init__(self, requirement_data: List[Dict]):
         self.requirements = requirement_data
 
-    def add(self, requirement: Dict, update_unique_id=True) -> str:
+    def add(
+        self, requirement: Dict, from_relations: List, update_unique_id=True
+    ) -> str:
         """Add new requirement to requirements.
 
         Args:
             requirement (Dict): New requirement to add
+            from_relations (List): List of relations to add
 
         Returns:
             str: Unique ID of added requirement
@@ -19,13 +22,29 @@ class RequirementManager:
             # ユニークIDを振り直す
             requirement["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
 
-        # 接続先が無効なrelationを削除する
-        requirement["relations"] = [
-            rel for rel in requirement["relations"] if rel["destination"] != "None"
+        # 新しい要求を追加する
+        self.requirements["nodes"].append(requirement)
+
+        # 無効な接続関係を削除
+        self.requirements["edges"] = [
+            edge
+            for edge in self.requirements["edges"]
+            if edge["source"] != "None"
+            and edge["destination"] != "None"
+            and edge["source"] != None
+            and edge["destination"] != None
         ]
 
-        # 新しい要求を追加する
-        self.requirements.append(requirement)
+        # edgeを追加する
+        for from_relation in from_relations:
+            if (
+                from_relation["source"] != "None"
+                and from_relation["destination"] != "None"
+                and from_relation["source"] != None
+                and from_relation["destination"] != None
+            ):
+                # sourceとdestinationがNoneでない場合のみ追加
+                self.requirements["edges"].append(from_relation)
 
         # 選択状態とするためにユニークIDを返す
         return requirement["unique_id"]
@@ -37,30 +56,30 @@ class RequirementManager:
             unique_id (str): Unique ID of requirement to remove
         """
         # 指定されたunique_idの要求を削除する
-        self.requirements.remove(
-            [d for d in self.requirements if d["unique_id"] == unique_id][0]
+        self.requirements["nodes"].remove(
+            [d for d in self.requirements["nodes"] if d["unique_id"] == unique_id][0]
         )
 
         if remove_relations:
             # 指定されたunique_idをもつ関連を削除する
-            for requirement in self.requirements:
-                requirement["relations"] = [
-                    rel
-                    for rel in requirement["relations"]
-                    if rel["destination"] != unique_id
-                ]
+            self.requirements["edges"] = [
+                edge
+                for edge in self.requirements["edges"]
+                if edge["source"] != unique_id and edge["destination"] != unique_id
+            ]
 
-    def update(self, requirement: Dict):
+    def update(self, requirement: Dict, from_relations: List):
         """Update requirement with specified unique_id.
 
         Args:
             requirement (Dict): Requirement to update
+            from_relations (List): List of relations to update
         """
         # 指定されたunique_idの要求を削除する
         self.remove(requirement["unique_id"], remove_relations=False)
 
         # 新しい要求を追加する
-        self.add(requirement, update_unique_id=False)
+        self.add(requirement, from_relations, update_unique_id=False)
 
     def update_reverse_relations(self, unique_id: str, from_relations: List):
         """Update reverse relations for requirement with specified unique_id.

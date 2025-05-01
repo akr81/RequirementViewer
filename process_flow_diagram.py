@@ -149,65 +149,65 @@ with edit_column:
         "色", color_list, index=color_list.index(tmp_entity["color"])
     )
 
-    from_relations = []
-    temp_predecessors = []
-    if tmp_entity["unique_id"] in graph_data.graph.nodes:
-        temp_predecessors = list(graph_data.graph.predecessors(tmp_entity["unique_id"]))
-    for i, from_relation in enumerate(temp_predecessors):
-        temp_from_relation = {"from": None, "comment": None}
-        temp_from_relation["from"] = id_title_dict[
-            st.selectbox(
-                "接続元",
-                id_title_list,
-                id_title_list.index(unique_id_dict[from_relation]),
-                key=f"from{i}",
+    # 接続元の関係を取得
+    for i, edge in enumerate(requirement_data["edges"]):
+        # 接続先が選択エンティティ
+        if edge["destination"] == selected_entity["unique_id"]:
+            edge.setdefault("comment", "")
+            edge["source"] = id_title_dict[
+                st.selectbox(
+                    "接続元",
+                    id_title_list,
+                    index=id_title_list.index(unique_id_dict[edge["source"]]),
+                    key=f"predecessors{i}",
+                )
+            ]
+            edge["comment"] = st.text_input(
+                "説明", edge["comment"], key=f"comment_predecessor{i}"
             )
-        ]
-        temp_from_comment = ""
-        for edge in graph_data.graph.edges(data=True):
-            if edge[0] == from_relation and edge[1] == tmp_entity["unique_id"]:
-                if "comment" in edge[2]:
-                    temp_from_comment = edge[2]["comment"]
-        temp_from_relation["comment"] = st.text_input(
-            "コメント", temp_from_comment, key=f"comment_from{i}"
-        )
-        from_relations.append(temp_from_relation)
+
     # 関係追加の操作があるため、1つは常に表示
-    temp_from_relation = {"from": None, "comment": None}
-    temp_from_relation["from"] = id_title_dict[
+    temp_predecessor = {
+        "source": None,
+        "destination": selected_entity["unique_id"],
+        "comment": None,
+    }
+    temp_predecessor["from"] = id_title_dict[
         st.selectbox("接続元(新規)", id_title_list, index=id_title_list.index("None"))
     ]
-    temp_from_relation["comment"] = st.text_input(
-        "コメント", "", key="comment_from_new"
+    temp_predecessor["comment"] = st.text_input(
+        "コメント", "", key="comment_predecessor_new"
     )
-    from_relations.append(temp_from_relation)
 
-    for i, relation in enumerate(tmp_entity["relations"]):
-        relation.setdefault("comment", "")
-        relation["destination"] = id_title_dict[
-            st.selectbox(
-                "接続先",
-                id_title_list,
-                id_title_list.index(unique_id_dict[relation["destination"]]),
-                key=f"destination{i}",
+    # 接続先の関係を取得
+    for i, edge in enumerate(requirement_data["edges"]):
+        # 接続元が選択エンティティ
+        if edge["source"] == selected_entity["unique_id"]:
+            edge.setdefault("comment", "")
+            edge["source"] = id_title_dict[
+                st.selectbox(
+                    "接続先",
+                    id_title_list,
+                    index=id_title_list.index(unique_id_dict[edge["destination"]]),
+                    key=f"ancestors{i}",
+                )
+            ]
+            edge["comment"] = st.text_input(
+                "説明", edge["comment"], key=f"comment_ancestors{i}"
             )
-        ]
-        temp_comment = ""
-        if "comment" in relation:
-            temp_comment = relation["comment"]
-        relation["comment"] = st.text_input(
-            "コメント", temp_comment, key=f"comment_to{i}"
-        )
 
     # 関係追加の操作があるため、1つは常に表示
-    destination_unique_id = id_title_dict[
+    temp_ancestor = {
+        "source": selected_entity["unique_id"],
+        "destination": None,
+        "comment": None,
+    }
+    temp_ancestor["destination"] = id_title_dict[
         st.selectbox("接続先(新規)", id_title_list, index=id_title_list.index("None"))
     ]  # 末尾に追加用の空要素を追加
-    comment = st.text_input("コメント", "", key="comment_to_new")
+    temp_ancestor["comment"] = st.text_input("コメント", "", key="comment_ancestor_new")
 
-    tmp_entity["relations"].append(
-        {"destination": destination_unique_id, "comment": comment}
-    )
+    new_edges = [temp_predecessor, temp_ancestor]
 
     add_operate_buttons(
         tmp_entity,
@@ -215,7 +215,7 @@ with edit_column:
         file_path,
         id_title_dict,
         unique_id_dict,
-        from_relations=from_relations,
+        from_relations=new_edges,
     )
 
 # セッション状態にgraph_dataを追加

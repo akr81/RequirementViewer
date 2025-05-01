@@ -36,11 +36,12 @@ def add_operate_buttons(
             if not (tmp_entity["unique_id"]) in unique_id_dict:
                 st.error("更新すべきエンティティがありません。")
             else:
-                requirement_manager.update(tmp_entity)
-                if from_relations is not None:
-                    requirement_manager.update_reverse_relations(
-                        tmp_entity["unique_id"], from_relations
-                    )
+                requirement_manager.update(tmp_entity, from_relations)
+                # if from_relations is not None:
+                #     requirement_manager.update_reverse_relations(
+                #         tmp_entity["unique_id"], from_relations
+                #     )
+                print(requirement_manager.requirements)
                 update_source_data(file_path, requirement_manager.requirements)
                 st.write("エンティティを更新しました。")
                 st.query_params.selected = tmp_entity["unique_id"]

@@ -167,15 +167,16 @@ def load_source_data(file_path: str) -> Dict:
     return source_data
 
 
-def update_source_data(file_path: str, source_data: list[dict]):
+def update_source_data(file_path: str, source_data: Dict):
     """Update source to JSON file.
 
     Args:
         file_path (str): Path to JSON file
-        source_data (list[dict]): Source data list
+        source_data (Dict): Source data
     """
     # list内の辞書型データをunique_id順に並び替える
-    source_data.sort(key=lambda x: x["unique_id"])
+    source_data["nodes"].sort(key=lambda x: x["unique_id"])
+    source_data["edges"].sort(key=lambda x: x["source"])
     with open(file_path, "w", encoding="utf-8") as f:
         hjson.dump(source_data, f, ensure_ascii=False, indent=4)
 
