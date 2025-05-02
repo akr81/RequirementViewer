@@ -24,8 +24,6 @@ class RequirementGraph:
             self._convert_process_flow()
         elif title == "Evaporating Cloud Viewer":
             self._convert_evaporating_cloud()
-        elif title == "Evaporating Cloud Viewer":
-            self._convert_evaporating_cloud()
         else:
             raise ValueError("Invalid title specified.")
 
@@ -42,16 +40,12 @@ class RequirementGraph:
                 )
 
     def _convert_strategy_and_tactics(self):
-        for entity in self.entities:
-            entity.setdefault("color", "None")  # colorがない場合はNoneを設定
-            self.graph.add_node(entity["unique_id"], **entity)
-            for relation in entity["relations"]:
-                relation.setdefault("type", "arrow")  # typeがない場合はarrowを設定
-                self.graph.add_edge(
-                    entity["unique_id"],
-                    relation["destination"],
-                    type=relation["type"],
-                )
+        for node in self.entities["nodes"]:
+            self.graph.add_node(node["unique_id"], **node)
+
+        for edge in self.entities["edges"]:
+            edge.setdefault("color", "None")  # colorがない場合はNoneを設定
+            self.graph.add_edge(edge["source"], edge["destination"], **edge)
 
     def _convert_process_flow(self):
         for node in self.entities["nodes"]:

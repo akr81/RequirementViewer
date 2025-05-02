@@ -14,6 +14,8 @@ from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
 import uuid
 import copy
+import datetime
+import pprint
 
 
 def get_default_entity() -> dict:
@@ -30,7 +32,6 @@ def get_default_entity() -> dict:
         "tactics": "",
         "sufficient_assumption": "",
         "unique_id": f"{uuid.uuid4()}".replace("-", ""),
-        "relations": [],
     }
 
 
@@ -74,9 +75,10 @@ requirement_manager = RequirementManager(requirement_data)
 graph_data = RequirementGraph(requirement_data, st.session_state.app_name)
 
 # IDとタイトルをキー, ユニークIDを値とする辞書とその逆を作成
-id_title_dict = build_mapping(requirement_data, "id", "unique_id", add_empty=True)
-unique_id_dict = build_mapping(requirement_data, "unique_id", "id", add_empty=True)
-id_title_list = build_sorted_list(requirement_data, "id", prepend=["None"])
+nodes = requirement_data["nodes"]
+id_title_dict = build_mapping(nodes, "id", "unique_id", add_empty=True)
+unique_id_dict = build_mapping(nodes, "unique_id", "id", add_empty=True)
+id_title_list = build_sorted_list(nodes, "id", prepend=["None"])
 
 # URL のクエリからパラメタを取得
 scale = float(st.query_params.get("scale", 1.0))
@@ -105,7 +107,9 @@ else:
             pass
         else:
             selected_entity = [
-                d for d in requirement_data if d["unique_id"] == selected_unique_id
+                d
+                for d in requirement_data["nodes"]
+                if d["unique_id"] == selected_unique_id
             ][0]
 
 if not selected_entity:
@@ -130,8 +134,9 @@ plantuml_code = draw_diagram_column(
 
 with edit_column:
     st.write("## データ編集")
-    # 直接データ操作はせず、コピーに対して操作する
+    # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
+    tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
 
     tmp_entity["id"] = st.text_input("ID", tmp_entity["id"])
@@ -155,29 +160,44 @@ with edit_column:
         "色", color_list, index=color_list.index(tmp_entity["color"])
     )
 
-    for i, relation in enumerate(tmp_entity["relations"]):
-        relation["destination"] = id_title_dict[
+    # 接続元の関係を取得
+    # 直接edgeは操作せず、コピーに対して操作する
+    tmp_edges = copy.deepcopy(requirement_data["edges"])
+    for i, edge in enumerate(tmp_edges):
+        if edge["source"] != selected_unique_id:
+            continue
+        edge["destination"] = id_title_dict[
             st.selectbox(
                 "接続先",
                 id_title_list,
-                id_title_list.index(unique_id_dict[relation["destination"]]),
+                id_title_list.index(unique_id_dict[edge["destination"]]),
                 key=f"destination{i}",
             )
         ]
 
     # 関係追加の操作があるため、1つは常に表示
     destination_unique_id = id_title_dict[
-        st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
+        st.selectbox("接続先(新規)", id_title_list, index=id_title_list.index("None"))
     ]  # 末尾に追加用の空要素を追加
 
-    tmp_entity["relations"].append(
-        {
-            "destination": destination_unique_id,
-        }
-    )
+    new_edge = {
+        "source": tmp_entity["unique_id"],
+        "destination": destination_unique_id,
+        "type": "arrow",
+    }
+
+    tmp_edges.append(new_edge)
+
+    print(f"=={datetime.datetime.now()}==")
 
     add_operate_buttons(
-        tmp_entity, requirement_manager, file_path, id_title_dict, unique_id_dict
+        selected_unique_id,
+        tmp_entity,
+        requirement_manager,
+        file_path,
+        id_title_dict,
+        unique_id_dict,
+        tmp_edges=tmp_edges,
     )
 
 # セッション状態にgraph_dataを追加

@@ -73,14 +73,11 @@ requirement_manager = RequirementManager(requirement_data)
 graph_data = RequirementGraph(requirement_data, st.session_state.app_name)
 
 # IDとタイトルをキー, ユニークIDを値とする辞書とその逆を作成
-id_title_dict = build_mapping(
-    requirement_data["nodes"], "id", "unique_id", add_empty=True
-)
-unique_id_dict = build_mapping(
-    requirement_data["nodes"], "unique_id", "id", add_empty=True
-)
-id_title_list = build_sorted_list(requirement_data["nodes"], "id", prepend=["None"])
-add_list = extract_and_list(requirement_data["nodes"], prepend=["None", "New"])
+nodes = requirement_data["nodes"]
+id_title_dict = build_mapping(nodes, "id", "unique_id", add_empty=True)
+unique_id_dict = build_mapping(nodes, "unique_id", "id", add_empty=True)
+id_title_list = build_sorted_list(nodes, "id", prepend=["None"])
+add_list = extract_and_list(nodes, prepend=["None", "New"])
 
 # URL のクエリからパラメタを取得
 scale = float(st.query_params.get("scale", 1.0))
