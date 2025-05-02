@@ -58,30 +58,28 @@ class RequirementGraph:
             self.graph.add_node(node["unique_id"], **node)
         for edge in self.entities["edges"]:
             edge.setdefault("type", "arrow")
-            print(edge["source"], self.graph.nodes[edge["source"]]["type"])
             if self.graph.nodes[edge["source"]]["type"] == "note":
                 modified_edge = copy.deepcopy(edge)
                 modified_edge["type"] = "flat_long"
                 self.graph.add_edge(
                     modified_edge["source"],
                     modified_edge["destination"],
-                    **modified_edge
+                    **modified_edge,
                 )
             else:
                 self.graph.add_edge(edge["source"], edge["destination"], **edge)
 
     def _convert_requirements(self):
         """Convert requirements to graph."""
-        for entity in self.entities:
-            entity.setdefault("color", "None")  # colorがない場合はNoneを設定
-            self.graph.add_node(entity["unique_id"], **entity)
-            for relation in entity["relations"]:
-                self.graph.add_edge(
-                    entity["unique_id"],
-                    relation["destination"],
-                    type=relation["type"],
-                    note=relation["note"],
-                )
+        for node in self.entities["nodes"]:
+            self.graph.add_node(node["unique_id"], **node)
+        for edge in self.entities["edges"]:
+            edge.setdefault("color", "None")  # colorがない場合はNoneを設定
+            self.graph.add_edge(
+                edge["source"],
+                edge["destination"],
+                **edge,  # edgeの情報をそのまま渡す
+            )
 
     def _add_note_edge(self, entity, relation):
         """Add edge for note type entity.

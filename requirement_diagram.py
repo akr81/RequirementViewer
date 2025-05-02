@@ -17,6 +17,8 @@ import os
 import uuid
 import copy
 import shutil
+import datetime
+import pprint
 
 
 @st.cache_data
@@ -73,7 +75,6 @@ def get_default_entity(entity_types: list[str]) -> dict:
         "text": "",
         "color": "None",
         "unique_id": f"{uuid.uuid4()}".replace("-", ""),
-        "relations": [],
     }
 
 
@@ -116,15 +117,15 @@ if demo:
 
 data_key = st.session_state.app_data[st.session_state.app_name]["data"]
 file_path = config_data[data_key]
-
 requirement_data = load_source_data(file_path)
 requirement_manager = RequirementManager(requirement_data)
 graph_data = RequirementGraph(requirement_data, st.session_state.app_name)
 
 # IDとタイトルをキー, ユニークIDを値とする辞書とその逆を作成
-id_title_dict = build_mapping(requirement_data, "id", "unique_id", add_empty=True)
-unique_id_dict = build_mapping(requirement_data, "unique_id", "id", add_empty=True)
-id_title_list = build_sorted_list(requirement_data, "id", prepend=["None"])
+nodes = requirement_data["nodes"]
+id_title_dict = build_mapping(nodes, "id", "unique_id", add_empty=True)
+unique_id_dict = build_mapping(nodes, "unique_id", "id", add_empty=True)
+id_title_list = build_sorted_list(nodes, "id", prepend=["None"])
 
 # URL のクエリからパラメタを取得
 scale = float(st.query_params.get("scale", 1.0))
@@ -153,7 +154,9 @@ else:
             pass
         else:
             selected_entity = [
-                d for d in requirement_data if d["unique_id"] == selected_unique_id
+                d
+                for d in requirement_data["nodes"]
+                if d["unique_id"] == selected_unique_id
             ][0]
 
 if not selected_entity:
@@ -178,10 +181,10 @@ plantuml_code = draw_diagram_column(
 
 with edit_column:
     st.write("## データ編集")
-    # 直接データ操作はせず、コピーに対して操作する
+    # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
-    if "color" not in tmp_entity or tmp_entity["color"] == "":
-        tmp_entity["color"] = "None"
+    tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
+    tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
 
     tmp_entity["type"] = st.selectbox(
         "エンティティタイプ",
@@ -198,80 +201,101 @@ with edit_column:
     # テキストエリアでエンティティの詳細情報を入力
     # 関係は複数ありえるため、繰り返し表示させる
     # また、関係の追加を行うケースがあるため、最初の項目は空にしておき2つめ以後は設定されているデータを表示する
-
     relation_column, destination_column = st.columns(2)
+    tmp_edges = copy.deepcopy(requirement_data["edges"])
+    for i, tmp_edge in enumerate(tmp_edges):
 
-    for i, relation in enumerate(tmp_entity["relations"]):
+        # 接続元が選択エンティティでないものはスキップ
+        if tmp_edge["source"] != selected_unique_id:
+            continue
+
         relation_column, destination_column = st.columns(2)
         with relation_column:
-            relation["type"] = st.selectbox(
+            tmp_edge["type"] = st.selectbox(
                 "関係タイプ",
                 relation_types,
-                relation_types.index(relation["type"]),
+                relation_types.index(tmp_edge["type"]),
                 key=f"relation_type{i}",
             )
         with destination_column:
-            relation["destination"] = id_title_dict[
+            tmp_edge["destination"] = id_title_dict[
                 st.selectbox(
                     "接続先",
                     id_title_list,
-                    id_title_list.index(unique_id_dict[relation["destination"]]),
+                    id_title_list.index(unique_id_dict[tmp_edge["destination"]]),
                     key=f"destination{i}",
                 )
             ]
         expander_title = (
             "関係の注釈"
-            if "text" in relation["note"] and relation["note"]["text"] != ""
+            if "text" in tmp_edge["note"] and tmp_edge["note"]["text"] != ""
             else "関係の注釈(なし)"
         )
         with st.expander(
             expander_title,
-            expanded=bool("text" in relation["note"] and relation["note"]["text"]),
+            expanded=bool("text" in tmp_edge["note"] and tmp_edge["note"]["text"]),
         ):
-            relation["note"]["type"] = st.selectbox(
+            tmp_edge["note"]["type"] = st.selectbox(
                 "注釈タイプ",
                 note_types,
                 key=f"note_type{i}",
-                index=note_types.index(relation.get("note").get("type", "None")),
+                index=note_types.index(tmp_edge.get("note").get("type", "None")),
             )
-            if "note" in relation:
-                relation["note"]["text"] = st.text_area(
+            if "note" in tmp_edge:
+                tmp_edge["note"]["text"] = st.text_area(
                     "説明",
-                    relation.get("note").get("text", ""),
+                    tmp_edge.get("note").get("text", ""),
                     key=f"relation_note{i}",
                 )
             else:
-                relation["note"] = st.text_area("説明", "", key=f"relation_note{i}")
+                tmp_edge["note"] = st.text_area("説明", "", key=f"relation_note{i}")
 
     # 関係追加の操作があるため、1つは常に表示
     relation_column_new, destination_column_new = st.columns(2)
 
     with relation_column_new:
-        relation_type = st.selectbox("関係タイプ", relation_types)
+        relation_type = st.selectbox("関係タイプ(新規)", relation_types)
     with destination_column_new:
         destination_unique_id = id_title_dict[
-            st.selectbox("接続先", id_title_list, index=id_title_list.index("None"))
+            st.selectbox(
+                "接続先(新規)", id_title_list, index=id_title_list.index("None")
+            )
         ]  # 末尾に追加用の空要素を追加
-    with st.expander("関係の注釈", expanded=True):
+    with st.expander("関係の注釈(新規)", expanded=True):
         relation_note = {}
         relation_note["type"] = st.selectbox("注釈タイプ", note_types, key="note_type")
         relation_note["text"] = st.text_area("説明", "", key="relation_text")
 
     if not relation_note:
-        tmp_entity["relations"].append(
-            {"type": relation_type, "destination": destination_unique_id, "note": {}}
+        tmp_edges.append(
+            {
+                "source": selected_unique_id,
+                "type": relation_type,
+                "destination": destination_unique_id,
+                "note": {},
+            }
         )
     else:
-        tmp_entity["relations"].append(
+        tmp_edges.append(
             {
+                "source": selected_unique_id,
                 "type": relation_type,
                 "destination": destination_unique_id,
                 "note": relation_note,
             }
         )
 
+    print(f"=={datetime.datetime.now()}==")
+    pprint.pprint(tmp_entity)
+    pprint.pprint(tmp_edges)
     add_operate_buttons(
-        tmp_entity, requirement_manager, file_path, id_title_dict, unique_id_dict
+        selected_unique_id,
+        tmp_entity,
+        requirement_manager,
+        file_path,
+        id_title_dict,
+        unique_id_dict,
+        tmp_edges=tmp_edges,
     )
 
 

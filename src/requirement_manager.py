@@ -25,11 +25,15 @@ class RequirementManager:
         # 有効な接続関係(source, destinationがともに有効)を追加する
         # 重複削除
         seen = set()
-        tmp_edges = [
-            d
-            for d in tmp_edges
-            if tuple(d.items()) not in seen and not seen.add(tuple(d.items()))
-        ]
+        try:
+            tmp_edges = [
+                d
+                for d in tmp_edges
+                if tuple(d.items()) not in seen and not seen.add(tuple(d.items()))
+            ]
+        except:
+            # TODO エラー処理
+            pass
         for tmp_edge in tmp_edges:
             if (
                 tmp_edge["source"] != "None"

@@ -151,7 +151,7 @@ with edit_column:
     )
 
     # 接続元の関係を取得
-    # TODO edgeも一度コピーを取って、そこから操作する
+    # 直接edgeは操作せず、コピーに対して操作する
     tmp_edges = copy.deepcopy(requirement_data["edges"])
     for i, edge in enumerate(tmp_edges):
         # 接続先が選択エンティティ
