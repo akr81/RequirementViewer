@@ -258,7 +258,7 @@ with edit_column:
         file_path,
         id_title_dict,
         unique_id_dict,
-        from_relations=from_relations,
+        tmp_edges=from_relations,
     )
 
 # セッション状態にgraph_dataを追加

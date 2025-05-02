@@ -136,8 +136,9 @@ plantuml_code = draw_diagram_column(
 
 with edit_column:
     st.write("## データ編集")
-    # 直接データ操作はせず、コピーに対して操作する
+    # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
+    tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
     tmp_entity.setdefault("type", "entity")  # typeがない場合はentityを設定
 
@@ -150,9 +151,11 @@ with edit_column:
     )
 
     # 接続元の関係を取得
-    for i, edge in enumerate(requirement_data["edges"]):
+    # TODO edgeも一度コピーを取って、そこから操作する
+    tmp_edges = copy.deepcopy(requirement_data["edges"])
+    for i, edge in enumerate(tmp_edges):
         # 接続先が選択エンティティ
-        if edge["destination"] == selected_entity["unique_id"]:
+        if edge["destination"] == selected_unique_id:
             edge.setdefault("comment", "")
             edge["source"] = id_title_dict[
                 st.selectbox(
@@ -169,22 +172,22 @@ with edit_column:
     # 関係追加の操作があるため、1つは常に表示
     temp_predecessor = {
         "source": None,
-        "destination": selected_entity["unique_id"],
+        "destination": tmp_entity["unique_id"],
         "comment": None,
     }
-    temp_predecessor["from"] = id_title_dict[
+    temp_predecessor["source"] = id_title_dict[
         st.selectbox("接続元(新規)", id_title_list, index=id_title_list.index("None"))
     ]
     temp_predecessor["comment"] = st.text_input(
-        "コメント", "", key="comment_predecessor_new"
+        "説明(新規)", "", key="comment_predecessor_new"
     )
 
     # 接続先の関係を取得
-    for i, edge in enumerate(requirement_data["edges"]):
+    for i, edge in enumerate(tmp_edges):
         # 接続元が選択エンティティ
-        if edge["source"] == selected_entity["unique_id"]:
+        if edge["source"] == selected_unique_id:
             edge.setdefault("comment", "")
-            edge["source"] = id_title_dict[
+            edge["destination"] = id_title_dict[
                 st.selectbox(
                     "接続先",
                     id_title_list,
@@ -198,24 +201,28 @@ with edit_column:
 
     # 関係追加の操作があるため、1つは常に表示
     temp_ancestor = {
-        "source": selected_entity["unique_id"],
+        "source": tmp_entity["unique_id"],
         "destination": None,
         "comment": None,
     }
     temp_ancestor["destination"] = id_title_dict[
         st.selectbox("接続先(新規)", id_title_list, index=id_title_list.index("None"))
     ]  # 末尾に追加用の空要素を追加
-    temp_ancestor["comment"] = st.text_input("コメント", "", key="comment_ancestor_new")
+    temp_ancestor["comment"] = st.text_input(
+        "説明(新規)", "", key="comment_ancestor_new"
+    )
 
     new_edges = [temp_predecessor, temp_ancestor]
+    tmp_edges.extend(new_edges)
 
     add_operate_buttons(
+        selected_unique_id,
         tmp_entity,
         requirement_manager,
         file_path,
         id_title_dict,
         unique_id_dict,
-        from_relations=new_edges,
+        tmp_edges=tmp_edges,
     )
 
 # セッション状態にgraph_dataを追加

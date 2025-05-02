@@ -499,15 +499,18 @@ right_shoulder_to_head .. right_shoulder
     def _convert_card_edge(self, data: Dict[str, Any], reverse=False):
         src = data[0]
         dst = data[1]
+        explanation = ""
+        if "comment" in data[2] and data[2]["comment"] != "":
+            explanation = ":" + data[2]["comment"]
         if data[2]["type"] == "arrow":
             if reverse:
-                ret = f"{src} --> {dst}"
+                ret = f"{src} --> {dst} {explanation}"
             else:
-                ret = f"{dst} <-- {src}"
+                ret = f"{dst} <-- {src} {explanation}"
         elif data[2]["type"] == "flat":
-            ret = f"{dst} . {src}"
+            ret = f"{dst} . {src} {explanation}"
         elif data[2]["type"] == "flat_long":
-            ret = f"{dst} .. {src}"
+            ret = f"{dst} .. {src} {explanation}"
 
         return ret
 
