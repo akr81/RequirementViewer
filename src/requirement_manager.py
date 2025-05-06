@@ -34,14 +34,15 @@ class RequirementManager:
         except:
             # TODO エラー処理
             pass
-        for tmp_edge in tmp_edges:
-            if (
-                tmp_edge["source"] != "None"
-                and tmp_edge["destination"] != "None"
-                and tmp_edge["source"] != None
-                and tmp_edge["destination"] != None
-            ):
-                self.requirements["edges"].append(tmp_edge)
+        if tmp_edges is not None:
+            for tmp_edge in tmp_edges:
+                if (
+                    tmp_edge["source"] != "None"
+                    and tmp_edge["destination"] != "None"
+                    and tmp_edge["source"] != None
+                    and tmp_edge["destination"] != None
+                ):
+                    self.requirements["edges"].append(tmp_edge)
 
         # 選択状態とするためにユニークIDを返す
         return requirement["unique_id"]
@@ -75,11 +76,13 @@ class RequirementManager:
         """
         # 渡されるrequirementは、暫定的にユニークIDを振り直しているので、元のユニークIDで上書きする
         # edgeの上書き
-        for tmp_edge in tmp_edges:
-            if tmp_edge["source"] == requirement["unique_id"]:
-                tmp_edge["source"] = selected_unique_id
-            if tmp_edge["destination"] == requirement["unique_id"]:
-                tmp_edge["destination"] = selected_unique_id
+        if tmp_edges is not None:
+            for tmp_edge in tmp_edges:
+                if tmp_edge["source"] == requirement["unique_id"]:
+                    tmp_edge["source"] = selected_unique_id
+                if tmp_edge["destination"] == requirement["unique_id"]:
+                    tmp_edge["destination"] = selected_unique_id
+
         # requirementの上書き
         requirement["unique_id"] = selected_unique_id
 

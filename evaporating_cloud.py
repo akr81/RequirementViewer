@@ -26,7 +26,6 @@ def get_default_entity() -> dict:
         "id": "",
         "title": "",
         "unique_id": f"{uuid.uuid4()}".replace("-", ""),
-        "relations": [],
     }
 
 
@@ -70,9 +69,10 @@ requirement_manager = RequirementManager(requirement_data)
 graph_data = RequirementGraph(requirement_data, st.session_state.app_name)
 
 # IDとタイトルをキー, ユニークIDを値とする辞書とその逆を作成
-id_title_dict = build_mapping(requirement_data, "id", "unique_id", add_empty=True)
-unique_id_dict = build_mapping(requirement_data, "unique_id", "id", add_empty=True)
-id_title_list = build_sorted_list(requirement_data, "id", prepend=["None"])
+nodes = requirement_data["nodes"]
+id_title_dict = build_mapping(nodes, "id", "unique_id", add_empty=True)
+unique_id_dict = build_mapping(nodes, "unique_id", "id", add_empty=True)
+id_title_list = build_sorted_list(nodes, "id", prepend=["None"])
 
 # URL のクエリからパラメタを取得
 scale = float(st.query_params.get("scale", 1.0))
@@ -101,7 +101,9 @@ else:
             pass
         else:
             selected_entity = [
-                d for d in requirement_data if d["unique_id"] == selected_unique_id
+                d
+                for d in requirement_data["nodes"]
+                if d["unique_id"] == selected_unique_id
             ][0]
 
 if not selected_entity:
@@ -121,6 +123,7 @@ plantuml_code = draw_diagram_column(
     upstream_distance,
     downstream_distance,
     scale,
+    graph_data=graph_data,
 )
 
 with edit_column:
@@ -143,13 +146,18 @@ with edit_column:
         "色", color_list, index=color_list.index(tmp_entity["color"])
     )
 
+    # 更新しないが旧フォーマットを更新するために読み込む
+    tmp_edges = copy.deepcopy(requirement_data["edges"])
+
     add_operate_buttons(
+        selected_unique_id,
         tmp_entity,
         requirement_manager,
         file_path,
         id_title_dict,
         unique_id_dict,
         no_add=True,
+        tmp_edges=tmp_edges,
     )
 
 # セッション状態にgraph_dataを追加

@@ -28,16 +28,13 @@ class RequirementGraph:
             raise ValueError("Invalid title specified.")
 
     def _convert_evaporating_cloud(self):
-        for entity in self.entities:
+        for entity in self.entities["nodes"]:
             entity.setdefault("color", "None")  # colorがない場合はNoneを設定
             self.graph.add_node(entity["unique_id"], **entity)
-            for relation in entity["relations"]:
-                relation.setdefault("type", "arrow")  # typeがない場合はarrowを設定
-                self.graph.add_edge(
-                    entity["unique_id"],
-                    relation["destination"],
-                    type=relation["type"],
-                )
+
+        for edge in self.entities["edges"]:
+            edge.setdefault("type", "arrow")  # typeがない場合はarrowを設定
+            self.graph.add_edge(edge["source"], edge["destination"], **edge)
 
     def _convert_strategy_and_tactics(self):
         for node in self.entities["nodes"]:
