@@ -235,6 +235,24 @@ def extract_and_list(
     return sorted_vals
 
 
+def build_and_list(
+    items: List[Dict[str, Any]], *, prepend: Optional[List[str]] = None
+) -> List[str]:
+    """
+    全 edges の and をユニークに集めてソートしたリスト。
+    prepend（例: ["None","New"]）を先頭に挿入可能。
+    """
+    vals = []
+    for item in items:
+        if item.get("and", "None") not in (None, "", "None"):
+            vals.append(str(item["and"]))
+    sorted_vals = sorted(list(set(vals)), key=lambda v: (not v.isdigit(), v))
+    if prepend:
+        for x in reversed(prepend):
+            sorted_vals.insert(0, x)
+    return sorted_vals
+
+
 def get_next_and_number(existing: List[str], candidate: str) -> str:
     """
     candidate=="New" → 1〜99 の空き番号を返す。

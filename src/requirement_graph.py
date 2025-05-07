@@ -89,35 +89,12 @@ class RequirementGraph:
 
     def _convert_current_reality(self):
         """Convert current reality tree to graph."""
-        for entity in self.entities:
-            entity.setdefault("color", "None")  # colorがない場合はNoneを設定
-            self.graph.add_node(entity["unique_id"], **entity)
-            for relation in entity["relations"]:
-                if entity["type"] == "entity":
-                    if (
-                        "and" in relation
-                        and relation["and"] != None
-                        and relation["and"] != "None"
-                    ):
-                        self.graph.add_node(
-                            relation["and"],
-                            id=relation["and"],
-                            unique_id=relation["and"],
-                            type="and",
-                        )
-                        # and経由の関係を追加
-                        self.graph.add_edge(
-                            entity["unique_id"], relation["and"], type="arrow"
-                        )
-                        self.graph.add_edge(
-                            relation["and"], relation["destination"], type="arrow"
-                        )
-                    else:
-                        self.graph.add_edge(
-                            entity["unique_id"], relation["destination"], type="arrow"
-                        )
-                else:
-                    self._add_note_edge(entity, relation)
+        for node in self.entities["nodes"]:
+            node.setdefault("color", "None")  # colorがない場合はNoneを設定
+            self.graph.add_node(node["unique_id"], **node)
+        for edge in self.entities["edges"]:
+            edge.setdefault("type", "arrow")  # typeがない場合はarrowを設定
+            self.graph.add_edge(edge["source"], edge["destination"], **edge)
 
     def extract_subgraph(
         self, target_node: str, upstream_distance: int, downstream_distance: int

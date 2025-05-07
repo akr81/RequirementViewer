@@ -3,6 +3,7 @@ import networkx as nx
 import re
 import unicodedata
 import hjson
+import copy
 
 with open("setting/colors.json", "r", encoding="utf-8") as f:
     color_to_archimate = hjson.load(f)
@@ -558,7 +559,19 @@ end note
 
         # Convert edges
         for edge in graph.edges(data=True):
-            ret += self._convert_card_edge(edge) + "\n"
+            # andに値が設定されている場合は、ANDを経由させる
+            if edge[2]["and"] != "None":
+                ret += f"usecase \"AND{edge[2]['and']}\" as {edge[2]['and']}\n"
+                # edgeのdestinationをandにする
+                edge_to_and = list(copy.deepcopy(edge))
+                edge_to_and[1] = edge[2]["and"]
+                ret += self._convert_card_edge(edge_to_and) + "\n"
+                # edgeのsourceをandにする
+                edge_from_and = list(copy.deepcopy(edge))
+                edge_from_and[0] = edge[2]["and"]
+                ret += self._convert_card_edge(edge_from_and) + "\n"
+            else:
+                ret += self._convert_card_edge(edge) + "\n"
 
         ret += "\n}\n@enduml\n"
         return ret
