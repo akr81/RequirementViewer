@@ -199,9 +199,9 @@ with edit_column:
         temp_predecessor["and"] = st.selectbox(
             "and", add_list, index=add_list.index("None"), key=f"and_predecessors"
         )
-        edge["and"] = get_next_and_number(add_list, edge["and"])
-        if not edge["and"]:
-            edge["and"] = "None"
+        temp_predecessor["and"] = get_next_and_number(add_list, temp_predecessor["and"])
+        if not temp_predecessor["and"]:
+            temp_predecessor["and"] = "None"
 
     loop_destination_column, loop_destination_and_column = st.columns([7, 2])
     for i, edge in enumerate(tmp_edges):
