@@ -81,7 +81,7 @@ def get_diagram(plantuml_code: str, plantuml_server: str, *, png_out=False) -> A
         # PNG出力の場合はURLを変更
         plantuml_server = plantuml_server.replace("svg", "png")
         plantuml_code = plantuml_code.replace(
-            "@startuml", "@startuml\nskinparam dpi 300\n"
+            "@startuml", "@startuml\nskinparam dpi 200\n"
         )
     # PlantUMLサーバ用にエンコード
     encoded = encode_plantuml(plantuml_code)
