@@ -5,6 +5,7 @@ import zlib
 import requests
 import hjson
 import os
+import datetime
 from typing import Tuple, List, Dict, Tuple, Any, Optional
 
 
@@ -66,7 +67,7 @@ def encode64(data: bytes) -> str:
 
 
 # PlantUMLコードからSVG画像を取得する関数
-def get_diagram(plantuml_code: str, plantuml_server: str) -> str:
+def get_diagram(plantuml_code: str, plantuml_server: str, *, png_out=False) -> Any:
     """Get SVG diagram from PlantUML code.
 
     Args:
@@ -74,14 +75,23 @@ def get_diagram(plantuml_code: str, plantuml_server: str) -> str:
         plantuml_server (str): PlantUML server URL
 
     Returns:
-        str: SVG diagram as text
+        Any: SVG diagram as text or PNG image as bytes
     """
+    if png_out:
+        # PNG出力の場合はURLを変更
+        plantuml_server = plantuml_server.replace("svg", "png")
+        plantuml_code = plantuml_code.replace(
+            "@startuml", "@startuml\nskinparam dpi 300\n"
+        )
     # PlantUMLサーバ用にエンコード
     encoded = encode_plantuml(plantuml_code)
     url = "".join([plantuml_server, encoded])
     response = requests.get(url)
     if response.status_code == 200:
-        return response.text
+        if png_out:
+            return response.content
+        else:
+            return response.text
     else:
         st.error("PlantUMLサーバから図を取得できませんでした。")
         st.write(response)
@@ -180,6 +190,15 @@ def update_source_data(file_path: str, source_data: Dict):
     with open(file_path, "w", encoding="utf-8") as f:
         hjson.dump(source_data, f, ensure_ascii=False, indent=4)
 
+    # for backup
+    postfix_file = st.session_state.app_data[st.session_state.app_name]["postfix"]
+    os.makedirs("back", exist_ok=True)
+    filename = (
+        datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{postfix_file}.json"
+    )
+    with open(os.path.join("back", filename), "w", encoding="utf-8") as out:
+        hjson.dump(source_data, out, ensure_ascii=False, indent=4)
+
 
 def build_mapping(
     items: List[Dict[str, Any]],
@@ -188,7 +207,7 @@ def build_mapping(
     *,
     add_empty: bool = False,
     empty_key: str = "None",
-    empty_value: str = "None"
+    empty_value: str = "None",
 ) -> Dict[str, str]:
     """
     items の各 dict から key_field→value_field マッピングを作成。

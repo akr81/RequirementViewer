@@ -3,6 +3,8 @@ from src.utility import get_diagram
 from src.requirement_graph import RequirementGraph
 from src.convert_puml_code import ConvertPumlCode
 import copy
+import os
+import datetime
 
 
 def draw_diagram_column(
@@ -113,4 +115,15 @@ def draw_diagram_column(
             """,
             unsafe_allow_html=True,
         )
+
+        # pngファイルを出力
+        postfix_file = st.session_state.app_data[st.session_state.app_name]["postfix"]
+        os.makedirs("back", exist_ok=True)
+        png_output = get_diagram(plantuml_code, config_data["plantuml"], png_out=True)
+        filename = (
+            datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{postfix_file}.png"
+        )
+        with open(os.path.join("back", filename), "wb") as out:
+            out.write(png_output)
+
     return plantuml_code
