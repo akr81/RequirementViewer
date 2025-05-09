@@ -2,16 +2,13 @@ import streamlit as st
 from src.requirement_manager import RequirementManager
 from src.requirement_graph import RequirementGraph
 from src.utility import (
-    start_plantuml_server,
-    load_config,
     load_source_data,
-    load_app_data,
-    load_colors,
     build_mapping,
     build_sorted_list,
 )
 from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
+from src.page_setup import initialize_page
 import hjson
 import os
 import uuid
@@ -78,25 +75,10 @@ def get_default_entity(entity_types: list[str]) -> dict:
     }
 
 
-st.session_state.app_name = "Requirement Diagram Viewer"
-
-st.set_page_config(
-    layout="wide",
-    page_title=st.session_state.app_name,
-    initial_sidebar_state="collapsed",  # サイドバーを閉じた状態で表示
+color_list, config_data, demo, app_data, plantuml_process = initialize_page(
+    "Requirement Diagram Viewer"
 )
 
-# Configファイルを読み込む
-config_data, demo = load_config()
-st.session_state.config_data = config_data
-app_data = load_app_data()
-st.session_state.app_data = app_data
-color_list = load_colors()
-
-# PlantUMLサーバを起動（キャッシュされるので再度起動されません）
-if not ("www.plantuml.com" in config_data["plantuml"]):
-    plantuml_process = start_plantuml_server()
-# st.write("PlantUMLサーバが立ち上がっています（プロセスID：", plantuml_process.pid, "）")
 
 # エンティティタイプと関係タイプを読み込む
 entity_types = load_entity_types()

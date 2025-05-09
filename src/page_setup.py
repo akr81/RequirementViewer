@@ -1,5 +1,5 @@
 import streamlit as st
-from src.utility import load_colors, load_config, load_app_data
+from src.utility import load_colors, load_config, load_app_data, start_plantuml_server
 
 
 def initialize_page(app_name: str):
@@ -22,4 +22,8 @@ def initialize_page(app_name: str):
     app_data = load_app_data()
     st.session_state.app_data = app_data
 
-    return color_list, config_data, demo, app_data
+    # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
+    if not ("www.plantuml.com" in config_data["plantuml"]):
+        plantuml_process = start_plantuml_server()
+
+    return color_list, config_data, demo, app_data, plantuml_process

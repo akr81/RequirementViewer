@@ -2,19 +2,15 @@ import streamlit as st
 from src.requirement_manager import RequirementManager
 from src.requirement_graph import RequirementGraph
 from src.utility import (
-    start_plantuml_server,
-    load_config,
     load_source_data,
-    load_app_data,
-    load_colors,
     build_mapping,
     build_sorted_list,
-    extract_and_list,
     build_and_list,
     get_next_and_number,
 )
 from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
+from src.page_setup import initialize_page
 import uuid
 import copy
 
@@ -34,27 +30,9 @@ def get_default_entity() -> dict:
 
 entity_list = ["entity", "note"]
 
-color_list = load_colors()
-
-st.session_state.app_name = "Current Reality Tree Viewer"
-
-st.set_page_config(
-    layout="wide",
-    page_title=st.session_state.app_name,
-    initial_sidebar_state="collapsed",  # サイドバーを閉じた状態で表示
+color_list, config_data, demo, app_data, plantuml_process = initialize_page(
+    "Current Reality Tree Viewer"
 )
-
-# Configファイルを読み込む
-config_data, demo = load_config()
-st.session_state.config_data = config_data
-app_data = load_app_data()
-st.session_state.app_data = app_data
-
-# PlantUMLサーバを起動（キャッシュされるので再度起動されません）
-if not ("www.plantuml.com" in config_data["plantuml"]):
-    plantuml_process = start_plantuml_server()
-# st.write("PlantUMLサーバが立ち上がっています（プロセスID：", plantuml_process.pid, "）")
-
 
 if demo:
     st.title(st.session_state.app_name)
@@ -78,7 +56,6 @@ edges = requirement_data["edges"]
 id_title_dict = build_mapping(nodes, "id", "unique_id", add_empty=True)
 unique_id_dict = build_mapping(nodes, "unique_id", "id", add_empty=True)
 id_title_list = build_sorted_list(nodes, "id", prepend=["None"])
-# add_list = extract_and_list(nodes, prepend=["None", "New"])
 add_list = build_and_list(edges, prepend=["None", "New"])
 
 # URL のクエリからパラメタを取得
