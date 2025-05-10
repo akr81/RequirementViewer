@@ -1,27 +1,11 @@
 import streamlit as st
 from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
+from src.diagram_configs import *
 from src.page_setup import initialize_page, load_and_prepare_data
 import uuid
 import copy
 import datetime
-
-
-def get_default_entity() -> dict:
-    """Get default entity data.
-
-    Returns:
-        entity_types: Entity data list
-    """
-    return {
-        "id": "",
-        "necessary_assumption": "",
-        "strategy": "",
-        "parallel_assumption": "",
-        "tactics": "",
-        "sufficient_assumption": "",
-        "unique_id": f"{uuid.uuid4()}".replace("-", ""),
-    }
 
 
 color_list, config_data, demo, app_data, plantuml_process = initialize_page(
@@ -61,7 +45,7 @@ file_path = config_data[data_key]
 ) = load_and_prepare_data(file_path, st.session_state.app_name)
 
 if not selected_entity:
-    selected_entity = get_default_entity()
+    selected_entity = DEFAULT_ENTITY_GETTERS[st.session_state.app_name]()
 
 # Requirement diagram表示とデータ編集のレイアウトを設定
 diagram_column, edit_column = st.columns([4, 1])

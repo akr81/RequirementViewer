@@ -1,6 +1,7 @@
 import streamlit as st
 from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
+from src.diagram_configs import *
 from src.page_setup import initialize_page, load_and_prepare_data
 import hjson
 import os
@@ -49,25 +50,6 @@ def load_note_types() -> list[str]:
     return note_types
 
 
-def get_default_entity(entity_types: list[str]) -> dict:
-    """Get default entity data.
-
-    Returns:
-        entity_types: Entity data list
-    """
-    default_type = ""
-    if len(entity_types) > 0:
-        default_type = entity_types[0]
-    return {
-        "type": default_type,
-        "id": "",
-        "title": "",
-        "text": "",
-        "color": "None",
-        "unique_id": f"{uuid.uuid4()}".replace("-", ""),
-    }
-
-
 color_list, config_data, demo, app_data, plantuml_process = initialize_page(
     "Requirement Diagram Viewer"
 )
@@ -113,7 +95,7 @@ file_path = config_data[data_key]
 ) = load_and_prepare_data(file_path, st.session_state.app_name)
 
 if not selected_entity:
-    selected_entity = get_default_entity(entity_types)
+    selected_entity = DEFAULT_ENTITY_GETTERS[st.session_state.app_name](entity_types)
 
 # Requirement diagram表示とデータ編集のレイアウトを設定
 diagram_column, edit_column = st.columns([4, 1])
