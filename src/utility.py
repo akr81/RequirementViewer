@@ -5,6 +5,7 @@ import zlib
 import requests
 import hjson
 import os
+import shutil
 import datetime
 from typing import Tuple, List, Dict, Tuple, Any, Optional
 
@@ -194,7 +195,7 @@ def update_source_data(file_path: str, source_data: Dict):
     postfix_file = st.session_state.app_data[st.session_state.app_name]["postfix"]
     os.makedirs("back", exist_ok=True)
     filename = (
-        datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{postfix_file}.json"
+        datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{postfix_file}.hjson"
     )
     with open(os.path.join("back", filename), "w", encoding="utf-8") as out:
         hjson.dump(source_data, out, ensure_ascii=False, indent=4)
@@ -287,3 +288,37 @@ def get_next_and_number(existing: List[str], candidate: str) -> str:
     if not candidate:
         return "None"
     return candidate
+
+
+def get_backup_files_for_current_data():
+    """Get backup files for current data.
+
+    Returns:
+        list: List of backup files
+    """
+    # バックアップファイルのリストを取得
+    backup_files = [
+        f
+        for f in os.listdir("back")
+        if os.path.isfile(os.path.join("back", f))
+        and f.endswith(".hjson")
+        and st.session_state.app_data[st.session_state.app_name]["postfix"] in f
+    ]
+    backup_files.insert(0, "バックアップから選択")
+    return backup_files
+
+
+def copy_file():
+    """Copy file from backup to current data.
+
+    Note:
+        This function assumes that the source file exists in the "back" directory.
+        The destination file is specified in the session state.
+    """
+
+    src = st.session_state["selected_backup_file"]
+    dst = st.session_state["file_path"]
+    """Copy file from src to dst."""
+    src = os.path.join("back", src)
+    if os.path.exists(src):
+        shutil.copy(src, dst)

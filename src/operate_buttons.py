@@ -12,9 +12,12 @@ def add_operate_buttons(
     no_add=False,
     tmp_edges=None,
 ):
-    _, add_button_column, update_button_column, remove_button_column = st.columns(
-        [2, 1, 1, 1]
-    )
+    (
+        _,
+        add_button_column,
+        update_button_column,
+        remove_button_column,
+    ) = st.columns([3, 1, 1, 1])
     with add_button_column:
         if not no_add:
             # 追加ボタンを表示
