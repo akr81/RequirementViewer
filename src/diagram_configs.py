@@ -85,20 +85,3 @@ DEFAULT_ENTITY_GETTERS = {
     "Requirement Diagram Viewer": get_req_default_entity,
     "Strategy and Tactics Tree Viewer": get_st_default_entity,
 }
-
-# CRT向けのエンティティフィールド
-CRT_ENTITY_FIELDS = [
-    {
-        "name": "type",
-        "label": "タイプ",
-        "widget": "selectbox",
-        "options_key": "entity_list_for_crt",
-    },  # entity_list_for_crt は別途定義または渡す
-    {"name": "id", "label": "課題・状況", "widget": "text_area"},
-    {
-        "name": "color",
-        "label": "色",
-        "widget": "selectbox",
-        "options_key": "color_list",
-    },
-]
