@@ -3,12 +3,15 @@ from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
 from src.diagram_configs import *
 from src.page_setup import initialize_page, load_and_prepare_data
+from src.utility import (
+    get_backup_files_for_current_data,
+    copy_file,
+)
 import hjson
 import os
 import uuid
 import copy
 import shutil
-import datetime
 
 
 @st.cache_data
@@ -73,6 +76,7 @@ if demo:
 
 data_key = st.session_state.app_data[st.session_state.app_name]["data"]
 file_path = config_data[data_key]
+st.session_state["file_path"] = file_path
 
 
 # データの読み込みと準備
@@ -114,7 +118,20 @@ plantuml_code = draw_diagram_column(
 )
 
 with edit_column:
-    st.write("## データ編集")
+    title_column, file_selector_column = st.columns([4, 4])
+    with title_column:
+        st.write("## データ編集")
+    with file_selector_column:
+        # ファイル選択boxを表示
+        backup_files = get_backup_files_for_current_data()
+        st.selectbox(
+            "ファイルを選択",
+            backup_files,
+            0,
+            label_visibility="collapsed",
+            on_change=copy_file,
+            key="selected_backup_file",
+        )
     # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
@@ -200,8 +217,9 @@ with edit_column:
         relation_note["type"] = st.selectbox("注釈タイプ", note_types, key="note_type")
         relation_note["text"] = st.text_area("説明", "", key="relation_text")
 
+    new_edge = []
     if not relation_note:
-        tmp_edges.append(
+        new_edge.append(
             {
                 "source": selected_unique_id,
                 "type": relation_type,
@@ -210,7 +228,7 @@ with edit_column:
             }
         )
     else:
-        tmp_edges.append(
+        new_edge.append(
             {
                 "source": selected_unique_id,
                 "type": relation_type,
@@ -227,6 +245,7 @@ with edit_column:
         id_title_dict,
         unique_id_dict,
         tmp_edges=tmp_edges,
+        new_edges=new_edge,
     )
 
 
