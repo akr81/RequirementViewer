@@ -116,14 +116,21 @@ def draw_diagram_column(
             unsafe_allow_html=True,
         )
 
-        # pngファイルを出力
-        postfix_file = st.session_state.app_data[st.session_state.app_name]["postfix"]
-        os.makedirs("back", exist_ok=True)
-        png_output = get_diagram(plantuml_code, config_data["plantuml"], png_out=True)
-        filename = (
-            datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{postfix_file}.png"
-        )
-        with open(os.path.join("back", filename), "wb") as out:
-            out.write(png_output)
+        # png画像を生成(出力はファイル更新時)
+        if st.session_state["save_png"]:
+            postfix_file = st.session_state.app_data[st.session_state.app_name][
+                "postfix"
+            ]
+            os.makedirs("back", exist_ok=True)
+            png_output = get_diagram(
+                plantuml_code, config_data["plantuml"], png_out=True
+            )
+            filename = (
+                datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                + f"_{postfix_file}.png"
+            )
+            with open(os.path.join("back", filename), "wb") as out:
+                out.write(png_output)
+            st.session_state["save_png"] = False
 
     return plantuml_code

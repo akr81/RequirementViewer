@@ -6,7 +6,7 @@ class RequirementManager:
     def __init__(self, requirement_data: List[Dict]):
         self.requirements = requirement_data
 
-    def add(self, requirement: Dict, tmp_edges: List) -> str:
+    def add(self, requirement: Dict, tmp_edges: List, new_edges: List) -> str:
         """Add new requirement to requirements.
 
         Args:
@@ -19,8 +19,9 @@ class RequirementManager:
         # 新しい要求を追加する
         self.requirements["nodes"].append(requirement)
 
+        # 新規追加なので既存のedgeは変更しない
         # 一旦すべての接続関係を削除
-        self.requirements["edges"].clear()
+        # self.requirements["edges"].clear()
 
         # 有効な接続関係(source, destinationがともに有効)を追加する
         # 重複削除
@@ -34,15 +35,17 @@ class RequirementManager:
         except:
             # TODO エラー処理
             pass
-        if tmp_edges is not None:
-            for tmp_edge in tmp_edges:
+        if new_edges is not None:
+            for new_edge in new_edges:
                 if (
-                    tmp_edge["source"] != "None"
-                    and tmp_edge["destination"] != "None"
-                    and tmp_edge["source"] != None
-                    and tmp_edge["destination"] != None
+                    new_edge["source"] != "None"
+                    and new_edge["destination"] != "None"
+                    and new_edge["source"] != None
+                    and new_edge["destination"] != None
                 ):
-                    self.requirements["edges"].append(tmp_edge)
+                    self.requirements["edges"].append(new_edge)
+                else:
+                    print(f"Removed: {new_edge}")
 
         # 選択状態とするためにユニークIDを返す
         return requirement["unique_id"]
@@ -66,7 +69,13 @@ class RequirementManager:
                 if edge["source"] != unique_id and edge["destination"] != unique_id
             ]
 
-    def update(self, selected_unique_id: str, requirement: Dict, tmp_edges: List):
+    def update(
+        self,
+        selected_unique_id: str,
+        requirement: Dict,
+        tmp_edges: List,
+        new_edges: List,
+    ):
         """Update requirement with specified unique_id.
 
         Args:
@@ -89,8 +98,22 @@ class RequirementManager:
         # 指定されたunique_idの要求を削除する
         self.remove(requirement["unique_id"], remove_relations=False)
 
-        # 新しい要求を追加する
-        self.add(requirement, tmp_edges)
+        # 一旦すべての接続関係を削除
+        self.requirements["edges"].clear()
+
+        # 有効な接続関係(source, destinationがともに有効)を追加する
+        all_edges = tmp_edges + new_edges
+        if all_edges is not None:
+            for edge in all_edges:
+                if (
+                    edge["source"] != "None"
+                    and edge["destination"] != "None"
+                    and edge["source"] != None
+                    and edge["destination"] != None
+                ):
+                    self.requirements["edges"].append(edge)
+
+        self.add(requirement, tmp_edges, new_edges)
 
     def update_reverse_relations(self, unique_id: str, from_relations: List):
         """Update reverse relations for requirement with specified unique_id.

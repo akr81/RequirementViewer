@@ -11,6 +11,7 @@ def add_operate_buttons(
     unique_id_dict,
     no_add=False,
     tmp_edges=None,
+    new_edges=None,
 ):
     (
         _,
@@ -25,7 +26,8 @@ def add_operate_buttons(
                 if (tmp_entity["id"]) in id_title_dict:
                     st.error("IDが既存のエンティティと重複しています。")
                 else:
-                    added_id = requirement_manager.add(tmp_entity, tmp_edges)
+                    # 追加の場合、既存のedgeを変更する必要はない
+                    added_id = requirement_manager.add(tmp_entity, tmp_edges, new_edges)
                     update_source_data(file_path, requirement_manager.requirements)
                     st.write("エンティティを追加しました。")
                     st.query_params.selected = added_id
@@ -36,7 +38,9 @@ def add_operate_buttons(
             if not selected_unique_id in unique_id_dict:
                 st.error("更新すべきエンティティがありません。")
             else:
-                requirement_manager.update(selected_unique_id, tmp_entity, tmp_edges)
+                requirement_manager.update(
+                    selected_unique_id, tmp_entity, tmp_edges, new_edges
+                )
                 update_source_data(file_path, requirement_manager.requirements)
                 st.write("エンティティを更新しました。")
                 st.query_params.selected = tmp_entity["unique_id"]

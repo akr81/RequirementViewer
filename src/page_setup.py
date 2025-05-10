@@ -19,6 +19,8 @@ def initialize_page(app_name: str):
 
     # アプリ名を設定
     st.session_state.app_name = app_name
+    if "save_png" not in st.session_state:
+        st.session_state["save_png"] = False
 
     # ページの設定
     st.set_page_config(

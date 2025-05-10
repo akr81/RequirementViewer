@@ -198,8 +198,7 @@ with edit_column:
         if not temp_ancestor["and"]:
             temp_ancestor["and"] = "None"
 
-    tmp_edges.append(temp_predecessor)
-    tmp_edges.append(temp_ancestor)
+    new_edges = [temp_predecessor, temp_ancestor]
 
     add_operate_buttons(
         selected_unique_id,
@@ -209,6 +208,7 @@ with edit_column:
         id_title_dict,
         unique_id_dict,
         tmp_edges=tmp_edges,
+        new_edges=new_edges,
     )
 
 # セッション状態にgraph_dataを追加

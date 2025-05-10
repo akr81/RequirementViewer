@@ -200,6 +200,9 @@ def update_source_data(file_path: str, source_data: Dict):
     with open(os.path.join("back", filename), "w", encoding="utf-8") as out:
         hjson.dump(source_data, out, ensure_ascii=False, indent=4)
 
+    # 変更に合わせてPNG画像を保存
+    st.session_state["save_png"] = True
+
 
 def build_mapping(
     items: List[Dict[str, Any]],
@@ -304,6 +307,7 @@ def get_backup_files_for_current_data():
         and f.endswith(".hjson")
         and st.session_state.app_data[st.session_state.app_name]["postfix"] in f
     ]
+    backup_files.sort(reverse=True)
     backup_files.insert(0, "バックアップから選択")
     return backup_files
 
