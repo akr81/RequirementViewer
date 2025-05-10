@@ -308,7 +308,7 @@ def get_backup_files_for_current_data():
         and st.session_state.app_data[st.session_state.app_name]["postfix"] in f
     ]
     backup_files.sort(reverse=True)
-    backup_files.insert(0, "バックアップから選択")
+    backup_files.insert(0, "バックアップから読込")
     return backup_files
 
 

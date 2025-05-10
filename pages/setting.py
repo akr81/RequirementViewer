@@ -35,7 +35,7 @@ create_new = st.button("新規ファイル作成")
 if create_new:
     # YYYYMMDD_hhmmssでファイル名を作成
     now = datetime.datetime.now()
-    file_path = now.strftime("%Y%m%d_%H%M%S") + f"_{postfix_new_file}.json"
+    file_path = now.strftime("%Y%m%d_%H%M%S") + f"_{postfix_new_file}.hjson"
 
     if st.session_state.app_name == "Evaporating Cloud Viewer":
         # defaultファイルをコピー
