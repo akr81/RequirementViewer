@@ -171,6 +171,7 @@ scale {scale}
                 is_first = False
             else:
                 ret += f"&{key}={value}"
+
         ret += f"&selected={node[1]['unique_id']}]]"
         return ret
 

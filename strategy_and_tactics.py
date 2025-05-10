@@ -120,8 +120,6 @@ with edit_column:
 
     tmp_edges.append(new_edge)
 
-    print(f"=={datetime.datetime.now()}==")
-
     add_operate_buttons(
         selected_unique_id,
         tmp_entity,

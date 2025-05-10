@@ -19,22 +19,7 @@ class RequirementManager:
         # 新しい要求を追加する
         self.requirements["nodes"].append(requirement)
 
-        # 新規追加なので既存のedgeは変更しない
-        # 一旦すべての接続関係を削除
-        # self.requirements["edges"].clear()
-
-        # 有効な接続関係(source, destinationがともに有効)を追加する
-        # 重複削除
-        seen = set()
-        try:
-            tmp_edges = [
-                d
-                for d in tmp_edges
-                if tuple(d.items()) not in seen and not seen.add(tuple(d.items()))
-            ]
-        except:
-            # TODO エラー処理
-            pass
+        # 有効な新規edgeを追加する
         if new_edges is not None:
             for new_edge in new_edges:
                 if (
@@ -44,8 +29,6 @@ class RequirementManager:
                     and new_edge["destination"] != None
                 ):
                     self.requirements["edges"].append(new_edge)
-                else:
-                    print(f"Removed: {new_edge}")
 
         # 選択状態とするためにユニークIDを返す
         return requirement["unique_id"]
@@ -85,8 +68,9 @@ class RequirementManager:
         """
         # 渡されるrequirementは、暫定的にユニークIDを振り直しているので、元のユニークIDで上書きする
         # edgeの上書き
-        if tmp_edges is not None:
-            for tmp_edge in tmp_edges:
+        all_edges = tmp_edges + new_edges
+        if all_edges is not None:
+            for tmp_edge in all_edges:
                 if tmp_edge["source"] == requirement["unique_id"]:
                     tmp_edge["source"] = selected_unique_id
                 if tmp_edge["destination"] == requirement["unique_id"]:
@@ -97,12 +81,13 @@ class RequirementManager:
 
         # 指定されたunique_idの要求を削除する
         self.remove(requirement["unique_id"], remove_relations=False)
+        # 要求を追加する
+        self.requirements["nodes"].append(requirement)
 
         # 一旦すべての接続関係を削除
         self.requirements["edges"].clear()
 
         # 有効な接続関係(source, destinationがともに有効)を追加する
-        all_edges = tmp_edges + new_edges
         if all_edges is not None:
             for edge in all_edges:
                 if (
@@ -112,82 +97,3 @@ class RequirementManager:
                     and edge["destination"] != None
                 ):
                     self.requirements["edges"].append(edge)
-
-        self.add(requirement, tmp_edges, new_edges)
-
-    def update_reverse_relations(self, unique_id: str, from_relations: List):
-        """Update reverse relations for requirement with specified unique_id.
-
-        Args:
-            unique_id (str): Unique ID of requirement to update
-            from_relations (List): List of relations to update
-        """
-        if from_relations is None:
-            return
-
-        # 元のrequirementsで、unique_idに対して接続しているノードを取得
-        connected_to_unique_id = []
-        for requirement in self.requirements:
-            for relation in requirement["relations"]:
-                if relation["destination"] == unique_id:
-                    connected_to_unique_id.append(requirement["unique_id"])
-
-        # 操作結果から取得したunique_idに対する接続関係
-        from_unique_id_list = []
-        for from_relation in from_relations:
-            from_unique_id = from_relation["from"]
-            if from_unique_id != "None":
-                from_unique_id_list.append(from_unique_id)
-
-        print(from_relations)
-        print(connected_to_unique_id)
-        print(from_unique_id_list)
-        old_set = set(connected_to_unique_id)
-        new_set = set(from_unique_id_list)
-
-        added_list = list(new_set - old_set)
-        removed_list = list(old_set - new_set)
-        remains_list = list(old_set & new_set)
-
-        # TODO "and"などに依存せず、入力された要素をそのまま追加・更新する
-        # 新規追加のものはそのまま追加
-        print(f"added: {added_list}")
-        for added in added_list:
-            # 接続先にunique_idがなければ追加
-            for requirement in self.requirements:
-                if requirement["unique_id"] == added:
-                    requirement["relations"].append(
-                        {
-                            "destination": unique_id,
-                            "and": [
-                                d for d in from_relations if d.get("from") == added
-                            ][0]["and"],
-                        }
-                    )
-
-        # 削除されたものは接続を削除
-        print(f"removed: {removed_list}")
-        for removed in removed_list:
-            # 接続先にunique_idがあれば削除
-            for requirement in self.requirements:
-                if requirement["unique_id"] == removed:
-                    requirement["relations"] = [
-                        rel
-                        for rel in requirement["relations"]
-                        if rel["destination"] != unique_id
-                    ]
-
-        # それ以外のものは"and"関係をアップデート(上書きする)
-        print(f"remains: {remains_list}")
-        for remains in remains_list:
-            for requirement in self.requirements:
-                if requirement["unique_id"] == remains:
-                    for relation in requirement["relations"]:
-                        if relation["destination"] == unique_id:
-                            for from_relation in from_relations:
-                                if from_relation["from"] == remains:
-                                    for key, value in from_relation.items():
-                                        if key == "from":
-                                            pass
-                                        else:
-                                            relation[key] = value

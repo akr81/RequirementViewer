@@ -9,7 +9,6 @@ import uuid
 import copy
 import shutil
 import datetime
-import pprint
 
 
 @st.cache_data
@@ -220,9 +219,6 @@ with edit_column:
             }
         )
 
-    print(f"=={datetime.datetime.now()}==")
-    pprint.pprint(tmp_entity)
-    pprint.pprint(tmp_edges)
     add_operate_buttons(
         selected_unique_id,
         tmp_entity,

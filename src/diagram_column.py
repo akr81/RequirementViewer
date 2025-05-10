@@ -92,6 +92,7 @@ def draw_diagram_column(
                 "left_to_right": False,
             }
             converter = ConvertPumlCode(config)
+
             plantuml_code = converter.convert_to_puml(
                 page_title,
                 graph_data.subgraph,
