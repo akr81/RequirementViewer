@@ -10,6 +10,7 @@ def add_operate_buttons(
     id_title_dict,
     unique_id_dict,
     no_add=False,
+    no_remove=False,
     tmp_edges=None,
     new_edges=None,
 ):
@@ -46,12 +47,13 @@ def add_operate_buttons(
                 st.query_params.selected = tmp_entity["unique_id"]
                 st.rerun()
     with remove_button_column:
-        # 削除ボタンを表示
-        if st.button("削除"):
-            if not (tmp_entity["id"]) in id_title_dict:
-                st.error("削除すべきエンティティがありません。")
-            else:
-                requirement_manager.remove(selected_unique_id)
-                update_source_data(file_path, requirement_manager.requirements)
-                st.write("エンティティを削除しました。")
-                st.rerun()
+        if not no_remove:
+            # 削除ボタンを表示
+            if st.button("削除"):
+                if not (tmp_entity["id"]) in id_title_dict:
+                    st.error("削除すべきエンティティがありません。")
+                else:
+                    requirement_manager.remove(selected_unique_id)
+                    update_source_data(file_path, requirement_manager.requirements)
+                    st.write("エンティティを削除しました。")
+                    st.rerun()

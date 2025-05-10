@@ -68,13 +68,15 @@ class RequirementManager:
         """
         # 渡されるrequirementは、暫定的にユニークIDを振り直しているので、元のユニークIDで上書きする
         # edgeの上書き
-        all_edges = tmp_edges + new_edges
-        if all_edges is not None:
-            for tmp_edge in all_edges:
-                if tmp_edge["source"] == requirement["unique_id"]:
-                    tmp_edge["source"] = selected_unique_id
-                if tmp_edge["destination"] == requirement["unique_id"]:
-                    tmp_edge["destination"] = selected_unique_id
+        all_edges = None
+        if tmp_edges is not None and new_edges is not None:
+            all_edges = tmp_edges + new_edges
+            if all_edges is not None:
+                for tmp_edge in all_edges:
+                    if tmp_edge["source"] == requirement["unique_id"]:
+                        tmp_edge["source"] = selected_unique_id
+                    if tmp_edge["destination"] == requirement["unique_id"]:
+                        tmp_edge["destination"] = selected_unique_id
 
         # requirementの上書き
         requirement["unique_id"] = selected_unique_id
@@ -84,11 +86,10 @@ class RequirementManager:
         # 要求を追加する
         self.requirements["nodes"].append(requirement)
 
-        # 一旦すべての接続関係を削除
-        self.requirements["edges"].clear()
-
         # 有効な接続関係(source, destinationがともに有効)を追加する
         if all_edges is not None:
+            # 一旦すべての接続関係を削除
+            self.requirements["edges"].clear()
             for edge in all_edges:
                 if (
                     edge["source"] != "None"
