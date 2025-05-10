@@ -105,40 +105,12 @@ file_path = config_data[data_key]
     unique_id_dict,
     id_title_list,
     _,
+    scale,
+    selected_unique_id,
+    upstream_distance,
+    downstream_distance,
+    selected_entity,
 ) = load_and_prepare_data(file_path, st.session_state.app_name)
-
-
-# URL のクエリからパラメタを取得
-scale = float(st.query_params.get("scale", 1.0))
-selected_unique_id = st.query_params.get("selected", [None])
-upstream_distance = st.query_params.get(
-    "upstream_distance", config_data["upstream_filter_max"]
-)
-downstream_distance = st.query_params.get(
-    "downstream_distance", config_data["downstream_filter_max"]
-)
-
-
-selected_entity = None
-if selected_unique_id == [None]:
-    # エンティティが選択されていない場合はデフォルトのエンティティを選択してリロード
-    default_params = {"selected": "default"}
-    st.query_params.setdefault("selected", "default")
-    st.rerun()
-else:
-    if selected_unique_id == "default":
-        # デフォルトの場合は何もしない
-        pass
-    else:
-        if selected_unique_id not in unique_id_dict:
-            # 存在しないユニークIDが指定された場合は何もしない
-            pass
-        else:
-            selected_entity = [
-                d
-                for d in requirement_data["nodes"]
-                if d["unique_id"] == selected_unique_id
-            ][0]
 
 if not selected_entity:
     selected_entity = get_default_entity(entity_types)

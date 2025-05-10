@@ -56,6 +56,35 @@ def load_and_prepare_data(file_path, app_name):
     id_title_list = build_sorted_list(nodes, "id", prepend=["None"])
     add_list = build_and_list(edges, prepend=["None", "New"])
 
+    # URL のクエリからパラメタを取得
+    scale = float(st.query_params.get("scale", 1.0))
+    selected_unique_id = st.query_params.get("selected", [None])
+    upstream_distance = st.query_params.get(
+        "upstream_distance", st.session_state.config_data["upstream_filter_max"]
+    )
+    downstream_distance = st.query_params.get(
+        "downstream_distance", st.session_state.config_data["downstream_filter_max"]
+    )
+
+    # 選択されたエンティティを取得
+    selected_entity = None
+    if selected_unique_id == [None]:
+        # エンティティが選択されていない場合はデフォルトのエンティティを選択してリロード
+        st.query_params.setdefault("selected", "default")
+        st.rerun()
+    else:
+        if selected_unique_id == "default":
+            # デフォルトの場合は何もしない
+            pass
+        else:
+            if selected_unique_id not in unique_id_dict:
+                # 存在しないユニークIDが指定された場合は何もしない
+                pass
+            else:
+                selected_entity = [
+                    d for d in nodes if d["unique_id"] == selected_unique_id
+                ][0]
+
     return (
         requirement_data,
         nodes,
@@ -66,4 +95,9 @@ def load_and_prepare_data(file_path, app_name):
         unique_id_dict,
         id_title_list,
         add_list,
+        scale,
+        selected_unique_id,
+        upstream_distance,
+        downstream_distance,
+        selected_entity,
     )
