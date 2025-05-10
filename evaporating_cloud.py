@@ -1,14 +1,7 @@
 import streamlit as st
-from src.requirement_manager import RequirementManager
-from src.requirement_graph import RequirementGraph
-from src.utility import (
-    load_source_data,
-    build_mapping,
-    build_sorted_list,
-)
 from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
-from src.page_setup import initialize_page
+from src.page_setup import initialize_page, load_and_prepare_data
 import uuid
 import copy
 
@@ -43,15 +36,18 @@ if data_key not in config_data:
 
 file_path = config_data[data_key]
 
-requirement_data = load_source_data(file_path)
-requirement_manager = RequirementManager(requirement_data)
-graph_data = RequirementGraph(requirement_data, st.session_state.app_name)
-
-# IDとタイトルをキー, ユニークIDを値とする辞書とその逆を作成
-nodes = requirement_data["nodes"]
-id_title_dict = build_mapping(nodes, "id", "unique_id", add_empty=True)
-unique_id_dict = build_mapping(nodes, "unique_id", "id", add_empty=True)
-id_title_list = build_sorted_list(nodes, "id", prepend=["None"])
+# データの読み込みと準備
+(
+    requirement_data,
+    nodes,
+    _,
+    requirement_manager,
+    graph_data,
+    id_title_dict,
+    unique_id_dict,
+    id_title_list,
+    _,
+) = load_and_prepare_data(file_path, st.session_state.app_name)
 
 # URL のクエリからパラメタを取得
 scale = float(st.query_params.get("scale", 1.0))
