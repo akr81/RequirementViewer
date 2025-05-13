@@ -9,6 +9,7 @@ def add_operate_buttons(
     file_path,
     id_title_dict,
     unique_id_dict,
+    no_new=False,
     no_add=False,
     no_remove=False,
     tmp_edges=None,
@@ -24,9 +25,10 @@ def add_operate_buttons(
     with new_button_column:
         # 新規ボタンを表示
         # デフォルトエンティティが選択された状態にする
-        if st.button("新規"):
-            st.query_params.selected = "default"
-            st.rerun()
+        if not no_new:
+            if st.button("新規"):
+                st.query_params.selected = "default"
+                st.rerun()
     with add_button_column:
         if not no_add:
             # 追加ボタンを表示

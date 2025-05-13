@@ -109,6 +109,7 @@ with edit_column:
         file_path,
         id_title_dict,
         unique_id_dict,
+        no_new=True,
         no_add=True,
         no_remove=True,
         tmp_edges=tmp_edges,
