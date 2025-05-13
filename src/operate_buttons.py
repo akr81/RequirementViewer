@@ -15,11 +15,18 @@ def add_operate_buttons(
     new_edges=None,
 ):
     (
+        new_button_column,
         _,
         add_button_column,
         update_button_column,
         remove_button_column,
-    ) = st.columns([3, 1, 1, 1])
+    ) = st.columns([1, 2, 1, 1, 1])
+    with new_button_column:
+        # 新規ボタンを表示
+        # デフォルトエンティティが選択された状態にする
+        if st.button("新規"):
+            st.query_params.selected = "default"
+            st.rerun()
     with add_button_column:
         if not no_add:
             # 追加ボタンを表示
