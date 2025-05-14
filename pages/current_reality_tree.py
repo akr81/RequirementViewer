@@ -109,6 +109,7 @@ with edit_column:
     tmp_edges = copy.deepcopy(edges)
 
     source_column_loop, source_and_column_loop = st.columns([7, 2])
+    visibility = "visible"
     for i, edge in enumerate(tmp_edges):
         # 接続先が選択エンティティ
         if edge["destination"] == selected_unique_id:
@@ -119,6 +120,7 @@ with edit_column:
                         id_title_list,
                         index=id_title_list.index(unique_id_dict[edge["source"]]),
                         key=f"predecessors{i}",
+                        label_visibility=visibility,
                     )
                 ]
             with source_and_column_loop:
@@ -127,10 +129,12 @@ with edit_column:
                     add_list,
                     index=add_list.index(edge["and"]),
                     key=f"and_predecessors{i}",
+                    label_visibility=visibility,
                 )
                 edge["and"] = get_next_and_number(add_list, edge["and"])
                 if not edge["and"]:
                     edge["and"] = "None"
+            visibility = "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
 
     # 関係追加の操作があるため、1つは常に表示
     temp_predecessor = {
@@ -156,8 +160,10 @@ with edit_column:
         temp_predecessor["and"] = get_next_and_number(add_list, temp_predecessor["and"])
         if not temp_predecessor["and"]:
             temp_predecessor["and"] = "None"
+    st.write("---")
 
     loop_destination_column, loop_destination_and_column = st.columns([7, 2])
+    visibility = "visible"
     for i, edge in enumerate(tmp_edges):
         if edge["source"] == selected_unique_id:
             with loop_destination_column:
@@ -168,15 +174,21 @@ with edit_column:
                         id_title_list,
                         id_title_list.index(unique_id_dict[edge["destination"]]),
                         key=f"destination{i}",
+                        label_visibility=visibility,
                     )
                 ]
             with loop_destination_and_column:
                 edge["and"] = st.selectbox(
-                    "and", add_list, add_list.index(edge["and"]), key=f"and{i}"
+                    "and",
+                    add_list,
+                    add_list.index(edge["and"]),
+                    key=f"and{i}",
+                    label_visibility=visibility,
                 )
                 edge["and"] = get_next_and_number(add_list, edge["and"])
                 if not edge["and"]:
                     edge["and"] = "None"
+            visibility = "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
 
     # 関係追加の操作があるため、1つは常に表示
     temp_ancestor = {

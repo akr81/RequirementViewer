@@ -154,6 +154,7 @@ with edit_column:
     # また、関係の追加を行うケースがあるため、最初の項目は空にしておき2つめ以後は設定されているデータを表示する
     relation_column, destination_column = st.columns(2)
     tmp_edges = copy.deepcopy(requirement_data["edges"])
+    visibility = "visible"
     for i, tmp_edge in enumerate(tmp_edges):
 
         # 接続元が選択エンティティでないものはスキップ
@@ -167,6 +168,7 @@ with edit_column:
                 relation_types,
                 relation_types.index(tmp_edge["type"]),
                 key=f"relation_type{i}",
+                label_visibility=visibility,
             )
         with destination_column:
             tmp_edge["destination"] = id_title_dict[
@@ -175,6 +177,7 @@ with edit_column:
                     id_title_list,
                     id_title_list.index(unique_id_dict[tmp_edge["destination"]]),
                     key=f"destination{i}",
+                    label_visibility=visibility,
                 )
             ]
         expander_title = (
@@ -200,6 +203,7 @@ with edit_column:
                 )
             else:
                 tmp_edge["note"] = st.text_area("説明", "", key=f"relation_note{i}")
+        visibility = "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
 
     # 関係追加の操作があるため、1つは常に表示
     relation_column_new, destination_column_new = st.columns(2)
