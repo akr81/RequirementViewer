@@ -93,7 +93,6 @@ with edit_column:
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
     tmp_entity.setdefault("type", "entity")  # typeがない場合はentityを設定
-    tmp_entity["type"] = "entity"
 
     tmp_entity["type"] = st.selectbox(
         "タイプ", entity_list, index=entity_list.index(tmp_entity["type"])
