@@ -188,6 +188,8 @@ with edit_column:
                 edge["and"] = get_next_and_number(add_list, edge["and"])
                 if not edge["and"]:
                     edge["and"] = "None"
+            if tmp_entity["type"] == "note":
+                edge["type"] = "flat_long"
             visibility = "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
 
     # 関係追加の操作があるため、1つは常に表示
@@ -209,6 +211,8 @@ with edit_column:
         temp_ancestor["and"] = get_next_and_number(add_list, temp_ancestor["and"])
         if not temp_ancestor["and"]:
             temp_ancestor["and"] = "None"
+    if tmp_entity["type"] == "note":
+        temp_ancestor["type"] = "flat_long"
 
     new_edges = [temp_predecessor, temp_ancestor]
 
