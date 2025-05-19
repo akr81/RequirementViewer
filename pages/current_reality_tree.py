@@ -14,6 +14,109 @@ import os
 import shutil
 
 
+def render_edge_to_selected(edge: dict, index: int, visibility: str) -> str:
+    # 接続先が選択エンティティ
+    if edge["destination"] == selected_unique_id:
+        with source_column_loop:
+            edge["source"] = id_title_dict[
+                st.selectbox(
+                    "接続元",
+                    id_title_list,
+                    index=id_title_list.index(unique_id_dict[edge["source"]]),
+                    key=f"predecessors{index}",
+                    label_visibility=visibility,
+                )
+            ]
+        with source_and_column_loop:
+            edge["and"] = st.selectbox(
+                "and",
+                add_list,
+                index=add_list.index(edge["and"]),
+                key=f"and_predecessors{index}",
+                label_visibility=visibility,
+            )
+            edge["and"] = get_next_and_number(add_list, edge["and"])
+            if not edge["and"]:
+                edge["and"] = "None"
+
+        return "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
+    return visibility
+
+
+def render_edge_to_selected_new(edge: dict, _: int, visibility: str):
+    with source_column:
+        edge["source"] = id_title_dict[
+            st.selectbox(
+                "接続元(新規)",
+                id_title_list,
+                index=id_title_list.index("None"),
+                key=f"predecessors_new",
+                label_visibility=visibility,
+            )
+        ]
+    with source_and_column:
+        edge["and"] = st.selectbox(
+            "and",
+            add_list,
+            index=add_list.index("None"),
+            key=f"and_predecessors_new",
+            label_visibility=visibility,
+        )
+        edge["and"] = get_next_and_number(add_list, edge["and"])
+        if not edge["and"]:
+            edge["and"] = "None"
+
+
+def render_edge_from_selected(edge: dict, index: int, visibility: str) -> str:
+    if edge["source"] == selected_unique_id:
+        with loop_destination_column:
+            # 接続元が選択エンティティ
+            edge["destination"] = id_title_dict[
+                st.selectbox(
+                    "接続先",
+                    id_title_list,
+                    id_title_list.index(unique_id_dict[edge["destination"]]),
+                    key=f"destination{index}",
+                    label_visibility=visibility,
+                )
+            ]
+        with loop_destination_and_column:
+            edge["and"] = st.selectbox(
+                "and",
+                add_list,
+                add_list.index(edge["and"]),
+                key=f"and{index}",
+                label_visibility=visibility,
+            )
+            edge["and"] = get_next_and_number(add_list, edge["and"])
+            if not edge["and"]:
+                edge["and"] = "None"
+        if tmp_entity["type"] == "note":
+            edge["type"] = "flat_long"
+
+        return "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
+    return visibility
+
+
+def render_edge_from_selected_new(edge: dict, _: int, visibility: str):
+    with destination_column:
+        edge["destination"] = id_title_dict[
+            st.selectbox(
+                "接続先(新規)",
+                id_title_list,
+                index=id_title_list.index("None"),
+                label_visibility=visibility,
+            )
+        ]
+    with destination_and_column:
+        edge["and"] = st.selectbox(
+            "and", add_list, add_list.index("None"), label_visibility=visibility
+        )
+        edge["and"] = get_next_and_number(add_list, edge["and"])
+        if not edge["and"]:
+            edge["and"] = "None"
+
+
 entity_list = ["entity", "note"]
 
 # ページの初期設定
@@ -110,30 +213,7 @@ with edit_column:
     source_column_loop, source_and_column_loop = st.columns([7, 2])
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        # 接続先が選択エンティティ
-        if edge["destination"] == selected_unique_id:
-            with source_column_loop:
-                edge["source"] = id_title_dict[
-                    st.selectbox(
-                        "接続元",
-                        id_title_list,
-                        index=id_title_list.index(unique_id_dict[edge["source"]]),
-                        key=f"predecessors{i}",
-                        label_visibility=visibility,
-                    )
-                ]
-            with source_and_column_loop:
-                edge["and"] = st.selectbox(
-                    "and",
-                    add_list,
-                    index=add_list.index(edge["and"]),
-                    key=f"and_predecessors{i}",
-                    label_visibility=visibility,
-                )
-                edge["and"] = get_next_and_number(add_list, edge["and"])
-                if not edge["and"]:
-                    edge["and"] = "None"
-            visibility = "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
+        visibility = render_edge_to_selected(edge, i, visibility)
 
     # 関係追加の操作があるため、1つは常に表示
     temp_predecessor = {
@@ -143,53 +223,15 @@ with edit_column:
         "type": "arrow",
     }
     source_column, source_and_column = st.columns([7, 2])
-    with source_column:
-        temp_predecessor["source"] = id_title_dict[
-            st.selectbox(
-                "接続元(新規)",
-                id_title_list,
-                index=id_title_list.index("None"),
-                key=f"predecessors_new",
-            )
-        ]
-    with source_and_column:
-        temp_predecessor["and"] = st.selectbox(
-            "and", add_list, index=add_list.index("None"), key=f"and_predecessors"
-        )
-        temp_predecessor["and"] = get_next_and_number(add_list, temp_predecessor["and"])
-        if not temp_predecessor["and"]:
-            temp_predecessor["and"] = "None"
+    visibility = "visible"
+    render_edge_to_selected_new(temp_predecessor, 0, visibility)
+
     st.write("---")
 
     loop_destination_column, loop_destination_and_column = st.columns([7, 2])
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        if edge["source"] == selected_unique_id:
-            with loop_destination_column:
-                # 接続元が選択エンティティ
-                edge["destination"] = id_title_dict[
-                    st.selectbox(
-                        "接続先",
-                        id_title_list,
-                        id_title_list.index(unique_id_dict[edge["destination"]]),
-                        key=f"destination{i}",
-                        label_visibility=visibility,
-                    )
-                ]
-            with loop_destination_and_column:
-                edge["and"] = st.selectbox(
-                    "and",
-                    add_list,
-                    add_list.index(edge["and"]),
-                    key=f"and{i}",
-                    label_visibility=visibility,
-                )
-                edge["and"] = get_next_and_number(add_list, edge["and"])
-                if not edge["and"]:
-                    edge["and"] = "None"
-            if tmp_entity["type"] == "note":
-                edge["type"] = "flat_long"
-            visibility = "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
+        visibility = render_edge_from_selected(edge, i, visibility)
 
     # 関係追加の操作があるため、1つは常に表示
     temp_ancestor = {
@@ -199,17 +241,9 @@ with edit_column:
         "type": "arrow",
     }
     destination_column, destination_and_column = st.columns([7, 2])
-    with destination_column:
-        temp_ancestor["destination"] = id_title_dict[
-            st.selectbox(
-                "接続先(新規)", id_title_list, index=id_title_list.index("None")
-            )
-        ]
-    with destination_and_column:
-        temp_ancestor["and"] = st.selectbox("and", add_list, add_list.index("None"))
-        temp_ancestor["and"] = get_next_and_number(add_list, temp_ancestor["and"])
-        if not temp_ancestor["and"]:
-            temp_ancestor["and"] = "None"
+    visibility = "visible"
+    render_edge_from_selected_new(temp_ancestor, 0, visibility)
+    # TODO: 上記の関数内で処理する
     if tmp_entity["type"] == "note":
         temp_ancestor["type"] = "flat_long"
 
