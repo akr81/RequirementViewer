@@ -13,79 +13,48 @@ import copy
 import os
 import shutil
 
+edge_params = {
+    "to_selected": {
+        "condition": "destination",
+        "selectbox_label": "接続元",
+        "selectbox_index": "source",
+        "selectbox_key": "predecessors",
+        "connection_column": None,
+        "and_column": None,
+    },
+    "from_selected": {
+        "condition": "source",
+        "selectbox_label": "接続先",
+        "selectbox_index": "destination",
+        "selectbox_key": "ancestors",
+        "connection_column": None,
+        "and_column": None,
+    },
+}
 
-def render_edge_to_selected(edge: dict, index: int, visibility: str) -> str:
-    # 接続先が選択エンティティ
-    if edge["destination"] == selected_unique_id:
-        with source_column_loop:
+
+def render_edge_connection(
+    edge: dict, index: int, visibility: str, params: dict
+) -> str:
+    if edge[params["condition"]] == selected_unique_id:
+        with params["connection_column"]:
             edge["source"] = id_title_dict[
                 st.selectbox(
-                    "接続元",
+                    params["selectbox_label"],
                     id_title_list,
-                    index=id_title_list.index(unique_id_dict[edge["source"]]),
-                    key=f"predecessors{index}",
+                    index=id_title_list.index(
+                        unique_id_dict[edge[params["selectbox_index"]]]
+                    ),
+                    key=f"{params['selectbox_key']}{index}",
                     label_visibility=visibility,
                 )
             ]
-        with source_and_column_loop:
+        with params["and_column"]:
             edge["and"] = st.selectbox(
                 "and",
                 add_list,
                 index=add_list.index(edge["and"]),
-                key=f"and_predecessors{index}",
-                label_visibility=visibility,
-            )
-            edge["and"] = get_next_and_number(add_list, edge["and"])
-            if not edge["and"]:
-                edge["and"] = "None"
-
-        return "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
-    return visibility
-
-
-def render_edge_to_selected_new(edge: dict, _: int, visibility: str):
-    with source_column:
-        edge["source"] = id_title_dict[
-            st.selectbox(
-                "接続元(新規)",
-                id_title_list,
-                index=id_title_list.index("None"),
-                key=f"predecessors_new",
-                label_visibility=visibility,
-            )
-        ]
-    with source_and_column:
-        edge["and"] = st.selectbox(
-            "and",
-            add_list,
-            index=add_list.index("None"),
-            key=f"and_predecessors_new",
-            label_visibility=visibility,
-        )
-        edge["and"] = get_next_and_number(add_list, edge["and"])
-        if not edge["and"]:
-            edge["and"] = "None"
-
-
-def render_edge_from_selected(edge: dict, index: int, visibility: str) -> str:
-    if edge["source"] == selected_unique_id:
-        with loop_destination_column:
-            # 接続元が選択エンティティ
-            edge["destination"] = id_title_dict[
-                st.selectbox(
-                    "接続先",
-                    id_title_list,
-                    id_title_list.index(unique_id_dict[edge["destination"]]),
-                    key=f"destination{index}",
-                    label_visibility=visibility,
-                )
-            ]
-        with loop_destination_and_column:
-            edge["and"] = st.selectbox(
-                "and",
-                add_list,
-                add_list.index(edge["and"]),
-                key=f"and{index}",
+                key=f"and_{params['selectbox_key']}{index}",
                 label_visibility=visibility,
             )
             edge["and"] = get_next_and_number(add_list, edge["and"])
@@ -98,19 +67,24 @@ def render_edge_from_selected(edge: dict, index: int, visibility: str) -> str:
     return visibility
 
 
-def render_edge_from_selected_new(edge: dict, _: int, visibility: str):
-    with destination_column:
-        edge["destination"] = id_title_dict[
+def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict):
+    with params["connection_column"]:
+        edge["source"] = id_title_dict[
             st.selectbox(
-                "接続先(新規)",
+                f"{params['selection_label']}(新規)",
                 id_title_list,
                 index=id_title_list.index("None"),
+                key=f"{params['selectbox_key']}_new",
                 label_visibility=visibility,
             )
         ]
-    with destination_and_column:
+    with params["and_column"]:
         edge["and"] = st.selectbox(
-            "and", add_list, add_list.index("None"), label_visibility=visibility
+            "and",
+            add_list,
+            index=add_list.index("None"),
+            key=f"and_{params['selectbox_key']}_new",
+            label_visibility=visibility,
         )
         edge["and"] = get_next_and_number(add_list, edge["and"])
         if not edge["and"]:
@@ -211,9 +185,11 @@ with edit_column:
     tmp_edges = copy.deepcopy(edges)
 
     source_column_loop, source_and_column_loop = st.columns([7, 2])
+    edge_params["to_selected"]["connection_column"] = source_column_loop
+    edge_params["to_selected"]["and_column"] = source_and_column_loop
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        visibility = render_edge_to_selected(edge, i, visibility)
+        visibility = render_edge_connection(edge, i, visibility, edge_params)
 
     # 関係追加の操作があるため、1つは常に表示
     temp_predecessor = {
@@ -223,15 +199,19 @@ with edit_column:
         "type": "arrow",
     }
     source_column, source_and_column = st.columns([7, 2])
+    edge_params["to_selected"]["connection_column"] = source_column
+    edge_params["to_selected"]["and_column"] = source_and_column
     visibility = "visible"
-    render_edge_to_selected_new(temp_predecessor, 0, visibility)
+    render_edge_connection_new(temp_predecessor, 0, visibility, edge_params)
 
     st.write("---")
 
     loop_destination_column, loop_destination_and_column = st.columns([7, 2])
+    edge_params["from_selected"]["connection_column"] = loop_destination_column
+    edge_params["from_selected"]["and_column"] = loop_destination_and_column
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        visibility = render_edge_from_selected(edge, i, visibility)
+        visibility = render_edge_connection(edge, i, visibility, edge_params)
 
     # 関係追加の操作があるため、1つは常に表示
     temp_ancestor = {
@@ -241,8 +221,10 @@ with edit_column:
         "type": "arrow",
     }
     destination_column, destination_and_column = st.columns([7, 2])
+    edge_params["from_selected"]["connection_column"] = destination_column
+    edge_params["from_selected"]["and_column"] = destination_and_column
     visibility = "visible"
-    render_edge_from_selected_new(temp_ancestor, 0, visibility)
+    render_edge_connection_new(temp_ancestor, 0, visibility, edge_params)
     # TODO: 上記の関数内で処理する
     if tmp_entity["type"] == "note":
         temp_ancestor["type"] = "flat_long"
