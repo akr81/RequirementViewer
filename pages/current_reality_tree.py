@@ -10,27 +10,6 @@ from src.diagram_configs import *
 from src.page_setup import initialize_page, load_and_prepare_data
 import uuid
 import copy
-import os
-import shutil
-
-edge_params = {
-    "to_selected": {
-        "condition": "destination",
-        "selectbox_label": "接続元",
-        "selectbox_index": "source",
-        "selectbox_key": "predecessors",
-        "connection_column": None,
-        "and_column": None,
-    },
-    "from_selected": {
-        "condition": "source",
-        "selectbox_label": "接続先",
-        "selectbox_index": "destination",
-        "selectbox_key": "ancestors",
-        "connection_column": None,
-        "and_column": None,
-    },
-}
 
 
 def render_edge_connection(
@@ -92,6 +71,25 @@ def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict
 
 
 entity_list = ["entity", "note"]
+
+edge_params = {
+    "to_selected": {
+        "condition": "destination",
+        "selectbox_label": "接続元",
+        "selectbox_index": "source",
+        "selectbox_key": "predecessors",
+        "connection_column": None,
+        "and_column": None,
+    },
+    "from_selected": {
+        "condition": "source",
+        "selectbox_label": "接続先",
+        "selectbox_index": "destination",
+        "selectbox_key": "ancestors",
+        "connection_column": None,
+        "and_column": None,
+    },
+}
 
 # ページの初期設定
 color_list, config_data, demo, app_data, plantuml_process = initialize_page(
@@ -179,14 +177,11 @@ with edit_column:
         "色", color_list, index=color_list.index(tmp_entity["color"])
     )
 
-    from_relations = []
-    temp_predecessors = []
     # 保存するまで表示が変わらないよう、edge本体は更新しない
     tmp_edges = copy.deepcopy(edges)
 
-    source_column_loop, source_and_column_loop = st.columns([7, 2])
-    edge_params["to_selected"]["connection_column"] = source_column_loop
-    edge_params["to_selected"]["and_column"] = source_and_column_loop
+    params_to = edge_params["to_selected"]
+    params_to["connection_column"], params_to["and_column"] = st.columns([7, 2])
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
         visibility = render_edge_connection(edge, i, visibility, edge_params)
@@ -198,17 +193,13 @@ with edit_column:
         "and": "None",
         "type": "arrow",
     }
-    source_column, source_and_column = st.columns([7, 2])
-    edge_params["to_selected"]["connection_column"] = source_column
-    edge_params["to_selected"]["and_column"] = source_and_column
     visibility = "visible"
     render_edge_connection_new(temp_predecessor, 0, visibility, edge_params)
 
     st.write("---")
 
-    loop_destination_column, loop_destination_and_column = st.columns([7, 2])
-    edge_params["from_selected"]["connection_column"] = loop_destination_column
-    edge_params["from_selected"]["and_column"] = loop_destination_and_column
+    params_from = edge_params["from_selected"]
+    params_from["connection_column"], params_from["and_column"] = st.columns([7, 2])
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
         visibility = render_edge_connection(edge, i, visibility, edge_params)
@@ -220,14 +211,8 @@ with edit_column:
         "and": "None",
         "type": "arrow",
     }
-    destination_column, destination_and_column = st.columns([7, 2])
-    edge_params["from_selected"]["connection_column"] = destination_column
-    edge_params["from_selected"]["and_column"] = destination_and_column
     visibility = "visible"
     render_edge_connection_new(temp_ancestor, 0, visibility, edge_params)
-    # TODO: 上記の関数内で処理する
-    if tmp_entity["type"] == "note":
-        temp_ancestor["type"] = "flat_long"
 
     new_edges = [temp_predecessor, temp_ancestor]
 
