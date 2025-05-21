@@ -10,7 +10,74 @@ from src.utility import (
 import copy
 
 
+def render_edge_connection(
+    edge: dict, index: int, visibility: str, params: dict
+) -> str:
+    # 接続元が選択エンティティ
+    if edge[params["condition"]] == selected_unique_id:
+        edge.setdefault("comment", "")
+        with params["connection_column"]:
+            edge[params["selectbox_index"]] = id_title_dict[
+                st.selectbox(
+                    params["selectbox_label"],
+                    id_title_list,
+                    index=id_title_list.index(
+                        unique_id_dict[edge[params["selectbox_index"]]]
+                    ),
+                    key=f"{params['selectbox_key']}{index}",
+                    label_visibility=visibility,
+                )
+            ]
+        with params["description_column"]:
+            edge["comment"] = st.text_input(
+                "説明",
+                edge["comment"],
+                key=f"comment_{params['selectbox_key']}{index}",
+                label_visibility=visibility,
+            )
+        return "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
+    return visibility
+
+
+def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict):
+    with params["connection_column"]:
+        edge[params["selectbox_index"]] = id_title_dict[
+            st.selectbox(
+                f"{params['selectbox_label']}(新規)",
+                id_title_list,
+                index=id_title_list.index("None"),
+                key=f"{params['selectbox_key']}_new",
+                label_visibility=visibility,
+            )
+        ]
+    with params["description_column"]:
+        edge["comment"] = st.text_input(
+            "説明(新規)",
+            key=f"comment_{params['selectbox_key']}_new",
+            label_visibility=visibility,
+        )
+
+
 pfd_type_list = ["deliverable", "process", "note"]
+
+edge_params = {
+    "to_selected": {
+        "condition": "destination",
+        "selectbox_label": "接続元",
+        "selectbox_index": "source",
+        "selectbox_key": "predecessors",
+        "connection_column": None,
+        "description_column": None,
+    },
+    "from_selected": {
+        "condition": "source",
+        "selectbox_label": "接続先",
+        "selectbox_index": "destination",
+        "selectbox_key": "ancestors",
+        "connection_column": None,
+        "description_column": None,
+    },
+}
 
 color_list, config_data, demo, app_data, plantuml_process = initialize_page(
     "Process Flow Diagram Viewer"
@@ -104,30 +171,11 @@ with edit_column:
     # 直接edgeは操作せず、コピーに対して操作する
     tmp_edges = copy.deepcopy(requirement_data["edges"])
 
-    source_column_loop, source_comment_column_loop = st.columns([1, 1])
+    params_to = edge_params["to_selected"]
+    params_to["connection_column"], params_to["description_column"] = st.columns([1, 1])
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        # 接続先が選択エンティティ
-        if edge["destination"] == selected_unique_id:
-            edge.setdefault("comment", "")
-            with source_column_loop:
-                edge["source"] = id_title_dict[
-                    st.selectbox(
-                        "接続元",
-                        id_title_list,
-                        index=id_title_list.index(unique_id_dict[edge["source"]]),
-                        key=f"predecessors{i}",
-                        label_visibility=visibility,
-                    )
-                ]
-            with source_comment_column_loop:
-                edge["comment"] = st.text_input(
-                    "説明",
-                    edge["comment"],
-                    key=f"comment_predecessor{i}",
-                    label_visibility=visibility,
-                )
-            visibility = "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
+        render_edge_connection(edge, i, visibility, edge_params["to_selected"])
 
     # 関係追加の操作があるため、1つは常に表示
     temp_predecessor = {
@@ -135,44 +183,21 @@ with edit_column:
         "destination": tmp_entity["unique_id"],
         "comment": None,
     }
-    source_column, source_comment_column = st.columns([1, 1])
-    with source_column:
-        temp_predecessor["source"] = id_title_dict[
-            st.selectbox(
-                "接続元(新規)", id_title_list, index=id_title_list.index("None")
-            )
-        ]
-    with source_comment_column:
-        temp_predecessor["comment"] = st.text_input(
-            "説明(新規)", "", key="comment_predecessor_new"
-        )
+
+    render_edge_connection_new(
+        temp_predecessor, 0, visibility, edge_params["to_selected"]
+    )
+
     st.write("---")
 
     # 接続先の関係を取得
-    destination_column_loop, destination_comment_column_loop = st.columns([1, 1])
+    params_from = edge_params["from_selected"]
+    params_from["connection_column"], params_from["description_column"] = st.columns(
+        [1, 1]
+    )
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        # 接続元が選択エンティティ
-        if edge["source"] == selected_unique_id:
-            edge.setdefault("comment", "")
-            with destination_column_loop:
-                edge["destination"] = id_title_dict[
-                    st.selectbox(
-                        "接続先",
-                        id_title_list,
-                        index=id_title_list.index(unique_id_dict[edge["destination"]]),
-                        key=f"ancestors{i}",
-                        label_visibility=visibility,
-                    )
-                ]
-            with destination_comment_column_loop:
-                edge["comment"] = st.text_input(
-                    "説明",
-                    edge["comment"],
-                    key=f"comment_ancestors{i}",
-                    label_visibility=visibility,
-                )
-            visibility = "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
+        render_edge_connection(edge, i, visibility, edge_params["from_selected"])
 
     # 関係追加の操作があるため、1つは常に表示
     temp_ancestor = {
@@ -180,17 +205,10 @@ with edit_column:
         "destination": None,
         "comment": None,
     }
-    destination_column, destination_comment_column = st.columns([1, 1])
-    with destination_column:
-        temp_ancestor["destination"] = id_title_dict[
-            st.selectbox(
-                "接続先(新規)", id_title_list, index=id_title_list.index("None")
-            )
-        ]  # 末尾に追加用の空要素を追加
-    with destination_comment_column:
-        temp_ancestor["comment"] = st.text_input(
-            "説明(新規)", "", key="comment_ancestor_new"
-        )
+
+    render_edge_connection_new(
+        temp_ancestor, 0, visibility, edge_params["from_selected"]
+    )
 
     new_edges = [temp_predecessor, temp_ancestor]
 

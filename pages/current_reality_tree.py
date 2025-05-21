@@ -17,7 +17,7 @@ def render_edge_connection(
 ) -> str:
     if edge[params["condition"]] == selected_unique_id:
         with params["connection_column"]:
-            edge["source"] = id_title_dict[
+            edge[params["selectbox_index"]] = id_title_dict[
                 st.selectbox(
                     params["selectbox_label"],
                     id_title_list,
@@ -48,9 +48,9 @@ def render_edge_connection(
 
 def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict):
     with params["connection_column"]:
-        edge["source"] = id_title_dict[
+        edge[params["selectbox_index"]] = id_title_dict[
             st.selectbox(
-                f"{params['selection_label']}(新規)",
+                f"{params['selectbox_label']}(新規)",
                 id_title_list,
                 index=id_title_list.index("None"),
                 key=f"{params['selectbox_key']}_new",
@@ -184,7 +184,7 @@ with edit_column:
     params_to["connection_column"], params_to["and_column"] = st.columns([7, 2])
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        visibility = render_edge_connection(edge, i, visibility, edge_params)
+        visibility = render_edge_connection(edge, i, visibility, params_to)
 
     # 関係追加の操作があるため、1つは常に表示
     temp_predecessor = {
@@ -194,7 +194,7 @@ with edit_column:
         "type": "arrow",
     }
     visibility = "visible"
-    render_edge_connection_new(temp_predecessor, 0, visibility, edge_params)
+    render_edge_connection_new(temp_predecessor, 0, visibility, params_to)
 
     st.write("---")
 
@@ -202,7 +202,7 @@ with edit_column:
     params_from["connection_column"], params_from["and_column"] = st.columns([7, 2])
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        visibility = render_edge_connection(edge, i, visibility, edge_params)
+        visibility = render_edge_connection(edge, i, visibility, params_from)
 
     # 関係追加の操作があるため、1つは常に表示
     temp_ancestor = {
@@ -212,7 +212,7 @@ with edit_column:
         "type": "arrow",
     }
     visibility = "visible"
-    render_edge_connection_new(temp_ancestor, 0, visibility, edge_params)
+    render_edge_connection_new(temp_ancestor, 0, visibility, params_from)
 
     new_edges = [temp_predecessor, temp_ancestor]
 
