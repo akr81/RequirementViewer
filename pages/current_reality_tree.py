@@ -125,6 +125,7 @@ st.session_state["file_path"] = file_path
     upstream_distance,
     downstream_distance,
     selected_entity,
+    landscape,
 ) = load_and_prepare_data(file_path, st.session_state.app_name)
 
 # 未選択の場合はデフォルトエンティティを設定
@@ -146,6 +147,7 @@ plantuml_code = draw_diagram_column(
     downstream_distance,
     scale,
     graph_data=graph_data,
+    landscape=landscape,
 )
 
 with edit_column:

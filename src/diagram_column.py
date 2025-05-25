@@ -20,6 +20,7 @@ def draw_diagram_column(
     scale,
     *,
     graph_data=None,
+    landscape=False,
 ):
 
     target = None
@@ -30,7 +31,8 @@ def draw_diagram_column(
             upstream_distance_column,
             downstream_distance_column,
             scale_column,
-        ) = st.columns([2, 2, 1, 1, 1])
+            landscape_column,
+        ) = st.columns([2, 2, 1, 1, 1, 1])
         with title_column:
             st.write(f"## {page_title}")
             st.write("クリックするとエンティティが選択されます")
@@ -66,6 +68,9 @@ def draw_diagram_column(
                 value=int(downstream_distance),
                 step=1,
             )
+        with landscape_column:
+            # 横向きのチェックボックス
+            landscape = st.checkbox("横向き", value=landscape)
         # グラフをフィルタリング
         graph_data.extract_subgraph(
             target,
@@ -83,6 +88,7 @@ def draw_diagram_column(
             parameters_dict["target"] = target
             parameters_dict["upstream_distance"] = upstream_distance
             parameters_dict["downstream_distance"] = downstream_distance
+            parameters_dict["landscape"] = landscape
 
             # グラフデータをPlantUMLコードに変換
             config = {

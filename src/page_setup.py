@@ -67,6 +67,7 @@ def load_and_prepare_data(file_path, app_name):
     downstream_distance = st.query_params.get(
         "downstream_distance", st.session_state.config_data["downstream_filter_max"]
     )
+    landscape = st.query_params.get("landscape", False)
 
     # 選択されたエンティティを取得
     selected_entity = None
@@ -102,4 +103,5 @@ def load_and_prepare_data(file_path, app_name):
         upstream_distance,
         downstream_distance,
         selected_entity,
+        landscape,
     )

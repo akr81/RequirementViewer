@@ -49,7 +49,7 @@ class ConvertPumlCode:
             raise ValueError("Invalid title specified.")
 
     def _add_common_parameter_setting(
-        self, scale: float, ortho: bool = True, sep: int = 0
+        self, scale: float, ortho: bool = True, sep: int = 0, *, landscape: bool = False
     ) -> str:
         ortho_str = (
             """
@@ -67,6 +67,7 @@ skinparam ranksep {sep}
             if sep != 0
             else ""
         )
+        landscape = "left to right direction" if landscape else ""
 
         return f"""
 @startuml
@@ -76,6 +77,7 @@ hide empty members
 hide method
 {ortho_str}
 {sep_str}
+{landscape}
 skinparam HyperlinkUnderline false
 skinparam usecase {{
 BackgroundColor White
@@ -135,7 +137,9 @@ scale {scale}
 
         # Add common parameter setting
         scale = parameters_dict.get("scale", 1.0)
-        ret = self._add_common_parameter_setting(scale)
+        ret = self._add_common_parameter_setting(
+            scale, landscape=parameters_dict.get("landscape", False)
+        )
 
         # Add title as package
         ret += f"package {title} <<Frame>> " + "{\n"
@@ -197,7 +201,9 @@ end note
     ) -> str:
         scale = parameters_dict.get("scale", 1.0)
 
-        ret = self._add_common_parameter_setting(scale, ortho=False)
+        ret = self._add_common_parameter_setting(
+            scale, ortho=False, landscape=parameters_dict.get("landscape", False)
+        )
 
         # Convert all nodes
         for node in graph.nodes(data=True):
@@ -469,7 +475,9 @@ right_shoulder_to_head .. right_shoulder
         """
         scale = parameters_dict.get("scale", 1.0)
 
-        ret = self._add_common_parameter_setting(scale)
+        ret = self._add_common_parameter_setting(
+            scale, landscape=parameters_dict.get("landscape", False)
+        )
 
         # Convert all nodes
         for node in graph.nodes(data=True):
@@ -530,7 +538,12 @@ right_shoulder_to_head .. right_shoulder
         """
         scale = parameters_dict.get("scale", 1.0)
 
-        ret = self._add_common_parameter_setting(scale, ortho=False, sep=20)
+        ret = self._add_common_parameter_setting(
+            scale,
+            ortho=False,
+            sep=20,
+            landscape=parameters_dict.get("landscape", False),
+        )
 
         # Convert all nodes
         for node in graph.nodes(data=True):
@@ -616,7 +629,12 @@ end note
         """
         scale = parameters_dict.get("scale", 1.0)
 
-        ret = self._add_common_parameter_setting(scale, ortho=False, sep=20)
+        ret = self._add_common_parameter_setting(
+            scale,
+            ortho=False,
+            sep=20,
+            landscape=parameters_dict.get("landscape", False),
+        )
 
         # Convert all nodes
         for node in graph.nodes(data=True):
