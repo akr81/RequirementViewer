@@ -58,7 +58,7 @@ def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict
         )
 
 
-pfd_type_list = ["deliverable", "process", "note"]
+pfd_type_list = ["deliverable", "process", "note", "cloud"]
 
 edge_params = {
     "to_selected": {

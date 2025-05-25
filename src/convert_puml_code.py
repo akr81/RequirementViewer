@@ -640,6 +640,8 @@ end note
         for node in graph.nodes(data=True):
             if node[1]["type"] == "process":
                 ret += self._convert_usecase(node, parameters_dict) + "\n"
+            elif node[1]["type"] == "cloud":
+                ret += self._convert_cloud(node, parameters_dict) + "\n"
             else:
                 ret += self._convert_card_crt(node, parameters_dict) + "\n"
 
@@ -669,4 +671,25 @@ end note
             id = node[1]["id"]
             id = id.replace("\n", "\\n")
             ret = f"usecase \"{id}\" as {node[1]['unique_id']} {parameters} {color}\n"
+        return ret
+
+    def _convert_cloud(self, node: Dict[str, Any], parameters_dict: Dict) -> str:
+        """Convert cloud information to PlantUML code.
+
+        Args:
+            data (Dict[str, Any]): Cloud information
+
+        Returns:
+            str: PlantUML code
+        """
+        parameters = self._convert_parameters_dict(node, parameters_dict)
+        if node[1]["color"] != "None":
+            color = color_to_archimate[node[1]["color"]]
+        else:
+            color = ""
+        if node[1]["type"] == "cloud":
+            # Convert and node
+            id = node[1]["id"]
+            id = id.replace("\n", "\\n")
+            ret = f"cloud \"{id}\" as {node[1]['unique_id']} {parameters} {color}\n"
         return ret
