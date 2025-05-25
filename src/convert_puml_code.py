@@ -590,7 +590,7 @@ end note
         ret += "\n}\n@enduml\n"
         return ret
 
-    def _convert_card_crt(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
+    def _convert_card_pfd(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
         parameters = self._convert_parameters_dict(node, parameters_dict)
         if node[1]["color"] != "None":
             color = color_to_archimate[node[1]["color"]]
@@ -643,7 +643,7 @@ end note
             elif node[1]["type"] == "cloud":
                 ret += self._convert_cloud(node, parameters_dict) + "\n"
             else:
-                ret += self._convert_card_crt(node, parameters_dict) + "\n"
+                ret += self._convert_card_pfd(node, parameters_dict) + "\n"
 
         # Convert edges
         for edge in graph.edges(data=True):
