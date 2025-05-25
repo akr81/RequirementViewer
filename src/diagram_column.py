@@ -70,7 +70,9 @@ def draw_diagram_column(
             )
         with landscape_column:
             # 横向きのチェックボックス
-            landscape = st.checkbox("横向き", value=landscape)
+            landscape_mod = st.checkbox(
+                "横向き", value=landscape, key="landscape_checkbox"
+            )
         # グラフをフィルタリング
         graph_data.extract_subgraph(
             target,
@@ -88,7 +90,7 @@ def draw_diagram_column(
             parameters_dict["target"] = target
             parameters_dict["upstream_distance"] = upstream_distance
             parameters_dict["downstream_distance"] = downstream_distance
-            parameters_dict["landscape"] = landscape
+            parameters_dict["landscape"] = landscape_mod
 
             # グラフデータをPlantUMLコードに変換
             config = {

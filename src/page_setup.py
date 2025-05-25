@@ -68,6 +68,8 @@ def load_and_prepare_data(file_path, app_name):
         "downstream_distance", st.session_state.config_data["downstream_filter_max"]
     )
     landscape = st.query_params.get("landscape", False)
+    # URLパラメタから取得すると文字列なのでboolに変換
+    landscape = True if landscape == "True" else False
 
     # 選択されたエンティティを取得
     selected_entity = None
