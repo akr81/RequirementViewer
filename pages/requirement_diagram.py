@@ -144,8 +144,8 @@ with edit_column:
         entity_types,
         index=entity_types.index(tmp_entity["type"]),
     )
-    tmp_entity["id"] = st.text_input("ID", tmp_entity["id"])
     tmp_entity["title"] = st.text_input("タイトル", tmp_entity["title"])
+    tmp_entity["id"] = st.text_input("ID", tmp_entity["id"])
     tmp_entity["text"] = st.text_area("説明", tmp_entity["text"])
     tmp_entity["color"] = st.selectbox(
         "色", color_list, index=color_list.index(tmp_entity["color"])
