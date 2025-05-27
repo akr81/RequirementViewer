@@ -100,6 +100,8 @@ st.session_state["file_path"] = file_path
 
 if not selected_entity:
     selected_entity = DEFAULT_ENTITY_GETTERS[st.session_state.app_name](entity_types)
+if selected_unique_id == "default":
+    selected_unique_id = selected_entity["unique_id"]
 
 # Requirement diagram表示とデータ編集のレイアウトを設定
 diagram_column, edit_column = st.columns([4, 1])
@@ -218,6 +220,9 @@ with edit_column:
                 "接続先(新規)", id_title_list, index=id_title_list.index("None")
             )
         ]  # 末尾に追加用の空要素を追加
+    if relation_type == "None" and destination_unique_id != "None":
+        # エラーを避けるため、関係タイプがNoneの場合はデフォルトの関係タイプを設定
+        relation_type = relation_types[1]
     with st.expander("関係の注釈(新規)", expanded=True):
         relation_note = {}
         relation_note["type"] = st.selectbox("注釈タイプ", note_types, key="note_type")
@@ -227,7 +232,7 @@ with edit_column:
     if not relation_note:
         new_edge.append(
             {
-                "source": selected_unique_id,
+                "source": tmp_entity["unique_id"],
                 "type": relation_type,
                 "destination": destination_unique_id,
                 "note": {},
@@ -236,7 +241,7 @@ with edit_column:
     else:
         new_edge.append(
             {
-                "source": selected_unique_id,
+                "source": tmp_entity["unique_id"],
                 "type": relation_type,
                 "destination": destination_unique_id,
                 "note": relation_note,
