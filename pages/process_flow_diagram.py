@@ -177,7 +177,9 @@ with edit_column:
     params_to["connection_column"], params_to["description_column"] = st.columns([1, 1])
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        render_edge_connection(edge, i, visibility, edge_params["to_selected"])
+        visibility = render_edge_connection(
+            edge, i, visibility, edge_params["to_selected"]
+        )
 
     # 関係追加の操作があるため、1つは常に表示
     temp_predecessor = {
@@ -186,6 +188,7 @@ with edit_column:
         "comment": None,
     }
 
+    visibility = "visible"
     render_edge_connection_new(
         temp_predecessor, 0, visibility, edge_params["to_selected"]
     )
@@ -199,7 +202,9 @@ with edit_column:
     )
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        render_edge_connection(edge, i, visibility, edge_params["from_selected"])
+        visibility = render_edge_connection(
+            edge, i, visibility, edge_params["from_selected"]
+        )
 
     # 関係追加の操作があるため、1つは常に表示
     temp_ancestor = {
@@ -208,6 +213,7 @@ with edit_column:
         "comment": None,
     }
 
+    visibility = "visible"
     render_edge_connection_new(
         temp_ancestor, 0, visibility, edge_params["from_selected"]
     )
