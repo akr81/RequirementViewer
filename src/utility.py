@@ -7,6 +7,7 @@ import hjson
 import os
 import shutil
 import datetime
+import copy
 from typing import Tuple, List, Dict, Tuple, Any, Optional
 
 
@@ -188,6 +189,21 @@ def update_source_data(file_path: str, source_data: Dict):
     # list内の辞書型データをunique_id順に並び替える
     source_data["nodes"].sort(key=lambda x: x["unique_id"])
     source_data["edges"].sort(key=lambda x: x["source"])
+
+    # Remove duplicated edges
+    seen_edges = set()
+    temp_edges = copy.deepcopy(source_data["edges"])
+    filtered_edges = []
+    for temp_edge in temp_edges:
+        # Convert edge dict to hashable tuple
+        edge_tuple = make_hashable(temp_edge)
+
+        if edge_tuple not in seen_edges:
+            seen_edges.add(edge_tuple)
+            filtered_edges.append(temp_edge)
+
+    source_data["edges"] = filtered_edges
+
     with open(file_path, "w", encoding="utf-8") as f:
         hjson.dump(source_data, f, ensure_ascii=False, indent=4)
 
@@ -326,3 +342,21 @@ def copy_file():
     src = os.path.join("back", src)
     if os.path.exists(src):
         shutil.copy(src, dst)
+
+
+def make_hashable(data):
+    """
+    入れ子になった辞書やリストを含むデータを、ハッシュ可能で順序不変な形に変換する。
+    """
+    if isinstance(data, dict):
+        # 辞書の場合: キーでソートし、値も再帰的に変換したタプルのタプルにする
+        return tuple(sorted((key, make_hashable(value)) for key, value in data.items()))
+    elif isinstance(data, list):
+        # リストの場合: 各要素を再帰的に変換したタプルにする
+        return tuple(make_hashable(element) for element in data)
+    elif isinstance(data, set):
+        # セットの場合: frozensetに変換し、要素も再帰的に変換
+        return frozenset(make_hashable(element) for element in data)
+    # 他のハッシュ可能な型 (int, str, tuple, frozensetなど) はそのまま返す
+    # 注意: float型は完全一致の問題があるため、用途によっては丸め処理などが必要
+    return data

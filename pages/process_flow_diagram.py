@@ -41,19 +41,21 @@ def render_edge_connection(
 
 def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict):
     with params["connection_column"]:
+        connection_key = f"{params['selectbox_key']}_new"
         edge[params["selectbox_index"]] = id_title_dict[
             st.selectbox(
                 f"{params['selectbox_label']}(新規)",
                 id_title_list,
                 index=id_title_list.index("None"),
-                key=f"{params['selectbox_key']}_new",
+                key=connection_key,
                 label_visibility=visibility,
             )
         ]
     with params["description_column"]:
+        comment_key = f"comment_{params['selectbox_key']}_new"
         edge["comment"] = st.text_input(
             "説明(新規)",
-            key=f"comment_{params['selectbox_key']}_new",
+            key=comment_key,
             label_visibility=visibility,
         )
 
@@ -186,6 +188,7 @@ with edit_column:
         "source": None,
         "destination": tmp_entity["unique_id"],
         "comment": None,
+        "type": "arrow",
     }
 
     visibility = "visible"
@@ -211,6 +214,7 @@ with edit_column:
         "source": tmp_entity["unique_id"],
         "destination": None,
         "comment": None,
+        "type": "arrow",
     }
 
     visibility = "visible"
@@ -230,6 +234,7 @@ with edit_column:
         tmp_edges=tmp_edges,
         new_edges=new_edges,
     )
+
 
 # セッション状態にgraph_dataを追加
 st.session_state.graph_data = graph_data
