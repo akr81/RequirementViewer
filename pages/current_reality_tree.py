@@ -3,11 +3,10 @@ from src.utility import (
     get_next_and_number,
     get_backup_files_for_current_data,
     copy_file,
-)
-from src.diagram_column import draw_diagram_column
+)  # draw_diagram_column を削除
 from src.operate_buttons import add_operate_buttons
 from src.diagram_configs import *
-from src.page_setup import initialize_page, load_and_prepare_data
+from src.page_setup import setup_page_layout_and_data  # 変更
 import uuid
 import copy
 
@@ -91,59 +90,34 @@ edge_params = {
     },
 }
 
-# ページの初期設定
-color_list, config_data, app_data = initialize_page("Current Reality Tree Viewer")
+# ページ全体のデータ読み込みと基本設定
+page_elements = setup_page_layout_and_data("Current Reality Tree Viewer")
 
-if "current_reality_tree_data" not in config_data:
-    st.error(
-        """設定ファイルにデータファイル設定がありません。
-        settingからファイルを設定してください。"""
-    )
-    st.stop()
-data_key = st.session_state.app_data[st.session_state.app_name]["data"]
-file_path = config_data[data_key]
-st.session_state["file_path"] = file_path
+# setup_page_layout_and_data から返された要素を変数に展開
+color_list = page_elements["color_list"]
+config_data = page_elements["config_data"]
+app_data = page_elements["app_data"]
+file_path = page_elements["file_path"]
+requirement_data = page_elements["requirement_data"]
+nodes = page_elements["nodes"]
+edges = page_elements["edges"]  # tmp_edges の元データとして必要
+requirement_manager = page_elements["requirement_manager"]
+graph_data = page_elements["graph_data"]
+id_title_dict = page_elements["id_title_dict"]
+unique_id_dict = page_elements["unique_id_dict"]
+id_title_list = page_elements["id_title_list"]
+add_list = page_elements["add_list"]
+scale = page_elements["scale"]
+selected_unique_id = page_elements["selected_unique_id"]
+upstream_distance = page_elements["upstream_distance"]
+downstream_distance = page_elements["downstream_distance"]
+selected_entity = page_elements["selected_entity"]
+landscape = page_elements["landscape"]
 
-# データの読み込みと準備
-(
-    requirement_data,
-    nodes,
-    edges,
-    requirement_manager,
-    graph_data,
-    id_title_dict,
-    unique_id_dict,
-    id_title_list,
-    add_list,
-    scale,
-    selected_unique_id,
-    upstream_distance,
-    downstream_distance,
-    selected_entity,
-    landscape,
-) = load_and_prepare_data(file_path, st.session_state.app_name)
+# 編集用カラムとPlantUMLコードを page_elements から取得
+edit_column = page_elements["edit_column"]
+plantuml_code = page_elements["plantuml_code"]
 
-# 未選択の場合はデフォルトエンティティを設定
-if not selected_entity:
-    selected_entity = DEFAULT_ENTITY_GETTERS[st.session_state.app_name]()
-
-# Requirement diagram表示とデータ編集のレイアウトを設定
-diagram_column, edit_column = st.columns([4, 1])
-
-plantuml_code = draw_diagram_column(
-    st.session_state.app_name,
-    diagram_column,
-    unique_id_dict,
-    id_title_dict,
-    id_title_list,
-    config_data,
-    requirement_data,
-    upstream_distance,
-    downstream_distance,
-    scale,
-    graph_data=graph_data,
-    landscape=landscape,
-)
 
 with edit_column:
     title_column, file_selector_column = st.columns([4, 4])
