@@ -3,7 +3,7 @@ import streamlit as st
 from src.utility import load_config  # 設定ファイル読み込み用
 
 # --- デフォルトアプリの設定読み込み ---
-config_data, _ = load_config()
+config_data = load_config()
 AVAILABLE_APP_PAGES = {  # 表示名とページファイルパスのマッピング
     "Current Reality Tree": "pages/current_reality_tree.py",  # pages/ ディレクトリ内のパス
     # ... 他のアプリ ...

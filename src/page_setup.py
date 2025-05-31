@@ -30,7 +30,7 @@ def initialize_page(app_name: str):
     )
 
     # configファイルを読み込む
-    config_data, demo = load_config()
+    config_data = load_config()
     st.session_state.config_data = config_data
     app_data = load_app_data()
     st.session_state.app_data = app_data
@@ -40,7 +40,7 @@ def initialize_page(app_name: str):
     if not ("www.plantuml.com" in config_data["plantuml"]):
         plantuml_process = start_plantuml_server()
 
-    return color_list, config_data, demo, app_data, plantuml_process
+    return color_list, config_data, app_data, plantuml_process
 
 
 def load_and_prepare_data(file_path, app_name):

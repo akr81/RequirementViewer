@@ -81,13 +81,9 @@ edge_params = {
     },
 }
 
-color_list, config_data, demo, app_data, plantuml_process = initialize_page(
+color_list, config_data, app_data, plantuml_process = initialize_page(
     "Process Flow Diagram Viewer"
 )
-
-
-if demo:
-    st.title(st.session_state.app_name)
 
 
 if "process_flow_diagram_data" not in config_data:

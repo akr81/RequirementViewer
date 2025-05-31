@@ -113,7 +113,7 @@ def load_colors() -> list:
     return list(colors.keys())
 
 
-def load_config() -> Tuple[dict, bool]:
+def load_config() -> dict:
     """Load config from JSON file.
 
     Returns:
@@ -121,13 +121,11 @@ def load_config() -> Tuple[dict, bool]:
     """
     if os.path.exists("setting/config.hjson"):
         config_file = "setting/config.hjson"
-        demo = False
     else:
         config_file = "setting/default_config.hjson"
-        demo = True
     with open(config_file, "r", encoding="utf-8") as f:
         config = hjson.load(f)
-    return config, demo
+    return config
 
 
 def load_app_data() -> dict:
