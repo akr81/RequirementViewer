@@ -1,67 +1,49 @@
 import streamlit as st
-from src.diagram_column import draw_diagram_column
 from src.operate_buttons import add_operate_buttons
 from src.diagram_configs import *
-from src.page_setup import initialize_page, load_and_prepare_data
-from src.utility import (
+from src.page_setup import setup_page_layout_and_data  # 変更
+from src.utility import (  # copy_file, get_backup_files_for_current_data のみ使用
     get_backup_files_for_current_data,
     copy_file,
 )
 import copy
 
 
-color_list, config_data, app_data = initialize_page("Evaporating Cloud Viewer")
+# ページ全体のデータ読み込みと基本設定
+page_elements = setup_page_layout_and_data("Evaporating Cloud Viewer")
 
-data_key = st.session_state.app_data[st.session_state.app_name]["data"]
-if data_key not in config_data:
-    st.error(
-        """設定ファイルにデータファイル設定がありません。
-        settingからファイルを設定してください。"""
-    )
-    st.stop()
+# setup_page_layout_and_data から返された要素を変数に展開
+color_list = page_elements["color_list"]
+config_data = page_elements["config_data"]
+app_data = page_elements["app_data"]
+file_path = page_elements["file_path"]
+requirement_data = page_elements["requirement_data"]
+nodes = page_elements["nodes"]  # Evaporating Cloud では直接使われないが、一応取得
+# edges は Evaporating Cloud では直接使われない
+requirement_manager = page_elements["requirement_manager"]
+graph_data = page_elements["graph_data"]
+id_title_dict = page_elements["id_title_dict"]
+unique_id_dict = page_elements["unique_id_dict"]
+id_title_list = page_elements[
+    "id_title_list"
+]  # Evaporating Cloud では直接使われないが、一応取得
+# add_list は Evaporating Cloud では使われない
+scale = page_elements["scale"]  # Evaporating Cloud では直接使われないが、一応取得
+selected_unique_id = page_elements["selected_unique_id"]
+upstream_distance = page_elements[
+    "upstream_distance"
+]  # Evaporating Cloud では直接使われないが、一応取得
+downstream_distance = page_elements[
+    "downstream_distance"
+]  # Evaporating Cloud では直接使われないが、一応取得
+selected_entity = page_elements["selected_entity"]
+landscape = page_elements[
+    "landscape"
+]  # Evaporating Cloud では直接使われないが、一応取得
 
-file_path = config_data[data_key]
-st.session_state["file_path"] = file_path
-
-# データの読み込みと準備
-(
-    requirement_data,
-    nodes,
-    _,
-    requirement_manager,
-    graph_data,
-    id_title_dict,
-    unique_id_dict,
-    id_title_list,
-    _,
-    scale,
-    selected_unique_id,
-    upstream_distance,
-    downstream_distance,
-    selected_entity,
-    landscape,
-) = load_and_prepare_data(file_path, st.session_state.app_name)
-
-if not selected_entity:
-    selected_entity = DEFAULT_ENTITY_GETTERS[st.session_state.app_name]()
-
-# Requirement diagram表示とデータ編集のレイアウトを設定
-diagram_column, edit_column = st.columns([4, 1])
-
-plantuml_code = draw_diagram_column(
-    st.session_state.app_name,
-    diagram_column,
-    unique_id_dict,
-    id_title_dict,
-    id_title_list,
-    config_data,
-    requirement_data,
-    upstream_distance,
-    downstream_distance,
-    scale,
-    graph_data=graph_data,
-    landscape=landscape,
-)
+# 編集用カラムとPlantUMLコードを page_elements から取得
+edit_column = page_elements["edit_column"]
+plantuml_code = page_elements["plantuml_code"]
 
 with edit_column:
     title_column, file_selector_column = st.columns([4, 4])
