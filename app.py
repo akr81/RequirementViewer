@@ -16,9 +16,38 @@ default_app_display_name = config_data.get(
 )
 
 
+@st.dialog("注意")
+def display_warning_dialog():
+    message = """
+PlantUMLの外部サーバを使用する設定となっています。
+
+入力するデータにご注意ください。
+"""
+    st.warning(message)
+    _, button_column, _ = st.columns([2, 1, 2])  # ボタン用の列を作成
+    with button_column:
+        if st.button("OK", key="warning_close_button"):
+            st.session_state.show_warning_dialog = False
+            st.rerun()
+        # 確認待ち
+        st.stop()
+
+
 def main_landing_page():
     st.set_page_config(layout="wide", page_title="思考ツールメイン")
     st.write("サイドバーから利用したい図を選択してください。")
+
+    # PlantUMLが外部の公開サーバを使用している場合の注意喚起
+    # セッションステートでダイアログの表示状態を管理
+    if "show_warning_dialog" not in st.session_state:
+        st.session_state.show_warning_dialog = True
+
+    if st.session_state.show_warning_dialog and "www.plantuml.com" in config_data.get(
+        "plantuml", ""
+    ):
+        display_warning_dialog()
+    # ダイアログは初回のみ表示
+    st.session_state.show_warning_dialog = False
 
     # --- 自動遷移ロジック ---
     if "redirect_attempted" not in st.session_state:

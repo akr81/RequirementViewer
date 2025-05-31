@@ -36,6 +36,7 @@ def initialize_page(app_name: str):
     st.session_state.app_data = app_data
 
     # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
+    plantuml_process = None
     if not ("www.plantuml.com" in config_data["plantuml"]):
         plantuml_process = start_plantuml_server()
 
