@@ -46,10 +46,10 @@ if create_new:
 
 if file_path is not None:
     # ファイルが選択された場合、configに保存
-    with open("setting/config.json", "r", encoding="utf-8") as f:
+    with open("setting/config.hjson", "r", encoding="utf-8") as f:
         config = hjson.load(f)
     config[data_key] = file_path
-    with open("setting/config.json", "w", encoding="utf-8") as f:
+    with open("setting/config.hjson", "w", encoding="utf-8") as f:
         hjson.dump(config, f, ensure_ascii=False, indent=4)
 
     st.info("ファイルを設定しました。")

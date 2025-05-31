@@ -79,6 +79,7 @@ def get_diagram(plantuml_code: str, plantuml_server: str, *, png_out=False) -> A
     Returns:
         Any: SVG diagram as text or PNG image as bytes
     """
+    plantuml_server = plantuml_server + "/svg/"  # デフォルトはSVG出力
     if png_out:
         # PNG出力の場合はURLを変更
         plantuml_server = plantuml_server.replace("svg", "png")
@@ -118,11 +119,11 @@ def load_config() -> Tuple[dict, bool]:
     Returns:
         dict: Config dictionary
     """
-    if os.path.exists("setting/config.json"):
-        config_file = "setting/config.json"
+    if os.path.exists("setting/config.hjson"):
+        config_file = "setting/config.hjson"
         demo = False
     else:
-        config_file = "setting/default_config.json"
+        config_file = "setting/default_config.hjson"
         demo = True
     with open(config_file, "r", encoding="utf-8") as f:
         config = hjson.load(f)
