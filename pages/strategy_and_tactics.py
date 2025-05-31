@@ -11,9 +11,7 @@ import uuid
 import copy
 
 
-color_list, config_data, app_data, plantuml_process = initialize_page(
-    "Strategy and Tactics Tree Viewer"
-)
+color_list, config_data, app_data = initialize_page("Strategy and Tactics Tree Viewer")
 
 
 data_key = st.session_state.app_data[st.session_state.app_name]["data"]

@@ -10,9 +10,7 @@ from src.utility import (
 import copy
 
 
-color_list, config_data, app_data, plantuml_process = initialize_page(
-    "Evaporating Cloud Viewer"
-)
+color_list, config_data, app_data = initialize_page("Evaporating Cloud Viewer")
 
 data_key = st.session_state.app_data[st.session_state.app_name]["data"]
 if data_key not in config_data:

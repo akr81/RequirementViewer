@@ -5,7 +5,6 @@ from src.utility import (
     load_colors,
     load_config,
     load_app_data,
-    start_plantuml_server,
     load_source_data,
     build_mapping,
     build_sorted_list,
@@ -35,12 +34,7 @@ def initialize_page(app_name: str):
     app_data = load_app_data()
     st.session_state.app_data = app_data
 
-    # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
-    plantuml_process = None
-    if not ("www.plantuml.com" in config_data["plantuml"]):
-        plantuml_process = start_plantuml_server()
-
-    return color_list, config_data, app_data, plantuml_process
+    return color_list, config_data, app_data
 
 
 def load_and_prepare_data(file_path, app_name):

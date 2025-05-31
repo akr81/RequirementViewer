@@ -92,9 +92,7 @@ edge_params = {
 }
 
 # ページの初期設定
-color_list, config_data, app_data, plantuml_process = initialize_page(
-    "Current Reality Tree Viewer"
-)
+color_list, config_data, app_data = initialize_page("Current Reality Tree Viewer")
 
 if "current_reality_tree_data" not in config_data:
     st.error(

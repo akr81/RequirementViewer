@@ -52,9 +52,7 @@ def load_note_types() -> list[str]:
     return note_types
 
 
-color_list, config_data, app_data, plantuml_process = initialize_page(
-    "Requirement Diagram Viewer"
-)
+color_list, config_data, app_data = initialize_page("Requirement Diagram Viewer")
 
 
 # エンティティタイプと関係タイプを読み込む
