@@ -217,9 +217,6 @@ scale {scale}
         # 常にselectedパラメータを追加
         query_items.append(f"selected={node[1]['unique_id']}")
 
-        if not query_items:  # 通常は発生しないはず (selectedが常に追加されるため)
-            return "[[]]"  # 空のリンクの場合のデフォルト
-
         return f"[[?{'&'.join(query_items)}]]"
 
     def _convert_evaporating_cloud_note(
@@ -238,26 +235,27 @@ note as {node_attrs['unique_id']} {color_str}
 end note
 """
 
+    def _dispatch_evaporating_cloud_node_conversion(
+        self, node_data_tuple: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        """Dispatches node conversion for Evaporating Cloud based on node type."""
+        node_attrs = node_data_tuple[1]
+        if node_attrs["type"] == "note":
+            return self._convert_evaporating_cloud_note(
+                node_data_tuple, parameters_dict
+            )
+        else:  # Assumes card or other types are card-like
+            return self._convert_evaporating_cloud_card_node(
+                node_data_tuple, parameters_dict
+            )
+
     def _convert_evaporating_cloud(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
-        puml_parts = []
+        puml_parts = self._convert_nodes_to_puml(
+            graph, parameters_dict, self._dispatch_evaporating_cloud_node_conversion
+        )
 
-        # Convert all nodes for Evaporating Cloud
-        for node_data_tuple in graph.nodes(data=True):
-            node_attrs = node_data_tuple[1]
-            if node_attrs["type"] == "note":
-                puml_parts.append(
-                    self._convert_evaporating_cloud_note(
-                        node_data_tuple, parameters_dict
-                    )
-                )
-            else:
-                puml_parts.append(
-                    self._convert_evaporating_cloud_card_node(
-                        node_data_tuple, parameters_dict
-                    )
-                )
         # Convert edges
         puml_parts.extend(self._convert_edges_to_puml(graph, self._convert_card_edge))
         # conflict
@@ -595,6 +593,21 @@ right_shoulder_to_head .. right_shoulder"""
             puml_node1, puml_node2, line_style, comment_text
         )
 
+    def _dispatch_crt_node_conversion(
+        self, node_data_tuple: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        """Dispatches node conversion for Current Reality Tree based on node type."""
+        node_attrs = node_data_tuple[1]
+        if node_attrs["type"] == "and":
+            # Convert "and" node
+            return (
+                f"usecase \"AND{node_attrs['unique_id']}\" as {node_attrs['unique_id']}"
+            )
+        elif node_attrs["type"] == "entity":
+            return self._convert_crt_entity_node(node_data_tuple, parameters_dict)
+        else:  # Assume note
+            return self._convert_crt_note_node(node_data_tuple, parameters_dict)
+
     def _convert_current_reality(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
@@ -607,24 +620,9 @@ right_shoulder_to_head .. right_shoulder"""
         Returns:
             str: PlantUML code
         """
-        puml_parts = []
-
-        # Convert all nodes for Current Reality Tree
-        for node_data_tuple in graph.nodes(data=True):
-            node_attrs = node_data_tuple[1]
-            if node_attrs["type"] == "and":
-                # Convert "and" node
-                puml_parts.append(
-                    f"usecase \"AND{node_attrs['unique_id']}\" as {node_attrs['unique_id']}"
-                )
-            elif node_attrs["type"] == "entity":
-                puml_parts.append(
-                    self._convert_crt_entity_node(node_data_tuple, parameters_dict)
-                )
-            else:  # Assume note
-                puml_parts.append(
-                    self._convert_crt_note_node(node_data_tuple, parameters_dict)
-                )
+        puml_parts = self._convert_nodes_to_puml(
+            graph, parameters_dict, self._dispatch_crt_node_conversion
+        )
 
         # Convert edges for Current Reality Tree
         for edge_data_tuple in graph.edges(data=True):
@@ -682,6 +680,24 @@ right_shoulder_to_head .. right_shoulder"""
 end note
 """
 
+    def _dispatch_pfd_node_conversion(
+        self, node_data_tuple: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        """Dispatches node conversion for Process Flow Diagram based on node type."""
+        node_attrs = node_data_tuple[1]
+        node_type = node_attrs.get(
+            "type", "card"
+        )  # Default to card if type is not specified
+
+        if node_type == "process":
+            return self._convert_pfd_usecase_node(node_data_tuple, parameters_dict)
+        elif node_type == "cloud":
+            return self._convert_pfd_cloud_node(node_data_tuple, parameters_dict)
+        elif node_type in ("card", "deliverable"):
+            return self._convert_pfd_card_node(node_data_tuple, parameters_dict)
+        else:  # Assume other types (e.g., 'note' or unspecified) become notes
+            return self._convert_pfd_note_node(node_data_tuple, parameters_dict)
+
     def _convert_process_flow_diagram(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
@@ -694,31 +710,9 @@ end note
         Returns:
             str: PlantUML code
         """
-        puml_parts = []
-
-        # Convert all nodes for Process Flow Diagram
-        for node_data_tuple in graph.nodes(data=True):
-            node_attrs = node_data_tuple[1]
-            node_type = node_attrs.get(
-                "type", "card"
-            )  # Default to card if type is not specified
-
-            if node_type == "process":
-                puml_parts.append(
-                    self._convert_pfd_usecase_node(node_data_tuple, parameters_dict)
-                )
-            elif node_type == "cloud":
-                puml_parts.append(
-                    self._convert_pfd_cloud_node(node_data_tuple, parameters_dict)
-                )
-            elif node_type in ("card", "deliverable"):
-                puml_parts.append(
-                    self._convert_pfd_card_node(node_data_tuple, parameters_dict)
-                )
-            else:  # Assume other types (e.g., 'note' or unspecified) become notes
-                puml_parts.append(
-                    self._convert_pfd_note_node(node_data_tuple, parameters_dict)
-                )
+        puml_parts = self._convert_nodes_to_puml(
+            graph, parameters_dict, self._dispatch_pfd_node_conversion
+        )
 
         # Convert edges
         puml_parts.extend(
