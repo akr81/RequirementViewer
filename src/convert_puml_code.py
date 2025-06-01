@@ -200,16 +200,19 @@ scale {scale}
 
         return f"[[?{'&'.join(query_items)}]]"
 
-    def _convert_evaporating_cloud_note(self, node, parameters_dict):
+    def _convert_evaporating_cloud_note(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
         # Get parameters string and modify for note
-        parameters = self._convert_parameters_dict(node, parameters_dict)
-        parameters = parameters[:-2] + " *]]"
+        node_attrs = node[1]
+        parameters_str = self._convert_parameters_dict(node, parameters_dict)
+        parameters_str = parameters_str[:-2] + " *]]"  # Specific for note links
 
         # Get color string
-        color = self._get_puml_color(node[1])
+        color_str = self._get_puml_color(node_attrs)
         return f"""
-note as {node[1]['unique_id']} {color}
-{node[1]['title']} {parameters}
+note as {node_attrs['unique_id']} {color_str}
+{node_attrs['title']} {parameters_str}
 end note
 """
 
@@ -220,13 +223,14 @@ end note
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            if node[1]["type"] == "note":
+            node_attrs = node[1]
+            if node_attrs["type"] == "note":
                 puml_parts.append(
                     self._convert_evaporating_cloud_note(node, parameters_dict)
                 )
             else:
                 puml_parts.append(
-                    self._convert_evaporating_cloud_card(node, parameters_dict)
+                    self._convert_evaporating_cloud_card_node(node, parameters_dict)
                 )
 
         # Convert edges
@@ -253,16 +257,24 @@ right_shoulder_to_head .. right_shoulder"""
 
         return "\n".join(puml_parts)
 
-    def _convert_evaporating_cloud_card(
-        self, node: Tuple[str, Dict], parameters_dict: Dict
+    def _create_card_puml(
+        self, unique_id: str, content: str, parameters_str: str, color_str: str
     ) -> str:
-        parameters = self._convert_parameters_dict(node, parameters_dict)
-        color = self._get_puml_color(node[1])
-        ret = f"""card {node[1]["unique_id"]} {parameters} {color} [
-{node[1]["title"]}
+        """Generates the PlantUML string for a card element."""
+        return f"""card {unique_id} {parameters_str} {color_str} [
+{content}
 ]
 """
-        return ret
+
+    def _convert_evaporating_cloud_card_node(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        node_attrs = node[1]
+        parameters_str = self._convert_parameters_dict(node, parameters_dict)
+        color_str = self._get_puml_color(node_attrs)
+        return self._create_card_puml(
+            node_attrs["unique_id"], node_attrs["title"], parameters_str, color_str
+        )
 
     def _convert_requirement_node(
         self, node: Tuple[str, Dict], parameters_dict: Dict
@@ -484,7 +496,7 @@ right_shoulder_to_head .. right_shoulder"""
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            puml_parts.append(self._convert_card(node, parameters_dict))
+            puml_parts.append(self._convert_st_card_node(node, parameters_dict))
 
         # Convert edges
         for edge in graph.edges(data=True):
@@ -492,18 +504,21 @@ right_shoulder_to_head .. right_shoulder"""
 
         return "\n".join(puml_parts)
 
-    def _convert_card(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
-        parameters = self._convert_parameters_dict(node, parameters_dict)
-        color = self._get_puml_color(node[1])
-        ret = f"""card {node[1]["unique_id"]} {parameters} {color} [
-{node[1]["id"]}
+    def _convert_st_card_node(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        """Converts a node for Strategy and Tactics Tree into a card."""
+        node_attrs = node[1]
+        parameters_str = self._convert_parameters_dict(node, parameters_dict)
+        color_str = self._get_puml_color(node_attrs)
+        content = f"""{node_attrs["id"]}
 ---
-{node[1]["strategy"]}
+{node_attrs["strategy"]}
 ---
-{node[1]["tactics"]}
-]
-"""
-        return ret
+{node_attrs["tactics"]}"""
+        return self._create_card_puml(
+            node_attrs["unique_id"], content, parameters_str, color_str
+        )
 
     def _convert_card_edge(self, data: Dict[str, Any], reverse=False):
         src = data[0]
@@ -539,29 +554,35 @@ right_shoulder_to_head .. right_shoulder"""
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            if "color" not in node[1]:
-                node[1]["color"] = "None"
-            parameters = self._convert_parameters_dict(node, parameters_dict)
-            color = self._get_puml_color(node[1])
-            if node[1]["type"] == "and":
+            node_attrs = node[1]
+            if node_attrs["type"] == "and":
                 # Convert "and" node
                 puml_parts.append(
-                    f"usecase \"AND{node[1]['unique_id']}\" as {node[1]['unique_id']}"
+                    f"usecase \"AND{node_attrs['unique_id']}\" as {node_attrs['unique_id']}"
                 )
-            elif node[1]["type"] == "entity":
+            elif node_attrs["type"] == "entity":
+                puml_parts.append(self._convert_crt_entity_node(node, parameters_dict))
+            else:  # Assume note
+                puml_parts.append(self._convert_crt_note_node(node, parameters_dict))
+
+        # Convert edges
+        for edge in graph.edges(data=True):
+            # andに値が設定されている場合は、ANDを経由させる
+            if (
+                edge[2].get("and") and edge[2]["and"] != "None"
+            ):  # Ensure 'and' key exists
+                and_id = edge[2]["and"]
+                # Ensure AND node is defined (it might have been defined above if it's also a standalone node)
+                # For safety, we can add it here if not already added, or assume it's handled.
+                # For simplicity, let's assume 'and' nodes are defined if they appear in edges.
+                # A more robust way would be to collect all 'and' IDs first.
+                if not any(
+                    part.startswith(f'usecase "AND{and_id}"') for part in puml_parts
+                ):
+                    puml_parts.append(f'usecase "AND{and_id}" as {and_id}')
+
                 puml_parts.append(
-                    f"""card {node[1]["unique_id"]} {parameters} {color} [
-{node[1]["id"]}
-]
-"""
-                )
-            else:
-                parameters = parameters[:-2] + " *]]"
-                puml_parts.append(
-                    f"""note as {node[1]["unique_id"]} {color}
-{node[1]["id"]}{parameters}
-end note
-"""
+                    f"usecase \"AND{edge[2]['and']}\" as {edge[2]['and']}"
                 )
 
         # Convert edges
@@ -584,31 +605,33 @@ end note
 
         return "\n".join(puml_parts)
 
-    def _convert_card_pfd(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
-        parameters = self._convert_parameters_dict(node, parameters_dict)
-        color = self._get_puml_color(node[1])
-        if (
-            "type" not in node[1]
-            or node[1]["type"] == "card"
-            or node[1]["type"] == "deliverable"
-        ):
-            ret = f"""card {node[1]["unique_id"]} {parameters} {color} [
-{node[1]["id"]}
-]
-"""
-        else:
-            parameters = parameters[:-2] + " *]]"
-            ret = f"""note as {node[1]["unique_id"]} {color}
-{node[1]["id"]}{parameters}
+    def _convert_crt_entity_node(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        node_attrs = node[1]
+        parameters_str = self._convert_parameters_dict(node, parameters_dict)
+        color_str = self._get_puml_color(node_attrs)
+        return self._create_card_puml(
+            node_attrs["unique_id"], node_attrs["id"], parameters_str, color_str
+        )
+
+    def _convert_crt_note_node(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        node_attrs = node[1]
+        parameters_str = self._convert_parameters_dict(node, parameters_dict)
+        color_str = self._get_puml_color(node_attrs)
+        # For note, parameters need modification for PlantUML syntax `note as ID color [ content *[[link]] ]`
+        note_parameters_str = parameters_str[:-2] + " *]]"
+        return f"""note as {node_attrs["unique_id"]} {color_str}
+{node_attrs["id"]}{note_parameters_str}
 end note
 """
-
-        return ret
 
     def _convert_process_flow_diagram(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
-        """Convert graph to process_flow diagram as PlantUML code string.
+        """Convert graph to Process Flow Diagram as PlantUML code string.
 
         Args:
             graph (nx.DiGraph): Graph of requirements.
@@ -621,21 +644,56 @@ end note
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            if node[1]["type"] == "process":
-                puml_parts.append(self._convert_usecase(node, parameters_dict))
-            elif node[1]["type"] == "cloud":
-                puml_parts.append(self._convert_cloud(node, parameters_dict))
-            else:
-                puml_parts.append(self._convert_card_pfd(node, parameters_dict))
+            node_attrs = node[1]
+            node_type = node_attrs.get(
+                "type", "card"
+            )  # Default to card if type is not specified
 
+            if node_type == "process":
+                puml_parts.append(self._convert_pfd_usecase_node(node, parameters_dict))
+            elif node_type == "cloud":
+                puml_parts.append(self._convert_pfd_cloud_node(node, parameters_dict))
+            elif node_type in ("card", "deliverable"):
+                puml_parts.append(self._convert_pfd_card_node(node, parameters_dict))
+            else:  # Assume other types (e.g., 'note' or unspecified) become notes
+                puml_parts.append(self._convert_pfd_note_node(node, parameters_dict))
         # Convert edges
         for edge in graph.edges(data=True):
             puml_parts.append(self._convert_card_edge(edge, reverse=True))
 
         return "\n".join(puml_parts)
 
-    def _convert_usecase(self, node: Dict[str, Any], parameters_dict: Dict) -> str:
+    def _convert_pfd_card_node(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        """Converts a card-like node for Process Flow Diagram."""
+        node_attrs = node[1]
+        parameters_str = self._convert_parameters_dict(node, parameters_dict)
+        color_str = self._get_puml_color(node_attrs)
+        return self._create_card_puml(
+            node_attrs["unique_id"], node_attrs["id"], parameters_str, color_str
+        )
+
+    def _convert_pfd_note_node(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        """Converts a note-like node for Process Flow Diagram."""
+        node_attrs = node[1]
+        parameters_str = self._convert_parameters_dict(node, parameters_dict)
+        color_str = self._get_puml_color(node_attrs)
+        # For note, parameters need modification for PlantUML syntax
+        note_parameters_str = parameters_str[:-2] + " *]]"
+        return f"""note as {node_attrs["unique_id"]} {color_str}
+{node_attrs["id"]}{note_parameters_str}
+end note
+"""
+
+    def _convert_pfd_usecase_node(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
         """Convert usecase information to PlantUML code.
+        (Specifically for Process Flow Diagram)
+        The original _convert_usecase method had a different signature for Requirement Diagram.
 
         Args:
             data (Dict[str, Any]): Usecase information
@@ -643,29 +701,37 @@ end note
         Returns:
             str: PlantUML code
         """
-        parameters = self._convert_parameters_dict(node, parameters_dict)
-        color = self._get_puml_color(node[1])
-        if node[1]["type"] == "process":
+        node_attrs = node[1]  # node is (unique_id, attributes_dict)
+        parameters_str = self._convert_parameters_dict(node, parameters_dict)
+        color_str = self._get_puml_color(node_attrs)
+        if node_attrs["type"] == "process":
             # Convert and node
-            id = node[1]["id"]
+            id_val = node_attrs["id"]
+            id_val = id_val.replace("\n", "\\n")  # Escape newlines for PlantUML label
+            return f"usecase \"{id_val}\" as {node_attrs['unique_id']} {parameters_str} {color_str}\n"
+        return ""  # Should not happen if called correctly
+
+    def _convert_pfd_cloud_node(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        """Convert cloud information to PlantUML code.
+        (Specifically for Process Flow Diagram)
+
+        Args:
+            node (Tuple[str, Dict]): Cloud information (node_id, attributes_dict)
             id = id.replace("\n", "\\n")
             ret = f"usecase \"{id}\" as {node[1]['unique_id']} {parameters} {color}\n"
         return ret
-
-    def _convert_cloud(self, node: Dict[str, Any], parameters_dict: Dict) -> str:
-        """Convert cloud information to PlantUML code.
-
-        Args:
-            data (Dict[str, Any]): Cloud information
+            parameters_dict (Dict): Parameters for link.
 
         Returns:
             str: PlantUML code
         """
-        parameters = self._convert_parameters_dict(node, parameters_dict)
-        color = self._get_puml_color(node[1])
-        if node[1]["type"] == "cloud":
-            # Convert and node
-            id = node[1]["id"]
-            id = id.replace("\n", "\\n")
-            ret = f"cloud \"{id}\" as {node[1]['unique_id']} {parameters} {color}\n"
-        return ret
+        node_attrs = node[1]  # node is (unique_id, attributes_dict)
+        parameters_str = self._convert_parameters_dict(node, parameters_dict)
+        color_str = self._get_puml_color(node_attrs)
+        if node_attrs["type"] == "cloud":
+            id_val = node_attrs["id"]
+            id_val = id_val.replace("\n", "\\n")  # Escape newlines for PlantUML label
+            return f"cloud \"{id_val}\" as {node_attrs['unique_id']} {parameters_str} {color_str}\n"
+        return ""  # Should not happen if called correctly
