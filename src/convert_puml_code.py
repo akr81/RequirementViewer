@@ -605,30 +605,34 @@ right_shoulder_to_head .. right_shoulder"""
         """
         Converts a card edge to PlantUML.
         Args:
-            data: Edge data (src, dst, attributes).
+            data: Edge data (tuple: (src_id, dst_id, attributes_dict)).
             use_src_arrow_dst_style:
                 If True, arrow type defaults to "src --> dst" (e.g., PFD).
                 If False (default), arrow type defaults to "dst <-- src" (e.g., S&T, EC, CRT).
         Returns:
             PlantUML string for the edge.
         """
-        src = data[0]
-        dst = data[1]
+        src_id = data[0]
+        dst_id = data[1]
+        edge_attrs = data[2]
 
-        puml_node1, puml_node2, line_style = "", "", ""
-        comment_text = data[2].get("comment", "")
+        edge_type = edge_attrs.get("type", "arrow")  # Default to arrow if not specified
+        comment_text = edge_attrs.get("comment", "")
 
-        if data[2]["type"] == "arrow":
-            if use_src_arrow_dst_style:  # Typically PFD: src --> dst
-                puml_node1, puml_node2, line_style = src, dst, "-->"
-            else:  # Typically S&T, EC, CRT: dst <-- src
-                puml_node1, puml_node2, line_style = dst, src, "<--"
-        elif data[2]["type"] == "flat":  # Used in S&T, EC, CRT: dst . src
-            puml_node1, puml_node2, line_style = dst, src, "."
-        elif data[2]["type"] == "flat_long":  # Used in S&T, EC, CRT: dst .. src
-            puml_node1, puml_node2, line_style = dst, src, ".."
+        # Determine node order based on style
+        puml_node1, puml_node2 = (
+            (src_id, dst_id) if use_src_arrow_dst_style else (dst_id, src_id)
+        )
+
+        # Determine line style based on edge_type and style
+        if edge_type == "arrow":
+            line_style = "-->" if use_src_arrow_dst_style else "<--"
+        elif edge_type == "flat":
+            line_style = "."
+        elif edge_type == "flat_long":
+            line_style = ".."
         else:
-            raise ValueError(f"Unknown card edge type: {data[2]['type']}")
+            raise ValueError(f"Unknown card edge type: {edge_type}")
 
         return self._create_generic_edge_puml(
             puml_node1, puml_node2, line_style, comment_text
