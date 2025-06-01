@@ -4,9 +4,9 @@
     viewer_height: 1200
     upstream_filter_max: 5
     downstream_filter_max: 5
-    requirement_data: default/requirement.json
-    strategy_and_tactics_data: default/st.json
-    current_reality_tree_data: default/crt.json
-    process_flow_diagram_data: default/pfd.json
-    evaporating_cloud_data: default/ec.json
+    requirement_data: sample/requirement.hjson
+    strategy_and_tactics_data: sample/st.hjson
+    current_reality_tree_data: sample/crt.hjson
+    process_flow_diagram_data: sample/pfd.hjson
+    evaporating_cloud_data: sample/ec.hjson
 }
