@@ -252,11 +252,11 @@ end note
     def _convert_evaporating_cloud(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
-        puml_parts = self._convert_nodes_to_puml(
-            graph, parameters_dict, self._dispatch_evaporating_cloud_node_conversion
+        puml_parts = list(
+            self._convert_nodes_to_puml(  # Ensure it's a list for extend
+                graph, parameters_dict, self._dispatch_evaporating_cloud_node_conversion
+            )
         )
-
-        # Convert edges
         puml_parts.extend(self._convert_edges_to_puml(graph, self._convert_card_edge))
         # conflict
         puml_parts.append(
@@ -620,8 +620,10 @@ right_shoulder_to_head .. right_shoulder"""
         Returns:
             str: PlantUML code
         """
-        puml_parts = self._convert_nodes_to_puml(
-            graph, parameters_dict, self._dispatch_crt_node_conversion
+        puml_parts = list(
+            self._convert_nodes_to_puml(  # Ensure it's a list for extend
+                graph, parameters_dict, self._dispatch_crt_node_conversion
+            )
         )
 
         # Convert edges for Current Reality Tree
@@ -710,11 +712,11 @@ end note
         Returns:
             str: PlantUML code
         """
-        puml_parts = self._convert_nodes_to_puml(
-            graph, parameters_dict, self._dispatch_pfd_node_conversion
+        puml_parts = list(
+            self._convert_nodes_to_puml(  # Ensure it's a list for extend
+                graph, parameters_dict, self._dispatch_pfd_node_conversion
+            )
         )
-
-        # Convert edges
         puml_parts.extend(
             self._convert_edges_to_puml(
                 graph, self._convert_card_edge, use_src_arrow_dst_style=True
