@@ -219,21 +219,47 @@ scale {scale}
 
         return f"[[?{'&'.join(query_items)}]]"
 
+    def _create_note_puml(
+        self,
+        unique_id: str,
+        content_text: str,
+        parameters_for_link: str,
+        color_str: str,
+        stereotype: str = None,
+        apply_link_modification: bool = False,
+    ) -> str:
+        """汎用的なノート要素のPlantUML文字列を生成する。"""
+        link_for_content = parameters_for_link
+        if apply_link_modification:
+            if link_for_content.startswith("[[?") and link_for_content.endswith("]]"):
+                link_for_content = link_for_content[:-2] + " *]]"
+            else:  # 安全策として、予期しない形式の場合は空のリンクにする
+                link_for_content = "[[]]"
+
+        stereotype_line = f"<<{stereotype}>>\n" if stereotype else ""
+
+        body_content = stereotype_line + content_text
+        # リンクが存在し、かつ空リンクでない場合にスペースを挟んで結合
+        if link_for_content and link_for_content != "[[]]":
+            body_content += " " + link_for_content
+
+        return f"""note as {unique_id} {color_str}
+{body_content}
+end note"""
+
     def _convert_evaporating_cloud_note(
         self, node: Tuple[str, Dict], parameters_dict: Dict
     ) -> str:
-        # Get parameters string and modify for note
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
-        parameters_str = parameters_str[:-2] + " *]]"  # Specific for note links
-
-        # Get color string
         color_str = self._get_puml_color(node_attrs)
-        return f"""
-note as {node_attrs['unique_id']} {color_str}
-{node_attrs['title']} {parameters_str}
-end note
-"""
+        return self._create_note_puml(
+            node_attrs["unique_id"],
+            node_attrs["title"],
+            parameters_str,
+            color_str,
+            apply_link_modification=True,
+        )
 
     def _dispatch_evaporating_cloud_node_conversion(
         self, node_data_tuple: Tuple[str, Dict], parameters_dict: Dict
@@ -287,14 +313,25 @@ right_shoulder_to_head .. right_shoulder"""
 ]
 """
 
-    def _convert_evaporating_cloud_card_node(
-        self, node: Tuple[str, Dict], parameters_dict: Dict
+    def _convert_simple_card_node(
+        self, node: Tuple[str, Dict], parameters_dict: Dict, content_field: str
     ) -> str:
+        """指定されたフィールドを内容とする単純なカードノードをPUMLに変換する。"""
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
+        content = node_attrs.get(
+            content_field, ""
+        )  # content_field が存在しない場合も考慮
         return self._create_card_puml(
-            node_attrs["unique_id"], node_attrs["title"], parameters_str, color_str
+            node_attrs["unique_id"], content, parameters_str, color_str
+        )
+
+    def _convert_evaporating_cloud_card_node(
+        self, node: Tuple[str, Dict], parameters_dict: Dict
+    ) -> str:
+        return self._convert_simple_card_node(
+            node, parameters_dict, content_field="title"
         )
 
     def _convert_requirement_node(
@@ -421,12 +458,16 @@ right_shoulder_to_head .. right_shoulder"""
             string = data["text"]
 
         color_str = self._get_puml_color(data)
-        ret = ""
-        ret += f"note as {data['unique_id']} {parameters} {color_str}\n"  # Added parameters and color
-        ret += f"<<{data['type']}>>\n"
-        ret += f"{string}\n"
-        ret += f"end note\n"
-        return ret
+        # Requirement Diagramのノートはリンク形式の変更が不要
+        # リンクはノートのコンテンツの末尾に配置されるように変更
+        return self._create_note_puml(
+            data["unique_id"],
+            string,  # content_text
+            parameters,  # parameters_for_link
+            color_str,
+            stereotype=data["type"],
+            apply_link_modification=False,  # 通常のリンク形式を使用
+        )
 
     def _get_title_string(self, id: str, title: str) -> str:
         """Return title string (ID + title)
@@ -662,12 +703,7 @@ right_shoulder_to_head .. right_shoulder"""
     def _convert_crt_entity_node(
         self, node: Tuple[str, Dict], parameters_dict: Dict
     ) -> str:
-        node_attrs = node[1]
-        parameters_str = self._convert_parameters_dict(node, parameters_dict)
-        color_str = self._get_puml_color(node_attrs)
-        return self._create_card_puml(
-            node_attrs["unique_id"], node_attrs["id"], parameters_str, color_str
-        )
+        return self._convert_simple_card_node(node, parameters_dict, content_field="id")
 
     def _convert_crt_note_node(
         self, node: Tuple[str, Dict], parameters_dict: Dict
@@ -675,12 +711,13 @@ right_shoulder_to_head .. right_shoulder"""
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
-        # For note, parameters need modification for PlantUML syntax `note as ID color [ content *[[link]] ]`
-        note_parameters_str = parameters_str[:-2] + " *]]"
-        return f"""note as {node_attrs["unique_id"]} {color_str}
-{node_attrs["id"]}{note_parameters_str}
-end note
-"""
+        return self._create_note_puml(
+            node_attrs["unique_id"],
+            node_attrs["id"],  # content_text
+            parameters_str,  # parameters_for_link
+            color_str,
+            apply_link_modification=True,
+        )
 
     def _dispatch_pfd_node_conversion(
         self, node_data_tuple: Tuple[str, Dict], parameters_dict: Dict
@@ -728,27 +765,21 @@ end note
     def _convert_pfd_card_node(
         self, node: Tuple[str, Dict], parameters_dict: Dict
     ) -> str:
-        """Converts a card-like node for Process Flow Diagram."""
-        node_attrs = node[1]
-        parameters_str = self._convert_parameters_dict(node, parameters_dict)
-        color_str = self._get_puml_color(node_attrs)
-        return self._create_card_puml(
-            node_attrs["unique_id"], node_attrs["id"], parameters_str, color_str
-        )
+        return self._convert_simple_card_node(node, parameters_dict, content_field="id")
 
     def _convert_pfd_note_node(
         self, node: Tuple[str, Dict], parameters_dict: Dict
     ) -> str:
-        """Converts a note-like node for Process Flow Diagram."""
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
-        # For note, parameters need modification for PlantUML syntax
-        note_parameters_str = parameters_str[:-2] + " *]]"
-        return f"""note as {node_attrs["unique_id"]} {color_str}
-{node_attrs["id"]}{note_parameters_str}
-end note
-"""
+        return self._create_note_puml(
+            node_attrs["unique_id"],
+            node_attrs["id"],  # content_text
+            parameters_str,  # parameters_for_link
+            color_str,
+            apply_link_modification=True,
+        )
 
     def _convert_pfd_usecase_node(
         self, node: Tuple[str, Dict], parameters_dict: Dict
