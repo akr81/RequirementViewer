@@ -137,6 +137,26 @@ scale {scale}
             return color_to_archimate.get(color_name, "")
         return ""
 
+    def _convert_nodes_to_puml(
+        self, graph: nx.DiGraph, parameters_dict: Dict, node_converter_method
+    ) -> List[str]:
+        """Helper to convert all nodes in a graph to PUML strings using a specific node converter."""
+        puml_node_parts = []
+        for node_data_tuple in graph.nodes(data=True):
+            puml_node_parts.append(
+                node_converter_method(node_data_tuple, parameters_dict)
+            )
+        return puml_node_parts
+
+    def _convert_edges_to_puml(
+        self, graph: nx.DiGraph, edge_converter_method, **kwargs
+    ) -> List[str]:
+        """Helper to convert all edges in a graph to PUML strings using a specific edge converter."""
+        puml_edge_parts = []
+        for edge_data_tuple in graph.edges(data=True):
+            puml_edge_parts.append(edge_converter_method(edge_data_tuple, **kwargs))
+        return puml_edge_parts
+
     def _convert_requirement_diagram(
         self, graph: nx.DiGraph, title: str, parameters_dict: Dict
     ) -> str:
@@ -165,13 +185,15 @@ scale {scale}
         puml_parts.append(f"package {title} <<Frame>> " + "{")
 
         # Convert all nodes
-        for node in graph.nodes(data=True):
-            puml_parts.append(self._convert_requirement_node(node, parameters_dict))
-
+        puml_parts.extend(
+            self._convert_nodes_to_puml(
+                graph, parameters_dict, self._convert_requirement_node
+            )
+        )
         # Convert edges
-        for edge in graph.edges(data=True):
-            puml_parts.append(self._convert_requirement_edge(edge))
-
+        puml_parts.extend(
+            self._convert_edges_to_puml(graph, self._convert_requirement_edge)
+        )
         puml_parts.append("}")
         return "\n".join(puml_parts)
 
@@ -221,22 +243,23 @@ end note
     ) -> str:
         puml_parts = []
 
-        # Convert all nodes
-        for node in graph.nodes(data=True):
-            node_attrs = node[1]
+        # Convert all nodes for Evaporating Cloud
+        for node_data_tuple in graph.nodes(data=True):
+            node_attrs = node_data_tuple[1]
             if node_attrs["type"] == "note":
                 puml_parts.append(
-                    self._convert_evaporating_cloud_note(node, parameters_dict)
+                    self._convert_evaporating_cloud_note(
+                        node_data_tuple, parameters_dict
+                    )
                 )
             else:
                 puml_parts.append(
-                    self._convert_evaporating_cloud_card_node(node, parameters_dict)
+                    self._convert_evaporating_cloud_card_node(
+                        node_data_tuple, parameters_dict
+                    )
                 )
-
         # Convert edges
-        for edge in graph.edges(data=True):
-            puml_parts.append(self._convert_card_edge(edge))
-
+        puml_parts.extend(self._convert_edges_to_puml(graph, self._convert_card_edge))
         # conflict
         puml_parts.append(
             """left_hand <=> right_hand #red
@@ -508,12 +531,13 @@ right_shoulder_to_head .. right_shoulder"""
         puml_parts = []
 
         # Convert all nodes
-        for node in graph.nodes(data=True):
-            puml_parts.append(self._convert_st_card_node(node, parameters_dict))
-
+        puml_parts.extend(
+            self._convert_nodes_to_puml(
+                graph, parameters_dict, self._convert_st_card_node
+            )
+        )
         # Convert edges
-        for edge in graph.edges(data=True):
-            puml_parts.append(self._convert_card_edge(edge))
+        puml_parts.extend(self._convert_edges_to_puml(graph, self._convert_card_edge))
         return "\n".join(puml_parts)
 
     def _convert_st_card_node(
@@ -585,18 +609,22 @@ right_shoulder_to_head .. right_shoulder"""
         """
         puml_parts = []
 
-        # Convert all nodes
-        for node in graph.nodes(data=True):
-            node_attrs = node[1]
+        # Convert all nodes for Current Reality Tree
+        for node_data_tuple in graph.nodes(data=True):
+            node_attrs = node_data_tuple[1]
             if node_attrs["type"] == "and":
                 # Convert "and" node
                 puml_parts.append(
                     f"usecase \"AND{node_attrs['unique_id']}\" as {node_attrs['unique_id']}"
                 )
             elif node_attrs["type"] == "entity":
-                puml_parts.append(self._convert_crt_entity_node(node, parameters_dict))
+                puml_parts.append(
+                    self._convert_crt_entity_node(node_data_tuple, parameters_dict)
+                )
             else:  # Assume note
-                puml_parts.append(self._convert_crt_note_node(node, parameters_dict))
+                puml_parts.append(
+                    self._convert_crt_note_node(node_data_tuple, parameters_dict)
+                )
 
         # Convert edges for Current Reality Tree
         for edge_data_tuple in graph.edges(data=True):
@@ -668,26 +696,36 @@ end note
         """
         puml_parts = []
 
-        # Convert all nodes
-        for node in graph.nodes(data=True):
-            node_attrs = node[1]
+        # Convert all nodes for Process Flow Diagram
+        for node_data_tuple in graph.nodes(data=True):
+            node_attrs = node_data_tuple[1]
             node_type = node_attrs.get(
                 "type", "card"
             )  # Default to card if type is not specified
 
             if node_type == "process":
-                puml_parts.append(self._convert_pfd_usecase_node(node, parameters_dict))
+                puml_parts.append(
+                    self._convert_pfd_usecase_node(node_data_tuple, parameters_dict)
+                )
             elif node_type == "cloud":
-                puml_parts.append(self._convert_pfd_cloud_node(node, parameters_dict))
+                puml_parts.append(
+                    self._convert_pfd_cloud_node(node_data_tuple, parameters_dict)
+                )
             elif node_type in ("card", "deliverable"):
-                puml_parts.append(self._convert_pfd_card_node(node, parameters_dict))
+                puml_parts.append(
+                    self._convert_pfd_card_node(node_data_tuple, parameters_dict)
+                )
             else:  # Assume other types (e.g., 'note' or unspecified) become notes
-                puml_parts.append(self._convert_pfd_note_node(node, parameters_dict))
+                puml_parts.append(
+                    self._convert_pfd_note_node(node_data_tuple, parameters_dict)
+                )
+
         # Convert edges
-        for edge in graph.edges(data=True):
-            puml_parts.append(
-                self._convert_card_edge(edge, use_src_arrow_dst_style=True)
+        puml_parts.extend(
+            self._convert_edges_to_puml(
+                graph, self._convert_card_edge, use_src_arrow_dst_style=True
             )
+        )
 
         return "\n".join(puml_parts)
 
