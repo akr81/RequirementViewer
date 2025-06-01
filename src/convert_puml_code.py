@@ -292,9 +292,9 @@ right_shoulder_to_head .. right_shoulder"""
         attr = node[1]
         type = attr["type"]
         ret = ""
-        if type == "usecase":
-            ret = self._convert_usecase(attr)
-        elif (
+        if type == "usecase":  # Requirement Diagram specific usecase
+            ret = self._convert_req_diagram_usecase_node(attr, parameters)
+        elif (  # Requirement Diagram specific requirement types
             type == "requirement"
             or type == "functionalRequirement"
             or type == "interfaceRequirement"
@@ -302,36 +302,43 @@ right_shoulder_to_head .. right_shoulder"""
             or type == "physicalRequirement"
             or type == "designConstraint"
         ):
-            ret = self._convert_requirement(attr, type, parameters)
-        elif type == "block" or type == "testCase":
-            ret = self._convert_block(attr, type, parameters)
-        elif type == "rationale" or type == "problem":
-            ret = self._convert_note_entity(attr)
+            ret = self._convert_req_diagram_requirement_node(attr, type, parameters)
+        elif (
+            type == "block" or type == "testCase"
+        ):  # Requirement Diagram specific block/testCase
+            ret = self._convert_req_diagram_block_node(attr, type, parameters)
+        elif (
+            type == "rationale" or type == "problem"
+        ):  # Requirement Diagram specific note-like entities
+            ret = self._convert_req_diagram_note_node(attr, parameters)
         else:
             raise ValueError(
-                f"No convert rule defined error: Unknown type specified: {type}"
+                f"Requirement Diagram: No convert rule defined for type: {type}"
             )
 
         return ret
 
-    def _convert_usecase(self, data: Dict[str, Any]) -> str:
-        """Convert usecase information to PlantUML code.
+    def _convert_req_diagram_usecase_node(
+        self, data: Dict[str, Any], parameters: str
+    ) -> str:
+        """Convert usecase node for Requirement Diagram to PlantUML code.
 
         Args:
-            data (Dict[str, Any]): Usecase information
+            data (Dict[str, Any]): Usecase node attributes.
+            parameters (str): Parameter string for link.
 
         Returns:
             str: PlantUML code
         """
         # For PlantUML, the "usecase" entity cannot used on class diagram
         title = data["title"]
-        ret = f"usecase \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<usecase>>"
-        return ret
+        color_str = self._get_puml_color(data)
+        return f"usecase \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<usecase>> {parameters} {color_str}"
 
-    def _convert_requirement(
+    def _convert_req_diagram_requirement_node(
         self, data: Dict[str, Any], type: str, parameters: str
     ) -> str:
-        """Convert requirement information to PlantUML code.
+        """Convert requirement node for Requirement Diagram to PlantUML code.
 
         Args:
             data (Dict[str, Any]): Requirement information
@@ -356,8 +363,10 @@ right_shoulder_to_head .. right_shoulder"""
         ret += "}\n"
         return ret
 
-    def _convert_block(self, data: Dict[str, Any], type: str, parameters: str) -> str:
-        """Convert block information to PlantUML code.
+    def _convert_req_diagram_block_node(
+        self, data: Dict[str, Any], type: str, parameters: str
+    ) -> str:
+        """Convert block/testCase node for Requirement Diagram to PlantUML code.
 
         Args:
             data (Dict[str, Any]): Block information
@@ -368,15 +377,18 @@ right_shoulder_to_head .. right_shoulder"""
             str: PlantUML code
         """
         title = data["title"]
-        ret = f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> {parameters}"
-        return ret
+        color_str = self._get_puml_color(data)
+        return f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> {parameters} {color_str}"
 
-    def _convert_note_entity(self, data: Dict[str, Any]) -> str:
-        """Return note type entity string
-        This method is for rationale, problem entity.
+    def _convert_req_diagram_note_node(
+        self, data: Dict[str, Any], parameters: str
+    ) -> str:
+        """Convert rationale/problem (note-like) node for Requirement Diagram to PlantUML code.
 
         Args:
-            data (Dict[str, Any]): Entity (node)
+            data (Dict[str, Any]): Node attributes for rationale or problem.
+            parameters (str): Parameter string for link (currently not used for notes in Req Diagram, but kept for consistency).
+
 
         Returns:
             str: PlantUML string for note
@@ -387,12 +399,12 @@ right_shoulder_to_head .. right_shoulder"""
         else:
             string = data["text"]
 
+        color_str = self._get_puml_color(data)
         ret = ""
-        ret += f"note as {data['unique_id']}\n"
+        ret += f"note as {data['unique_id']} {parameters} {color_str}\n"  # Added parameters and color
         ret += f"<<{data['type']}>>\n"
         ret += f"{string}\n"
         ret += f"end note\n"
-
         return ret
 
     def _get_title_string(self, id: str, title: str) -> str:
