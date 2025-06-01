@@ -20,6 +20,13 @@ class ConvertPumlCode:
         """
         self.detail = config["detail"]
         self.debug = config["debug"]
+        self.diagram_converters = {
+            "Requirement Diagram Viewer": self._convert_requirement_diagram,
+            "Strategy and Tactics Tree Viewer": self._convert_strategy_and_tactics,
+            "Current Reality Tree Viewer": self._convert_current_reality,
+            "Process Flow Diagram Viewer": self._convert_process_flow_diagram,
+            "Evaporating Cloud Viewer": self._convert_evaporating_cloud,
+        }
 
     def convert_to_puml(
         self, page_title: str, graph: nx.DiGraph, title: str, parameters_dict: Dict
@@ -35,18 +42,11 @@ class ConvertPumlCode:
         Returns:
             str: PlantUML code
         """
-        if page_title == "Requirement Diagram Viewer":
-            return self._convert_requirement_diagram(graph, title, parameters_dict)
-        elif page_title == "Strategy and Tactics Tree Viewer":
-            return self._convert_strategy_and_tactics(graph, title, parameters_dict)
-        elif page_title == "Current Reality Tree Viewer":
-            return self._convert_current_reality(graph, title, parameters_dict)
-        elif page_title == "Process Flow Diagram Viewer":
-            return self._convert_process_flow_diagram(graph, title, parameters_dict)
-        elif page_title == "Evaporating Cloud Viewer":
-            return self._convert_evaporating_cloud(graph, title, parameters_dict)
+        converter_method = self.diagram_converters.get(page_title)
+        if converter_method:
+            return converter_method(graph, title, parameters_dict)
         else:
-            raise ValueError("Invalid title specified.")
+            raise ValueError(f"Invalid page_title specified: {page_title}")
 
     def _add_common_parameter_setting(
         self, scale: float, ortho: bool = True, sep: int = 0, *, landscape: bool = False
