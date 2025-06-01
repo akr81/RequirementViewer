@@ -27,6 +27,13 @@ class ConvertPumlCode:
             "Process Flow Diagram Viewer": self._convert_process_flow_diagram,
             "Evaporating Cloud Viewer": self._convert_evaporating_cloud,
         }
+        self.diagram_specific_settings = {
+            "Requirement Diagram Viewer": {"ortho": True, "sep": 0},
+            "Strategy and Tactics Tree Viewer": {"ortho": True, "sep": 0},
+            "Current Reality Tree Viewer": {"ortho": False, "sep": 20},
+            "Process Flow Diagram Viewer": {"ortho": False, "sep": 20},
+            "Evaporating Cloud Viewer": {"ortho": False, "sep": 0},
+        }
 
     def convert_to_puml(
         self, page_title: str, graph: nx.DiGraph, title: str, parameters_dict: Dict
@@ -42,11 +49,26 @@ class ConvertPumlCode:
         Returns:
             str: PlantUML code
         """
+        specific_settings = self.diagram_specific_settings.get(
+            page_title, {"ortho": True, "sep": 0}
+        )  # Default if not found
+        ortho = specific_settings.get("ortho", True)
+        sep = specific_settings.get("sep", 0)
+        scale = parameters_dict.get("scale", 1.0)
+        landscape = parameters_dict.get("landscape", False)
+
+        puml_parts = [
+            self._add_common_parameter_setting(scale, ortho, sep, landscape=landscape)
+        ]
+
         converter_method = self.diagram_converters.get(page_title)
         if converter_method:
-            return converter_method(graph, title, parameters_dict)
+            diagram_body = converter_method(graph, title, parameters_dict)
+            puml_parts.append(diagram_body)
         else:
             raise ValueError(f"Invalid page_title specified: {page_title}")
+        puml_parts.append("@enduml")
+        return "\n".join(puml_parts)
 
     def _add_common_parameter_setting(
         self, scale: float, ortho: bool = True, sep: int = 0, *, landscape: bool = False
@@ -137,13 +159,7 @@ scale {scale}
         else:
             title = f'"req {title}"'
 
-        # Add common parameter setting
-        scale = parameters_dict.get("scale", 1.0)
-        puml_parts = [
-            self._add_common_parameter_setting(
-                scale, landscape=parameters_dict.get("landscape", False)
-            )
-        ]
+        puml_parts = []
 
         # Add title as package
         puml_parts.append(f"package {title} <<Frame>> " + "{")
@@ -156,7 +172,7 @@ scale {scale}
         for edge in graph.edges(data=True):
             puml_parts.append(self._convert_requirement_edge(edge))
 
-        puml_parts.append("}\n@enduml")
+        puml_parts.append("}")
         return "\n".join(puml_parts)
 
     def _convert_parameters_dict(
@@ -200,13 +216,7 @@ end note
     def _convert_evaporating_cloud(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
-        scale = parameters_dict.get("scale", 1.0)
-
-        puml_parts = [
-            self._add_common_parameter_setting(
-                scale, ortho=False, landscape=parameters_dict.get("landscape", False)
-            )
-        ]
+        puml_parts = []
 
         # Convert all nodes
         for node in graph.nodes(data=True):
@@ -241,7 +251,6 @@ right_shoulder_to_head .l. head
 right_shoulder_to_head .. right_shoulder"""
         )
 
-        puml_parts.append("}\n@enduml")
         return "\n".join(puml_parts)
 
     def _convert_evaporating_cloud_card(
@@ -471,13 +480,7 @@ right_shoulder_to_head .. right_shoulder"""
         Returns:
             str: PlantUML code
         """
-        scale = parameters_dict.get("scale", 1.0)
-
-        puml_parts = [
-            self._add_common_parameter_setting(
-                scale, landscape=parameters_dict.get("landscape", False)
-            )
-        ]
+        puml_parts = []
 
         # Convert all nodes
         for node in graph.nodes(data=True):
@@ -487,7 +490,6 @@ right_shoulder_to_head .. right_shoulder"""
         for edge in graph.edges(data=True):
             puml_parts.append(self._convert_card_edge(edge))
 
-        puml_parts.append("}\n@enduml")
         return "\n".join(puml_parts)
 
     def _convert_card(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
@@ -533,16 +535,7 @@ right_shoulder_to_head .. right_shoulder"""
         Returns:
             str: PlantUML code
         """
-        scale = parameters_dict.get("scale", 1.0)
-
-        puml_parts = [
-            self._add_common_parameter_setting(
-                scale,
-                ortho=False,
-                sep=20,
-                landscape=parameters_dict.get("landscape", False),
-            )
-        ]
+        puml_parts = []
 
         # Convert all nodes
         for node in graph.nodes(data=True):
@@ -589,7 +582,6 @@ end note
             else:
                 puml_parts.append(self._convert_card_edge(edge))
 
-        puml_parts.append("}\n@enduml")
         return "\n".join(puml_parts)
 
     def _convert_card_pfd(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
@@ -625,16 +617,7 @@ end note
         Returns:
             str: PlantUML code
         """
-        scale = parameters_dict.get("scale", 1.0)
-
-        puml_parts = [
-            self._add_common_parameter_setting(
-                scale,
-                ortho=False,
-                sep=20,
-                landscape=parameters_dict.get("landscape", False),
-            )
-        ]
+        puml_parts = []
 
         # Convert all nodes
         for node in graph.nodes(data=True):
@@ -649,7 +632,6 @@ end note
         for edge in graph.edges(data=True):
             puml_parts.append(self._convert_card_edge(edge, reverse=True))
 
-        puml_parts.append("}\n@enduml")
         return "\n".join(puml_parts)
 
     def _convert_usecase(self, node: Dict[str, Any], parameters_dict: Dict) -> str:
