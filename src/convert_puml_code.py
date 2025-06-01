@@ -493,36 +493,6 @@ right_shoulder_to_head .. right_shoulder"""
             puml_node1, puml_node2, puml_line_style, label_text, note_puml
         )
 
-    def _convert_note_edge(self, note_id: str, nodes: List[Dict[str, Any]]) -> str:
-        """Return note type entity string
-        This method is for rationale, problem entity connected to relation.
-
-        Args:
-            data (Dict[str, Any]): Entity (node)
-
-        Returns:
-            str: PlantUML string for note
-        """
-        ret = ""
-        for node in nodes:
-            if node[1]["unique_id"] == note_id:
-                # Display longer string from title and text
-                if len(node[1]["title"]) >= len(node[1]["text"]):
-                    string = node[1]["title"]
-                else:
-                    string = node[1]["text"]
-
-                string = string.replace("\\n", "\n")
-
-                ret = ""
-                ret += f"note on link\n"
-                ret += f"<<{node[1]['type']}>>\n"
-                if self.debug:
-                    ret += f'unique_id="{note_id}"\n'
-                ret += f"{string}\n"
-                ret += f"end note\n"
-        return ret
-
     def _convert_strategy_and_tactics(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
@@ -628,43 +598,36 @@ right_shoulder_to_head .. right_shoulder"""
             else:  # Assume note
                 puml_parts.append(self._convert_crt_note_node(node, parameters_dict))
 
-        # Convert edges
-        for edge in graph.edges(data=True):
-            # andに値が設定されている場合は、ANDを経由させる
-            if (
-                edge[2].get("and") and edge[2]["and"] != "None"
-            ):  # Ensure 'and' key exists
-                and_id = edge[2]["and"]
-                # Ensure AND node is defined (it might have been defined above if it's also a standalone node)
-                # For safety, we can add it here if not already added, or assume it's handled.
-                # For simplicity, let's assume 'and' nodes are defined if they appear in edges.
-                # A more robust way would be to collect all 'and' IDs first.
-                if not any(
-                    part.startswith(f'usecase "AND{and_id}"') for part in puml_parts
-                ):
-                    puml_parts.append(f'usecase "AND{and_id}" as {and_id}')
+        # Convert edges for Current Reality Tree
+        for edge_data_tuple in graph.edges(data=True):
+            src_node_id = edge_data_tuple[0]
+            dst_node_id = edge_data_tuple[1]
+            edge_attributes = edge_data_tuple[2]
 
-                puml_parts.append(
-                    f"usecase \"AND{edge[2]['and']}\" as {edge[2]['and']}"
-                )
+            and_node_id = edge_attributes.get("and")
 
-        # Convert edges
-        for edge in graph.edges(data=True):
-            # andに値が設定されている場合は、ANDを経由させる
-            if edge[2]["and"] != "None":
-                puml_parts.append(
-                    f"usecase \"AND{edge[2]['and']}\" as {edge[2]['and']}"
+            if and_node_id and and_node_id != "None":
+                # ANDノードを経由するエッジ: src -> AND -> dst
+                # ANDノード自体はノード変換ループでPUMLに追加されていると仮定
+
+                # src -> AND エッジ
+                attrs_to_and = copy.deepcopy(edge_attributes)
+                attrs_to_and.pop("and", None)  # このエッジ自体はANDを経由しない
+                edge_to_and_representation = (src_node_id, and_node_id, attrs_to_and)
+                puml_parts.append(self._convert_card_edge(edge_to_and_representation))
+
+                # AND -> dst エッジ
+                attrs_from_and = copy.deepcopy(edge_attributes)
+                attrs_from_and.pop("and", None)
+                edge_from_and_representation = (
+                    and_node_id,
+                    dst_node_id,
+                    attrs_from_and,
                 )
-                # edgeのdestinationをandにする
-                edge_to_and = list(copy.deepcopy(edge))
-                edge_to_and[1] = edge[2]["and"]
-                puml_parts.append(self._convert_card_edge(edge_to_and))
-                # edgeのsourceをandにする
-                edge_from_and = list(copy.deepcopy(edge))
-                edge_from_and[0] = edge[2]["and"]
-                puml_parts.append(self._convert_card_edge(edge_from_and))
+                puml_parts.append(self._convert_card_edge(edge_from_and_representation))
             else:
-                puml_parts.append(self._convert_card_edge(edge))
+                # 通常のエッジ
+                puml_parts.append(self._convert_card_edge(edge_data_tuple))
 
         return "\n".join(puml_parts)
 
