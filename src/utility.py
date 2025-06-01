@@ -128,6 +128,43 @@ def load_config() -> dict:
     return config
 
 
+def save_config(config_data: dict):
+    """Save config to JSON file.
+
+    Args:
+        config_data (dict): Config dictionary
+    """
+    config_file_path = "setting/config.hjson"
+    try:
+        with open(config_file_path, "w", encoding="utf-8") as f:
+            hjson.dump(config_data, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        st.error(f"設定ファイルの保存に失敗しました: {e}")
+
+
+def get_default_data_structure() -> Dict:
+    """Returns the default structure for a new data file."""
+    return {"nodes": [], "edges": []}
+
+
+def list_hjson_files(directory: str) -> List[str]:
+    """Lists .hjson files in the specified directory.
+
+    Args:
+        directory (str): The directory to scan.
+
+    Returns:
+        List[str]: A list of .hjson file names.
+    """
+    if not os.path.isdir(directory):
+        return []
+    return [
+        f
+        for f in os.listdir(directory)
+        if f.endswith(".hjson") and os.path.isfile(os.path.join(directory, f))
+    ]
+
+
 def load_app_data() -> dict:
     """Load app_data from JSON file.
 
