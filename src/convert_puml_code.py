@@ -139,23 +139,25 @@ scale {scale}
 
         # Add common parameter setting
         scale = parameters_dict.get("scale", 1.0)
-        ret = self._add_common_parameter_setting(
-            scale, landscape=parameters_dict.get("landscape", False)
-        )
+        puml_parts = [
+            self._add_common_parameter_setting(
+                scale, landscape=parameters_dict.get("landscape", False)
+            )
+        ]
 
         # Add title as package
-        ret += f"package {title} <<Frame>> " + "{\n"
+        puml_parts.append(f"package {title} <<Frame>> " + "{")
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            ret += self._convert_requirement_node(node, parameters_dict) + "\n"
+            puml_parts.append(self._convert_requirement_node(node, parameters_dict))
 
         # Convert edges
         for edge in graph.edges(data=True):
-            ret += self._convert_requirement_edge(edge) + "\n"
+            puml_parts.append(self._convert_requirement_edge(edge))
 
-        ret += "\n}\n@enduml\n"
-        return ret
+        puml_parts.append("}\n@enduml")
+        return "\n".join(puml_parts)
 
     def _convert_parameters_dict(
         self, node: Tuple[str, Dict], parameters_dict: Dict
@@ -199,28 +201,30 @@ end note
     ) -> str:
         scale = parameters_dict.get("scale", 1.0)
 
-        ret = self._add_common_parameter_setting(
-            scale, ortho=False, landscape=parameters_dict.get("landscape", False)
-        )
+        puml_parts = [
+            self._add_common_parameter_setting(
+                scale, ortho=False, landscape=parameters_dict.get("landscape", False)
+            )
+        ]
 
         # Convert all nodes
         for node in graph.nodes(data=True):
             if node[1]["type"] == "note":
-                ret += (
-                    self._convert_evaporating_cloud_note(node, parameters_dict) + "\n"
+                puml_parts.append(
+                    self._convert_evaporating_cloud_note(node, parameters_dict)
                 )
             else:
-                ret += (
-                    self._convert_evaporating_cloud_card(node, parameters_dict) + "\n"
+                puml_parts.append(
+                    self._convert_evaporating_cloud_card(node, parameters_dict)
                 )
 
         # Convert edges
         for edge in graph.edges(data=True):
-            ret += self._convert_card_edge(edge) + "\n"
+            puml_parts.append(self._convert_card_edge(edge))
 
         # conflict
-        ret += """
-left_hand <=> right_hand #red
+        puml_parts.append(
+            """left_hand <=> right_hand #red
 left_shoulder <=> right_shoulder #red
 left_shoulder <.. right_hand #blue
 right_shoulder <.. left_hand #blue
@@ -233,11 +237,11 @@ right_hand_to_shoulder .. right_hand
 left_shoulder_to_head .r. head
 left_shoulder_to_head .. left_shoulder
 right_shoulder_to_head .l. head
-right_shoulder_to_head .. right_shoulder
-"""
+right_shoulder_to_head .. right_shoulder"""
+        )
 
-        ret += "\n}\n@enduml\n"
-        return ret
+        puml_parts.append("}\n@enduml")
+        return "\n".join(puml_parts)
 
     def _convert_evaporating_cloud_card(
         self, node: Tuple[str, Dict], parameters_dict: Dict
@@ -468,20 +472,22 @@ right_shoulder_to_head .. right_shoulder
         """
         scale = parameters_dict.get("scale", 1.0)
 
-        ret = self._add_common_parameter_setting(
-            scale, landscape=parameters_dict.get("landscape", False)
-        )
+        puml_parts = [
+            self._add_common_parameter_setting(
+                scale, landscape=parameters_dict.get("landscape", False)
+            )
+        ]
 
         # Convert all nodes
         for node in graph.nodes(data=True):
-            ret += self._convert_card(node, parameters_dict) + "\n"
+            puml_parts.append(self._convert_card(node, parameters_dict))
 
         # Convert edges
         for edge in graph.edges(data=True):
-            ret += self._convert_card_edge(edge) + "\n"
+            puml_parts.append(self._convert_card_edge(edge))
 
-        ret += "\n}\n@enduml\n"
-        return ret
+        puml_parts.append("}\n@enduml")
+        return "\n".join(puml_parts)
 
     def _convert_card(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
         parameters = self._convert_parameters_dict(node, parameters_dict)
@@ -528,12 +534,14 @@ right_shoulder_to_head .. right_shoulder
         """
         scale = parameters_dict.get("scale", 1.0)
 
-        ret = self._add_common_parameter_setting(
-            scale,
-            ortho=False,
-            sep=20,
-            landscape=parameters_dict.get("landscape", False),
-        )
+        puml_parts = [
+            self._add_common_parameter_setting(
+                scale,
+                ortho=False,
+                sep=20,
+                landscape=parameters_dict.get("landscape", False),
+            )
+        ]
 
         # Convert all nodes
         for node in graph.nodes(data=True):
@@ -543,39 +551,45 @@ right_shoulder_to_head .. right_shoulder
             color = self._get_puml_color(node[1])
             if node[1]["type"] == "and":
                 # Convert "and" node
-                ret += (
-                    f"usecase \"AND{node[1]['unique_id']}\" as {node[1]['unique_id']}\n"
+                puml_parts.append(
+                    f"usecase \"AND{node[1]['unique_id']}\" as {node[1]['unique_id']}"
                 )
             elif node[1]["type"] == "entity":
-                ret += f"""card {node[1]["unique_id"]} {parameters} {color} [
+                puml_parts.append(
+                    f"""card {node[1]["unique_id"]} {parameters} {color} [
 {node[1]["id"]}
 ]
 """
+                )
             else:
                 parameters = parameters[:-2] + " *]]"
-                ret += f"""note as {node[1]["unique_id"]} {color}
+                puml_parts.append(
+                    f"""note as {node[1]["unique_id"]} {color}
 {node[1]["id"]}{parameters}
 end note
 """
+                )
 
         # Convert edges
         for edge in graph.edges(data=True):
             # andに値が設定されている場合は、ANDを経由させる
             if edge[2]["and"] != "None":
-                ret += f"usecase \"AND{edge[2]['and']}\" as {edge[2]['and']}\n"
+                puml_parts.append(
+                    f"usecase \"AND{edge[2]['and']}\" as {edge[2]['and']}"
+                )
                 # edgeのdestinationをandにする
                 edge_to_and = list(copy.deepcopy(edge))
                 edge_to_and[1] = edge[2]["and"]
-                ret += self._convert_card_edge(edge_to_and) + "\n"
+                puml_parts.append(self._convert_card_edge(edge_to_and))
                 # edgeのsourceをandにする
                 edge_from_and = list(copy.deepcopy(edge))
                 edge_from_and[0] = edge[2]["and"]
-                ret += self._convert_card_edge(edge_from_and) + "\n"
+                puml_parts.append(self._convert_card_edge(edge_from_and))
             else:
-                ret += self._convert_card_edge(edge) + "\n"
+                puml_parts.append(self._convert_card_edge(edge))
 
-        ret += "\n}\n@enduml\n"
-        return ret
+        puml_parts.append("}\n@enduml")
+        return "\n".join(puml_parts)
 
     def _convert_card_pfd(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
         parameters = self._convert_parameters_dict(node, parameters_dict)
@@ -612,28 +626,30 @@ end note
         """
         scale = parameters_dict.get("scale", 1.0)
 
-        ret = self._add_common_parameter_setting(
-            scale,
-            ortho=False,
-            sep=20,
-            landscape=parameters_dict.get("landscape", False),
-        )
+        puml_parts = [
+            self._add_common_parameter_setting(
+                scale,
+                ortho=False,
+                sep=20,
+                landscape=parameters_dict.get("landscape", False),
+            )
+        ]
 
         # Convert all nodes
         for node in graph.nodes(data=True):
             if node[1]["type"] == "process":
-                ret += self._convert_usecase(node, parameters_dict) + "\n"
+                puml_parts.append(self._convert_usecase(node, parameters_dict))
             elif node[1]["type"] == "cloud":
-                ret += self._convert_cloud(node, parameters_dict) + "\n"
+                puml_parts.append(self._convert_cloud(node, parameters_dict))
             else:
-                ret += self._convert_card_pfd(node, parameters_dict) + "\n"
+                puml_parts.append(self._convert_card_pfd(node, parameters_dict))
 
         # Convert edges
         for edge in graph.edges(data=True):
-            ret += self._convert_card_edge(edge, reverse=True) + "\n"
+            puml_parts.append(self._convert_card_edge(edge, reverse=True))
 
-        ret += "\n}\n@enduml\n"
-        return ret
+        puml_parts.append("}\n@enduml")
+        return "\n".join(puml_parts)
 
     def _convert_usecase(self, node: Dict[str, Any], parameters_dict: Dict) -> str:
         """Convert usecase information to PlantUML code.
