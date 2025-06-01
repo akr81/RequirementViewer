@@ -387,7 +387,7 @@ right_shoulder_to_head .. right_shoulder"""
 
         Args:
             data (Dict[str, Any]): Node attributes for rationale or problem.
-            parameters (str): Parameter string for link (currently not used for notes in Req Diagram, but kept for consistency).
+            parameters (str): Parameter string for link.
 
 
         Returns:
@@ -422,6 +422,25 @@ right_shoulder_to_head .. right_shoulder"""
         else:
             return f"{title}"
 
+    def _create_note_on_link_puml(self, note_data: Dict[str, Any]) -> str:
+        """Creates PlantUML string for a 'note on link'.
+
+        Args:
+            note_data (Dict[str, Any]): Dictionary containing note information (type, text).
+
+        Returns:
+            str: PlantUML string for the note on link, or empty string if no text.
+        """
+        if not note_data or not note_data.get("text"):
+            return ""
+
+        note_puml = "\nnote on link\n"
+        if note_data.get("type") and note_data["type"] != "None":
+            note_puml += f"<<{note_data['type']}>>\n"
+        note_puml += f"{note_data['text']}\n"
+        note_puml += "end note\n"
+        return note_puml
+
     def _convert_requirement_edge(self, data: Dict[str, Any]):
         """Return relationship string
 
@@ -434,33 +453,29 @@ right_shoulder_to_head .. right_shoulder"""
         src = data[0]
         dst = data[1]
         type = data[2]["type"]
-        note = data[2]["note"]
-        ret = ""
-        if type == "containment":
-            ret = f"{dst} +-- {src}"
-        elif (
-            type == "refine"
-            or type == "deriveReqt"
-            or type == "satisfy"
-            or type == "verify"
-            or type == "copy"
-            or type == "trace"
-        ):
-            ret = f"{dst} <.. {src}: <<{type}>>"
-        elif type == "problem" or type == "rationale":
-            # For rationale and problem (entity) only
-            ret = f"{dst} .. {src}"
+        note_data = data[2].get("note")
+
+        edge_templates = {
+            "containment": "{dst} +-- {src}",
+            "refine": "{dst} <.. {src}: <<{type}>>",
+            "deriveReqt": "{dst} <.. {src}: <<{type}>>",
+            "satisfy": "{dst} <.. {src}: <<{type}>>",
+            "verify": "{dst} <.. {src}: <<{type}>>",
+            "copy": "{dst} <.. {src}: <<{type}>>",
+            "trace": "{dst} <.. {src}: <<{type}>>",
+            "problem": "{dst} .. {src}",  # For rationale and problem (entity) only
+            "rationale": "{dst} .. {src}",  # For rationale and problem (entity) only
+        }
+
+        if type in edge_templates:
+            puml_edge = edge_templates[type].format(dst=dst, src=src, type=type)
         else:
             raise ValueError(f"No implement exist for relation type: {type}")
 
-        if note and note["text"] != "":
-            ret += "\n"
-            ret += f"note on link\n"
-            if note["type"] != "None":
-                ret += f"<<{note['type']}>>\n"
-            ret += f"{note['text']}\n"
-            ret += f"end note\n"
-        return ret
+        if note_data:
+            puml_edge += self._create_note_on_link_puml(note_data)
+
+        return puml_edge
 
     def _convert_note_edge(self, note_id: str, nodes: List[Dict[str, Any]]) -> str:
         """Return note type entity string
@@ -708,10 +723,11 @@ end note
         The original _convert_usecase method had a different signature for Requirement Diagram.
 
         Args:
-            data (Dict[str, Any]): Usecase information
+            node (Tuple[str, Dict]): Usecase information (node_id, attributes_dict).
+            parameters_dict (Dict): Parameters for link.
 
         Returns:
-            str: PlantUML code
+            str: PlantUML code.
         """
         node_attrs = node[1]  # node is (unique_id, attributes_dict)
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
@@ -731,13 +747,10 @@ end note
 
         Args:
             node (Tuple[str, Dict]): Cloud information (node_id, attributes_dict)
-            id = id.replace("\n", "\\n")
-            ret = f"usecase \"{id}\" as {node[1]['unique_id']} {parameters} {color}\n"
-        return ret
             parameters_dict (Dict): Parameters for link.
 
         Returns:
-            str: PlantUML code
+            str: PlantUML code.
         """
         node_attrs = node[1]  # node is (unique_id, attributes_dict)
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
