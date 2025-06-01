@@ -91,12 +91,6 @@ ArrowColor Black
 BorderColor Black
 FontSize 12
 }}
-skinparam usecase {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
 skinparam class {{
 BackgroundColor White
 ArrowColor Black
@@ -112,6 +106,14 @@ allowmixing
 
 scale {scale}
 """
+
+    def _get_puml_color(self, node_attributes: Dict) -> str:
+        """ノード属性からPlantUML用の色指定文字列を取得する。"""
+        color_name = node_attributes.get("color")
+        if color_name and color_name != "None":
+            # color_to_archimate に存在しないキーの場合は空文字を返す
+            return color_to_archimate.get(color_name, "")
+        return ""
 
     def _convert_requirement_diagram(
         self, graph: nx.DiGraph, title: str, parameters_dict: Dict
@@ -185,11 +187,7 @@ scale {scale}
         parameters = parameters[:-2] + " *]]"
 
         # Get color string
-        if node[1]["color"] != "None":
-            color = color_to_archimate[node[1]["color"]]
-        else:
-            color = ""
-
+        color = self._get_puml_color(node[1])
         return f"""
 note as {node[1]['unique_id']} {color}
 {node[1]['title']} {parameters}
@@ -245,10 +243,7 @@ right_shoulder_to_head .. right_shoulder
         self, node: Tuple[str, Dict], parameters_dict: Dict
     ) -> str:
         parameters = self._convert_parameters_dict(node, parameters_dict)
-        if node[1]["color"] != "None":
-            color = color_to_archimate[node[1]["color"]]
-        else:
-            color = ""
+        color = self._get_puml_color(node[1])
         ret = f"""card {node[1]["unique_id"]} {parameters} {color} [
 {node[1]["title"]}
 ]
@@ -322,13 +317,11 @@ right_shoulder_to_head .. right_shoulder
         """
         title = data["title"]
         text = data["text"]
-        color = color_to_archimate[data["color"]]
-        if color == "None":
-            color = ""
+        color_str = self._get_puml_color(data)
 
         # Ignore () as method using {field}
         ret = (
-            f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color} "
+            f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str} "
             + "{\n"
         )
 
@@ -492,10 +485,7 @@ right_shoulder_to_head .. right_shoulder
 
     def _convert_card(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
         parameters = self._convert_parameters_dict(node, parameters_dict)
-        if node[1]["color"] != "None":
-            color = color_to_archimate[node[1]["color"]]
-        else:
-            color = ""
+        color = self._get_puml_color(node[1])
         ret = f"""card {node[1]["unique_id"]} {parameters} {color} [
 {node[1]["id"]}
 ---
@@ -550,10 +540,7 @@ right_shoulder_to_head .. right_shoulder
             if "color" not in node[1]:
                 node[1]["color"] = "None"
             parameters = self._convert_parameters_dict(node, parameters_dict)
-            if node[1]["color"] != "None":
-                color = color_to_archimate[node[1]["color"]]
-            else:
-                color = ""
+            color = self._get_puml_color(node[1])
             if node[1]["type"] == "and":
                 # Convert "and" node
                 ret += (
@@ -592,11 +579,7 @@ end note
 
     def _convert_card_pfd(self, node: Tuple[str, Dict], parameters_dict: Dict) -> str:
         parameters = self._convert_parameters_dict(node, parameters_dict)
-        if node[1]["color"] != "None":
-            color = color_to_archimate[node[1]["color"]]
-        else:
-            color = ""
-
+        color = self._get_puml_color(node[1])
         if (
             "type" not in node[1]
             or node[1]["type"] == "card"
@@ -662,10 +645,7 @@ end note
             str: PlantUML code
         """
         parameters = self._convert_parameters_dict(node, parameters_dict)
-        if node[1]["color"] != "None":
-            color = color_to_archimate[node[1]["color"]]
-        else:
-            color = ""
+        color = self._get_puml_color(node[1])
         if node[1]["type"] == "process":
             # Convert and node
             id = node[1]["id"]
@@ -683,10 +663,7 @@ end note
             str: PlantUML code
         """
         parameters = self._convert_parameters_dict(node, parameters_dict)
-        if node[1]["color"] != "None":
-            color = color_to_archimate[node[1]["color"]]
-        else:
-            color = ""
+        color = self._get_puml_color(node[1])
         if node[1]["type"] == "cloud":
             # Convert and node
             id = node[1]["id"]
