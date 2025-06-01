@@ -162,26 +162,27 @@ scale {scale}
     def _convert_parameters_dict(
         self, node: Tuple[str, Dict], parameters_dict: Dict
     ) -> str:
-        """Convert parameters dict to PlantUML code.
+        """Convert parameters dict to PlantUML link string.
 
         Args:
-            node (Tuple[str, Dict]): Node information.
-            parameters_dict (Dict): Parameters for link.
+            node (Tuple[str, Dict]): Node information (unique_id is in node[1]['unique_id']).
+            parameters_dict (Dict): Parameters for the link base.
 
         Returns:
-            str: PlantUML code.
+            str: PlantUML link string like "[[?param1=val1&selected=id]]".
         """
-        is_first = True
-        ret = "[["
-        for key, value in parameters_dict.items():
-            if is_first:
-                ret += f"?{key}={value}"
-                is_first = False
-            else:
-                ret += f"&{key}={value}"
+        query_items = []
+        if parameters_dict:  # parameters_dictがNoneや空でないことを確認
+            for key, value in parameters_dict.items():
+                query_items.append(f"{key}={value}")
 
-        ret += f"&selected={node[1]['unique_id']}]]"
-        return ret
+        # 常にselectedパラメータを追加
+        query_items.append(f"selected={node[1]['unique_id']}")
+
+        if not query_items:  # 通常は発生しないはず (selectedが常に追加されるため)
+            return "[[]]"  # 空のリンクの場合のデフォルト
+
+        return f"[[?{'&'.join(query_items)}]]"
 
     def _convert_evaporating_cloud_note(self, node, parameters_dict):
         # Get parameters string and modify for note
