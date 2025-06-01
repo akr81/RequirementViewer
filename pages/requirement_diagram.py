@@ -10,10 +10,11 @@ import hjson
 import os
 import uuid
 import copy
-import shutil
 
 
-@st.cache_data
+# Commented out to avoid first time error as a workaround
+# This decorator possibly use some streamlit command before initialization
+# @st.cache_data
 def load_entity_types() -> list[str]:
     """Load entity types from JSON file.
 
@@ -25,7 +26,8 @@ def load_entity_types() -> list[str]:
     return entity_types
 
 
-@st.cache_data
+# Commented out to avoid first time error as a workaround
+# @st.cache_data
 def load_relation_types() -> list[str]:
     """Load relation types from JSON file.
 
@@ -39,7 +41,8 @@ def load_relation_types() -> list[str]:
     return relation_types
 
 
-@st.cache_data
+# Commented out to avoid first time error as a workaround
+# @st.cache_data
 def load_note_types() -> list[str]:
     """Load note types from JSON file.
 

@@ -15,20 +15,20 @@ from src.diagram_column import draw_diagram_column  # 追加
 
 
 def initialize_page(app_name: str):
-    # 色のリストを読み込む
-    color_list = load_colors()
-
-    # アプリ名を設定
-    st.session_state.app_name = app_name
-    if "save_png" not in st.session_state:
-        st.session_state["save_png"] = False
-
     # ページの設定
     st.set_page_config(
         layout="wide",
-        page_title=st.session_state.app_name,
+        page_title=app_name,  # st.session_state.app_name の代わりに app_name を直接使用
         initial_sidebar_state="collapsed",  # サイドバーを閉じた状態で表示
     )
+
+    # 色のリストを読み込む
+    color_list = load_colors()
+
+    # アプリ名を設定 (set_page_config の後でも問題ない)
+    st.session_state.app_name = app_name
+    if "save_png" not in st.session_state:
+        st.session_state["save_png"] = False
 
     # configファイルを読み込む
     config_data = load_config()

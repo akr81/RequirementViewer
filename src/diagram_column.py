@@ -11,6 +11,7 @@ import copy
 import os
 import datetime
 import hjson
+import shutil
 
 
 def draw_diagram_column(
@@ -144,8 +145,8 @@ def draw_diagram_column(
         # New File Section
         with st.expander("新しいファイルを作成"):
             new_file_name_key = f"{app_name}_new_file_name"
+            postfix = st.session_state.app_data[app_name].get("postfix", "data")
             if new_file_name_key not in st.session_state:
-                postfix = st.session_state.app_data[app_name].get("postfix", "data")
                 current_time_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 st.session_state[new_file_name_key] = (
                     f"{current_time_str}_{postfix}.hjson"
@@ -166,6 +167,9 @@ def draw_diagram_column(
                                 hjson.dump(
                                     default_content, f, ensure_ascii=False, indent=4
                                 )
+                            if postfix == "ec":
+                                # For Evaporating Cloud Viewer, copy default template
+                                shutil.copyfile("template/ec.hjson", new_file_path)
 
                             data_file_key = st.session_state.app_data[app_name]["data"]
                             st.session_state.config_data[data_file_key] = new_file_path

@@ -37,13 +37,13 @@ PlantUMLの外部サーバを使用する設定となっています。
 
 
 def main_landing_page():
+    st.set_page_config(layout="wide", page_title="思考ツールメイン")
+    st.write("サイドバーから利用したい図を選択してください。")
+
     # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
     # この処理はアプリケーション起動時に一度だけ行われるのが望ましい
     if not ("www.plantuml.com" in config_data.get("plantuml", "")):
         start_plantuml_server()
-
-    st.set_page_config(layout="wide", page_title="思考ツールメイン")
-    st.write("サイドバーから利用したい図を選択してください。")
 
     # PlantUMLが外部の公開サーバを使用している場合の注意喚起
     # セッションステートでダイアログの表示状態を管理

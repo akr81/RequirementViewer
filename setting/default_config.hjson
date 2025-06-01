@@ -5,7 +5,7 @@
     upstream_filter_max: 5
     downstream_filter_max: 5
     requirement_data: sample/requirement.hjson
-    strategy_and_tactics_data: sample/st.hjson
+    strategy_and_tactics_data: sample/stt.hjson
     current_reality_tree_data: sample/crt.hjson
     process_flow_diagram_data: sample/pfd.hjson
     evaporating_cloud_data: sample/ec.hjson

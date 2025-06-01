@@ -39,7 +39,7 @@ if create_new:
 
     if st.session_state.app_name == "Evaporating Cloud Viewer":
         # defaultファイルをコピー
-        shutil.copyfile("default/ec.json", file_path)
+        shutil.copyfile("template/ec.json", file_path)
     else:
         with open(file_path, "w", encoding="utf-8") as f:
             f.write("[]")
