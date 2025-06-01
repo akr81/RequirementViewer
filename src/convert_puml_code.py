@@ -441,6 +441,18 @@ right_shoulder_to_head .. right_shoulder"""
         note_puml += "end note\n"
         return note_puml
 
+    def _create_generic_edge_puml(
+        self,
+        puml_node1: str,
+        puml_node2: str,
+        line_style: str,
+        label_text: str = "",
+        note_on_link_puml: str = "",
+    ) -> str:
+        """Generates a generic PlantUML string for an edge."""
+        label_part = f" : {label_text}" if label_text else ""
+        return f"{puml_node1} {line_style} {puml_node2}{label_part}{note_on_link_puml}"
+
     def _convert_requirement_edge(self, data: Dict[str, Any]):
         """Return relationship string
 
@@ -453,29 +465,33 @@ right_shoulder_to_head .. right_shoulder"""
         src = data[0]
         dst = data[1]
         type = data[2]["type"]
-        note_data = data[2].get("note")
+        edge_attrs = data[2]
+        note_data = edge_attrs.get("note")
 
-        edge_templates = {
-            "containment": "{dst} +-- {src}",
-            "refine": "{dst} <.. {src}: <<{type}>>",
-            "deriveReqt": "{dst} <.. {src}: <<{type}>>",
-            "satisfy": "{dst} <.. {src}: <<{type}>>",
-            "verify": "{dst} <.. {src}: <<{type}>>",
-            "copy": "{dst} <.. {src}: <<{type}>>",
-            "trace": "{dst} <.. {src}: <<{type}>>",
-            "problem": "{dst} .. {src}",  # For rationale and problem (entity) only
-            "rationale": "{dst} .. {src}",  # For rationale and problem (entity) only
+        # (puml_node1, puml_node2, puml_line_style, label_content_template)
+        edge_configs = {
+            "containment": (dst, src, "+--", ""),
+            "refine": (dst, src, "<..", "<<{type}>>"),
+            "deriveReqt": (dst, src, "<..", "<<{type}>>"),
+            "satisfy": (dst, src, "<..", "<<{type}>>"),
+            "verify": (dst, src, "<..", "<<{type}>>"),
+            "copy": (dst, src, "<..", "<<{type}>>"),
+            "trace": (dst, src, "<..", "<<{type}>>"),
+            "problem": (dst, src, "..", ""),
+            "rationale": (dst, src, "..", ""),
         }
 
-        if type in edge_templates:
-            puml_edge = edge_templates[type].format(dst=dst, src=src, type=type)
-        else:
+        config = edge_configs.get(type)
+        if not config:
             raise ValueError(f"No implement exist for relation type: {type}")
 
-        if note_data:
-            puml_edge += self._create_note_on_link_puml(note_data)
+        puml_node1, puml_node2, puml_line_style, label_template = config
+        label_text = label_template.format(type=type) if label_template else ""
+        note_puml = self._create_note_on_link_puml(note_data) if note_data else ""
 
-        return puml_edge
+        return self._create_generic_edge_puml(
+            puml_node1, puml_node2, puml_line_style, label_text, note_puml
+        )
 
     def _convert_note_edge(self, note_id: str, nodes: List[Dict[str, Any]]) -> str:
         """Return note type entity string
@@ -528,7 +544,6 @@ right_shoulder_to_head .. right_shoulder"""
         # Convert edges
         for edge in graph.edges(data=True):
             puml_parts.append(self._convert_card_edge(edge))
-
         return "\n".join(puml_parts)
 
     def _convert_st_card_node(
@@ -538,32 +553,53 @@ right_shoulder_to_head .. right_shoulder"""
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
-        content = f"""{node_attrs["id"]}
+        # Ensure all expected keys exist, providing defaults if necessary
+        node_id = node_attrs.get("id", "")
+        strategy = node_attrs.get("strategy", "")
+        tactics = node_attrs.get("tactics", "")
+        content = f"""{node_id}
 ---
-{node_attrs["strategy"]}
+{strategy}
 ---
-{node_attrs["tactics"]}"""
+{tactics}"""
         return self._create_card_puml(
             node_attrs["unique_id"], content, parameters_str, color_str
         )
 
-    def _convert_card_edge(self, data: Dict[str, Any], reverse=False):
+    def _convert_card_edge(
+        self, data: Dict[str, Any], use_src_arrow_dst_style: bool = False
+    ):
+        """
+        Converts a card edge to PlantUML.
+        Args:
+            data: Edge data (src, dst, attributes).
+            use_src_arrow_dst_style:
+                If True, arrow type defaults to "src --> dst" (e.g., PFD).
+                If False (default), arrow type defaults to "dst <-- src" (e.g., S&T, EC, CRT).
+        Returns:
+            PlantUML string for the edge.
+        """
         src = data[0]
         dst = data[1]
-        explanation = ""
-        if "comment" in data[2] and data[2]["comment"] != "":
-            explanation = ":" + data[2]["comment"]
-        if data[2]["type"] == "arrow":
-            if reverse:
-                ret = f"{src} --> {dst} {explanation}"
-            else:
-                ret = f"{dst} <-- {src} {explanation}"
-        elif data[2]["type"] == "flat":
-            ret = f"{dst} . {src} {explanation}"
-        elif data[2]["type"] == "flat_long":
-            ret = f"{dst} .. {src} {explanation}"
 
-        return ret
+        puml_node1, puml_node2, line_style = "", "", ""
+        comment_text = data[2].get("comment", "")
+
+        if data[2]["type"] == "arrow":
+            if use_src_arrow_dst_style:  # Typically PFD: src --> dst
+                puml_node1, puml_node2, line_style = src, dst, "-->"
+            else:  # Typically S&T, EC, CRT: dst <-- src
+                puml_node1, puml_node2, line_style = dst, src, "<--"
+        elif data[2]["type"] == "flat":  # Used in S&T, EC, CRT: dst . src
+            puml_node1, puml_node2, line_style = dst, src, "."
+        elif data[2]["type"] == "flat_long":  # Used in S&T, EC, CRT: dst .. src
+            puml_node1, puml_node2, line_style = dst, src, ".."
+        else:
+            raise ValueError(f"Unknown card edge type: {data[2]['type']}")
+
+        return self._create_generic_edge_puml(
+            puml_node1, puml_node2, line_style, comment_text
+        )
 
     def _convert_current_reality(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
@@ -686,7 +722,9 @@ end note
                 puml_parts.append(self._convert_pfd_note_node(node, parameters_dict))
         # Convert edges
         for edge in graph.edges(data=True):
-            puml_parts.append(self._convert_card_edge(edge, reverse=True))
+            puml_parts.append(
+                self._convert_card_edge(edge, use_src_arrow_dst_style=True)
+            )
 
         return "\n".join(puml_parts)
 
