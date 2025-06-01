@@ -39,21 +39,27 @@ def render_edge_connection(
 
 
 def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict):
+    expected_index = -1
+    if "None" in id_title_list:
+        expected_index = id_title_list.index("None")
     with params["connection_column"]:
         connection_key = f"{params['selectbox_key']}_new"
-        edge[params["selectbox_index"]] = id_title_dict[
-            st.selectbox(
-                f"{params['selectbox_label']}(新規)",
-                id_title_list,
-                index=id_title_list.index("None"),
-                key=connection_key,
-                label_visibility=visibility,
-            )
-        ]
+        selected_value_from_widget = st.selectbox(
+            f"{params['selectbox_label']}(新規)",
+            id_title_list,
+            index=(
+                expected_index if expected_index != -1 else 0
+            ),  # 'None' がなければ先頭を選択
+            key=connection_key,
+            label_visibility=visibility,
+        )
+
+        edge[params["selectbox_index"]] = id_title_dict[selected_value_from_widget]
     with params["description_column"]:
         comment_key = f"comment_{params['selectbox_key']}_new"
         edge["comment"] = st.text_input(
             "説明(新規)",
+            value="",  # 明示的にデフォルト値を設定
             key=comment_key,
             label_visibility=visibility,
         )
@@ -109,6 +115,18 @@ edit_column = page_elements["edit_column"]
 plantuml_code = page_elements["plantuml_code"]
 
 with edit_column:
+    # --- リセット対象キーの登録 ---
+    if "clearable_new_connection_keys" not in st.session_state:
+        st.session_state.clearable_new_connection_keys = {}
+    # このページの新規接続用ウィジェットのキーを登録
+    # render_edge_connection_new で使用されるキーと一致させる
+    st.session_state.clearable_new_connection_keys["Process Flow Diagram Viewer"] = [
+        f"{edge_params['to_selected']['selectbox_key']}_new",  # e.g., "predecessors_new"
+        f"comment_{edge_params['to_selected']['selectbox_key']}_new",  # e.g., "comment_predecessors_new"
+        f"{edge_params['from_selected']['selectbox_key']}_new",  # e.g., "ancestors_new"
+        f"comment_{edge_params['from_selected']['selectbox_key']}_new",  # e.g., "comment_ancestors_new"
+    ]
+
     title_column, file_selector_column = st.columns([4, 4])
     with title_column:
         st.write("## データ編集")
@@ -151,9 +169,9 @@ with edit_column:
 
     # 関係追加の操作があるため、1つは常に表示
     temp_predecessor = {
-        "source": None,
+        "source": "None",  # selectboxの選択肢に合わせる
         "destination": tmp_entity["unique_id"],
-        "comment": None,
+        "comment": "",  # text_inputのデフォルトに合わせる
         "type": "arrow",
     }
 
@@ -178,8 +196,8 @@ with edit_column:
     # 関係追加の操作があるため、1つは常に表示
     temp_ancestor = {
         "source": tmp_entity["unique_id"],
-        "destination": None,
-        "comment": None,
+        "destination": "None",  # selectboxの選択肢に合わせる
+        "comment": "",  # text_inputのデフォルトに合わせる
         "type": "arrow",
     }
 

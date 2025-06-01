@@ -120,6 +120,17 @@ plantuml_code = page_elements["plantuml_code"]
 
 
 with edit_column:
+    # --- リセット対象キーの登録 ---
+    if "clearable_new_connection_keys" not in st.session_state:
+        st.session_state.clearable_new_connection_keys = {}
+    # このページの新規接続用ウィジェットのキーを登録
+    # render_edge_connection_new で使用されるキーと一致させる
+    st.session_state.clearable_new_connection_keys["Current Reality Tree Viewer"] = [
+        f"{edge_params['to_selected']['selectbox_key']}_new",  # e.g., "predecessors_new"
+        f"and_{edge_params['to_selected']['selectbox_key']}_new",  # e.g., "and_predecessors_new"
+        f"{edge_params['from_selected']['selectbox_key']}_new",  # e.g., "ancestors_new"
+        f"and_{edge_params['from_selected']['selectbox_key']}_new",  # e.g., "and_ancestors_new"
+    ]
     title_column, file_selector_column = st.columns([4, 4])
     with title_column:
         st.write("## データ編集")

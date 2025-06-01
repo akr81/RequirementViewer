@@ -84,6 +84,16 @@ edit_column = page_elements["edit_column"]
 plantuml_code = page_elements["plantuml_code"]
 
 with edit_column:
+    # --- リセット対象キーの登録 ---
+    if "clearable_new_connection_keys" not in st.session_state:
+        st.session_state.clearable_new_connection_keys = {}
+    # このページの新規接続用ウィジェットのキーを登録
+    st.session_state.clearable_new_connection_keys["Requirement Diagram Viewer"] = [
+        "new_relation_type",
+        "new_relation_destination",
+        "new_relation_note_type",
+        "new_relation_note_text",
+    ]
     title_column, file_selector_column = st.columns([4, 4])
     with title_column:
         st.write("## データ編集")
@@ -175,11 +185,16 @@ with edit_column:
     relation_column_new, destination_column_new = st.columns(2)
 
     with relation_column_new:
-        relation_type = st.selectbox("関係タイプ(新規)", relation_types)
+        relation_type = st.selectbox(
+            "関係タイプ(新規)", relation_types, key="new_relation_type"
+        )
     with destination_column_new:
         destination_unique_id = id_title_dict[
             st.selectbox(
-                "接続先(新規)", id_title_list, index=id_title_list.index("None")
+                "接続先(新規)",
+                id_title_list,
+                index=id_title_list.index("None"),
+                key="new_relation_destination",
             )
         ]  # 末尾に追加用の空要素を追加
     if relation_type == "None" and destination_unique_id != "None":
@@ -187,8 +202,10 @@ with edit_column:
         relation_type = relation_types[1]
     with st.expander("関係の注釈(新規)", expanded=True):
         relation_note = {}
-        relation_note["type"] = st.selectbox("注釈タイプ", note_types, key="note_type")
-        relation_note["text"] = st.text_area("説明", "", key="relation_text")
+        relation_note["type"] = st.selectbox(
+            "注釈タイプ", note_types, key="new_relation_note_type"
+        )
+        relation_note["text"] = st.text_area("説明", "", key="new_relation_note_text")
 
     new_edge = []
     if not relation_note:
