@@ -1,0 +1,125 @@
+{
+    nodes:
+    [
+        {
+            id: head
+            title: 幸せでいる
+            unique_id: head
+            color: None
+            type: entity
+        }
+        {
+            id: left_hand
+            title: 変える
+            unique_id: left_hand
+            color: None
+            type: entity
+        }
+        {
+            id: left_hand_note
+            title: 仮定
+            unique_id: left_hand_note
+            color: None
+            type: note
+        }
+        {
+            id: left_hand_to_shoulder
+            title:
+                '''
+                * 環境が変わっているため
+                自分たちも変化し続けないといけない
+                * 変化しない方がリスクが高い
+                '''
+            unique_id: left_hand_to_shoulder
+            color: None
+            type: note
+        }
+        {
+            id: left_shoulder
+            title: チャレンジする
+            unique_id: left_shoulder
+            color: None
+            type: entity
+        }
+        {
+            id: left_shoulder_to_head
+            title:
+                '''
+                * チャレンジがうまくいけば
+                成功と達成感が得られる
+                * 自己実現のためには
+                チャレンジが必要
+                '''
+            unique_id: left_shoulder_to_head
+            color: None
+            type: note
+        }
+        {
+            id: right_hand
+            title: 変えない
+            unique_id: right_hand
+            color: None
+            type: entity
+        }
+        {
+            id: right_hand_note
+            title: 仮定
+            unique_id: right_hand_note
+            color: None
+            type: note
+        }
+        {
+            id: right_hand_to_shoulder
+            title:
+                '''
+                * これまでやってこれている
+                * 変えるのはリスクが大きい
+                * 変えようとして痛い目にあったことがある
+                '''
+            unique_id: right_hand_to_shoulder
+            color: None
+            type: note
+        }
+        {
+            id: right_shoulder
+            title: 安全を確保する
+            unique_id: right_shoulder
+            color: None
+            type: entity
+        }
+        {
+            id: right_shoulder_to_head
+            title:
+                '''
+                安全が確保されなければ
+                幸せになれない
+                '''
+            unique_id: right_shoulder_to_head
+            color: None
+            type: note
+        }
+    ]
+    edges:
+    [
+        {
+            source: left_hand
+            destination: left_shoulder
+            type: arrow
+        }
+        {
+            source: left_shoulder
+            destination: head
+            type: arrow
+        }
+        {
+            source: right_hand
+            destination: right_shoulder
+            type: arrow
+        }
+        {
+            source: right_shoulder
+            destination: head
+            type: arrow
+        }
+    ]
+}

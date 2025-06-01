@@ -1,0 +1,234 @@
+{
+    nodes:
+    [
+        {
+            type: process
+            id: 野菜を切る
+            color: None
+            unique_id: 094d53a1c34b479588d4e174de550023
+        }
+        {
+            type: deliverable
+            id: 包丁・まな板
+            color: None
+            unique_id: 10bc881c96894c18a75ca760868e4dcd
+        }
+        {
+            type: deliverable
+            id: 水
+            color: None
+            unique_id: 43990fedc2ae40ea90ae894a05837ee3
+        }
+        {
+            type: deliverable
+            id: カットした肉
+            color: None
+            unique_id: 4ac032e977e947af95a7a48be783bfad
+        }
+        {
+            type: process
+            id: 肉を切る
+            color: None
+            unique_id: 52e0dcec931b4111bfca6437437f19d8
+        }
+        {
+            type: deliverable
+            id: カレー粉
+            color: None
+            unique_id: 64daa9568bcb4a188163f57febfdf799
+        }
+        {
+            type: process
+            id: 煮込む
+            color: None
+            unique_id: 7218a5f998dc414b871c6aa16e03d369
+        }
+        {
+            type: process
+            id: 鍋で肉に火を通す
+            color: None
+            unique_id: 7c8743024e8f4bf1aec21f7cdab8ed9f
+        }
+        {
+            type: process
+            id: 盛り付ける
+            color: None
+            unique_id: 83d2156d3a134fd3bad1df419dba7ef0
+        }
+        {
+            type: deliverable
+            id: カレー
+            color: None
+            unique_id: 85288d192bf14ad18fe725a5622a577a
+        }
+        {
+            type: note
+            id:
+                '''
+                煮込むため問題は無いが
+                野菜→肉の順にカットした方がいいかも
+                '''
+            color: Yellow
+            unique_id: add738405fce4806b8196a54b2bd080f
+        }
+        {
+            type: deliverable
+            id: 切った野菜
+            color: None
+            unique_id: b06092c07f2c491dac3dc71e41d98bee
+        }
+        {
+            type: deliverable
+            id: 野菜
+            color: None
+            unique_id: c085c92b4f204efd81ab8ed0d1f2795b
+        }
+        {
+            type: deliverable
+            id: 生肉
+            color: None
+            unique_id: d3add67b31674ea69eedd20b5c0901ec
+        }
+        {
+            type: deliverable
+            id: 火が通った肉
+            color: None
+            unique_id: efa353f1d801440bbdda897a5daa048a
+        }
+        {
+            type: deliverable
+            id: ごはん
+            color: None
+            unique_id: f5e2513a19a94565b8e15441acbf9c10
+        }
+        {
+            type: deliverable
+            id: 鍋
+            color: None
+            unique_id: f8c6cc6b81d24d7db425a77d7b8592bf
+        }
+        {
+            type: deliverable
+            id: カレーライス
+            color: None
+            unique_id: fa47d5ace65a435d8598f37854d95c6f
+        }
+    ]
+    edges:
+    [
+        {
+            source: 094d53a1c34b479588d4e174de550023
+            destination: b06092c07f2c491dac3dc71e41d98bee
+            comment: 一口サイズ
+            type: arrow
+        }
+        {
+            source: 10bc881c96894c18a75ca760868e4dcd
+            destination: 52e0dcec931b4111bfca6437437f19d8
+            comment: ""
+            type: arrow
+        }
+        {
+            source: 10bc881c96894c18a75ca760868e4dcd
+            destination: 094d53a1c34b479588d4e174de550023
+            comment: ""
+            type: arrow
+        }
+        {
+            source: 43990fedc2ae40ea90ae894a05837ee3
+            destination: 7218a5f998dc414b871c6aa16e03d369
+            comment: ""
+            type: arrow
+        }
+        {
+            source: 4ac032e977e947af95a7a48be783bfad
+            destination: 7c8743024e8f4bf1aec21f7cdab8ed9f
+            comment: ""
+            type: arrow
+        }
+        {
+            source: 52e0dcec931b4111bfca6437437f19d8
+            destination: 4ac032e977e947af95a7a48be783bfad
+            comment: 一口サイズ
+            type: arrow
+        }
+        {
+            source: 64daa9568bcb4a188163f57febfdf799
+            destination: 7218a5f998dc414b871c6aa16e03d369
+            comment: ""
+            type: arrow
+        }
+        {
+            source: 7218a5f998dc414b871c6aa16e03d369
+            destination: 85288d192bf14ad18fe725a5622a577a
+            comment: ""
+            type: arrow
+        }
+        {
+            source: 7c8743024e8f4bf1aec21f7cdab8ed9f
+            destination: efa353f1d801440bbdda897a5daa048a
+            comment: ""
+            type: arrow
+        }
+        {
+            source: 83d2156d3a134fd3bad1df419dba7ef0
+            destination: fa47d5ace65a435d8598f37854d95c6f
+            comment: ""
+            type: arrow
+        }
+        {
+            source: 85288d192bf14ad18fe725a5622a577a
+            destination: 83d2156d3a134fd3bad1df419dba7ef0
+            comment: ""
+            type: arrow
+        }
+        {
+            source: add738405fce4806b8196a54b2bd080f
+            destination: 52e0dcec931b4111bfca6437437f19d8
+            comment: ""
+            type: arrow
+        }
+        {
+            source: add738405fce4806b8196a54b2bd080f
+            destination: 094d53a1c34b479588d4e174de550023
+            comment: ""
+            type: arrow
+        }
+        {
+            source: b06092c07f2c491dac3dc71e41d98bee
+            destination: 7218a5f998dc414b871c6aa16e03d369
+            comment: ""
+            type: arrow
+        }
+        {
+            source: c085c92b4f204efd81ab8ed0d1f2795b
+            destination: 094d53a1c34b479588d4e174de550023
+            comment: ""
+            type: arrow
+        }
+        {
+            source: d3add67b31674ea69eedd20b5c0901ec
+            destination: 52e0dcec931b4111bfca6437437f19d8
+            comment: ""
+            type: arrow
+        }
+        {
+            source: efa353f1d801440bbdda897a5daa048a
+            destination: 7218a5f998dc414b871c6aa16e03d369
+            comment: ""
+            type: arrow
+        }
+        {
+            source: f5e2513a19a94565b8e15441acbf9c10
+            destination: 83d2156d3a134fd3bad1df419dba7ef0
+            comment: ""
+            type: arrow
+        }
+        {
+            source: f8c6cc6b81d24d7db425a77d7b8592bf
+            destination: 7c8743024e8f4bf1aec21f7cdab8ed9f
+            comment: ""
+            type: arrow
+        }
+    ]
+}

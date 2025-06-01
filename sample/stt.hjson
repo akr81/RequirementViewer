@@ -1,0 +1,49 @@
+{
+    nodes:
+    [
+        {
+            id: "2.2"
+            necessary_assumption: ""
+            strategy: 戦略
+            parallel_assumption: ""
+            tactics: 戦術
+            sufficient_assumption: ""
+            unique_id: 5195f50ad4b344afb65fc3ea6807f0d0
+            color: None
+        }
+        {
+            id: "1"
+            necessary_assumption: ""
+            strategy: 戦略
+            parallel_assumption: ""
+            tactics: 戦術
+            sufficient_assumption: ""
+            unique_id: 6294fe56d27b42768d59750c91d89d38
+            color: None
+        }
+        {
+            id: "2.1"
+            necessary_assumption: ""
+            strategy: 戦略
+            parallel_assumption: ""
+            tactics: 戦術
+            sufficient_assumption: ""
+            unique_id: 670c2fce79ac45489196707158ec20f8
+            color: None
+        }
+    ]
+    edges:
+    [
+        {
+            source: 5195f50ad4b344afb65fc3ea6807f0d0
+            destination: 6294fe56d27b42768d59750c91d89d38
+            type: arrow
+        }
+        {
+            source: 670c2fce79ac45489196707158ec20f8
+            destination: 6294fe56d27b42768d59750c91d89d38
+            type: arrow
+            color: None
+        }
+    ]
+}
