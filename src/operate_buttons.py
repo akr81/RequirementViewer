@@ -2,6 +2,24 @@ import streamlit as st
 from src.utility import update_source_data
 
 
+def _reset_new_connection_widgets():
+    """
+    現在のアプリケーションに関連する新規接続ウィジェットの
+    セッションステートをリセットする。
+    """
+    app_name = st.session_state.get("app_name")
+    if not app_name:
+        return
+
+    clearable_keys_for_app = st.session_state.get(
+        "clearable_new_connection_keys", {}
+    ).get(app_name)
+    if clearable_keys_for_app:
+        for key_to_clear in clearable_keys_for_app:
+            if key_to_clear in st.session_state:
+                del st.session_state[key_to_clear]
+
+
 def add_operate_buttons(
     selected_unique_id: str,
     tmp_entity,
@@ -53,18 +71,10 @@ def add_operate_buttons(
                 )
                 update_source_data(file_path, requirement_manager.requirements)
                 st.write("エンティティを更新しました。")
-                st.query_params.selected = tmp_entity["unique_id"]
-                # --- 新規接続ウィジェットのリセット処理 ---
-                app_name = st.session_state.app_name
-                clearable_keys_for_app = st.session_state.get(
-                    "clearable_new_connection_keys", {}
-                ).get(app_name)
-                if clearable_keys_for_app:
-                    keys_to_clear = clearable_keys_for_app
-                    for key_to_clear in keys_to_clear:
-                        if key_to_clear in st.session_state:
-                            del st.session_state[key_to_clear]
-                # --- ここまで ---
+                _reset_new_connection_widgets()
+                st.query_params.selected = tmp_entity[
+                    "unique_id"
+                ]  # リセット後にselectedを設定
                 st.rerun()
     with remove_button_column:
         if not no_remove:
