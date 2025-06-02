@@ -681,7 +681,8 @@ right_shoulder_to_head .. right_shoulder"""
 
             if and_node_id and and_node_id != "None":
                 # ANDノードを経由するエッジ: src -> AND -> dst
-                # ANDノード自体はノード変換ループでPUMLに追加されていると仮定
+                # ANDノードをここで追加
+                puml_parts.append(f'usecase "AND{and_node_id}" as {and_node_id}')
 
                 # src -> AND エッジ
                 attrs_to_and = copy.deepcopy(edge_attributes)
