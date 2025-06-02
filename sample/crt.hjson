@@ -1,4 +1,78 @@
 {
-    nodes:[]
-    edges:[]
+    nodes:
+    [
+        {
+            id: 寝付きが悪かった
+            color: None
+            unique_id: 0fd9e7082d3f4806b0fb5160889fe3c4
+            type: entity
+        }
+        {
+            id: 寝坊した
+            color: Blue
+            unique_id: 10b3b233c251493bbbceb901bda93677
+            type: entity
+        }
+        {
+            id: 終電まで飲み会に参加
+            color: None
+            unique_id: 619a684b7a3348f8b3e752e604a18b34
+            type: entity
+        }
+        {
+            id: 乗っていた電車が遅延した
+            color: None
+            unique_id: a0fad373845d4c7eaaea5f3cc95301fb
+            type: entity
+        }
+        {
+            id: 遅刻した
+            color: None
+            unique_id: f1c033c6cdc043ddb21ee901f1e042b7
+            type: entity
+        }
+        {
+            id:
+                '''
+                いつもの次の電車に乗った
+                （ギリギリ間に合うはず）
+                '''
+            color: None
+            unique_id: f4a7597145584c54aad13408a1c10ee1
+            type: entity
+        }
+    ]
+    edges:
+    [
+        {
+            source: 0fd9e7082d3f4806b0fb5160889fe3c4
+            destination: 10b3b233c251493bbbceb901bda93677
+            and: "2"
+            type: arrow
+        }
+        {
+            source: 10b3b233c251493bbbceb901bda93677
+            destination: f4a7597145584c54aad13408a1c10ee1
+            and: None
+            type: arrow
+        }
+        {
+            source: 619a684b7a3348f8b3e752e604a18b34
+            destination: 10b3b233c251493bbbceb901bda93677
+            and: "2"
+            type: arrow
+        }
+        {
+            source: a0fad373845d4c7eaaea5f3cc95301fb
+            destination: f1c033c6cdc043ddb21ee901f1e042b7
+            and: "1"
+            type: arrow
+        }
+        {
+            source: f4a7597145584c54aad13408a1c10ee1
+            destination: f1c033c6cdc043ddb21ee901f1e042b7
+            and: "1"
+            type: arrow
+        }
+    ]
 }
