@@ -118,6 +118,11 @@ BackgroundColor White
 ArrowColor Black
 BorderColor Black
 }}
+skinparam cloud {{
+BackgroundColor White
+ArrowColor Black
+BorderColor Black
+}}
 skinparam note {{
 BackgroundColor White
 ArrowColor Black
