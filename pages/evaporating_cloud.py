@@ -60,6 +60,13 @@ with edit_column:
             on_change=copy_file,
             key="selected_backup_file",
         )
+    diagram_title = st.text_input(
+        "ECタイトル",
+        value=requirement_data.get("title", ""),
+        key="diagram_title_input",
+    )
+    requirement_data["title"] = diagram_title  # タイトルを更新
+    st.write("---")
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定

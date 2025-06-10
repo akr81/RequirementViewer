@@ -143,7 +143,7 @@ with edit_column:
         )
     # ダイアグラムのタイトルを表示
     diagram_title = st.text_input(
-        "タイトル",
+        "PFDタイトル",
         value=requirement_data.get("title", ""),
         key="diagram_title_input",
     )
