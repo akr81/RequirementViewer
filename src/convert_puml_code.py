@@ -36,7 +36,12 @@ class ConvertPumlCode:
         }
 
     def convert_to_puml(
-        self, page_title: str, graph: nx.DiGraph, title: str, parameters_dict: Dict
+        self,
+        page_title: str,
+        graph: nx.DiGraph,
+        title: str,
+        parameters_dict: Dict,
+        diagram_title: str = "",
     ) -> str:
         """Convert graph to requirement diagram as PlantUML code string.
 
@@ -56,9 +61,17 @@ class ConvertPumlCode:
         sep = specific_settings.get("sep", 0)
         scale = parameters_dict.get("scale", 1.0)
         landscape = parameters_dict.get("landscape", False)
+        title_flag = parameters_dict.get("title", False)
 
         puml_parts = [
-            self._add_common_parameter_setting(scale, ortho, sep, landscape=landscape)
+            self._add_common_parameter_setting(
+                scale,
+                ortho,
+                sep,
+                landscape=landscape,
+                title_flag=title_flag,
+                diagram_title=diagram_title,
+            )
         ]
 
         converter_method = self.diagram_converters.get(page_title)
@@ -71,7 +84,14 @@ class ConvertPumlCode:
         return "\n".join(puml_parts)
 
     def _add_common_parameter_setting(
-        self, scale: float, ortho: bool = True, sep: int = 0, *, landscape: bool = False
+        self,
+        scale: float,
+        ortho: bool = True,
+        sep: int = 0,
+        *,
+        landscape: bool = False,
+        title_flag: bool = False,
+        diagram_title: str = "",
     ) -> str:
         ortho_str = (
             """
@@ -90,6 +110,11 @@ skinparam ranksep {sep}
             else ""
         )
         landscape = "left to right direction" if landscape else ""
+        diagram_title = (
+            f"title {diagram_title}"
+            if diagram_title is not "" and title_flag is not False
+            else ""
+        )
 
         return f"""
 @startuml
@@ -132,6 +157,7 @@ FontSize 12
 allowmixing
 
 scale {scale}
+{diagram_title}
 """
 
     def _get_puml_color(self, node_attributes: Dict) -> str:

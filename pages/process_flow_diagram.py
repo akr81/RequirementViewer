@@ -141,6 +141,14 @@ with edit_column:
             on_change=copy_file,
             key="selected_backup_file",
         )
+    # ダイアグラムのタイトルを表示
+    diagram_title = st.text_input(
+        "タイトル",
+        value=requirement_data.get("title", ""),
+        key="diagram_title_input",
+    )
+    requirement_data["title"] = diagram_title  # タイトルを更新
+    st.write("---")
     # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")

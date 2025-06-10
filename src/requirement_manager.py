@@ -16,6 +16,7 @@ class RequirementManager:
         Returns:
             str: Unique ID of added requirement
         """
+        requirement.setdefault("title", "")
         # 新しい要求を追加する
         self.requirements["nodes"].append(requirement)
 
@@ -66,6 +67,7 @@ class RequirementManager:
             requirement (Dict): Requirement to update
             tmp_edges (List): List of edges include invalid (removed)
         """
+        requirement.setdefault("title", "")
         # 渡されるrequirementは、暫定的にユニークIDを振り直しているので、元のユニークIDで上書きする
         # edgeの上書き
         all_edges = None

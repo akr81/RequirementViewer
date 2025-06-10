@@ -28,6 +28,7 @@ def draw_diagram_column(
     *,
     graph_data=None,
     landscape=False,
+    title=False,
 ):
     target = None
     DATA_DIR = "data"  # Define data directory
@@ -83,6 +84,9 @@ def draw_diagram_column(
             landscape_mod = st.checkbox(
                 "横向き", value=landscape, key=f"{app_name}_landscape_checkbox"
             )
+            title_mod = st.checkbox(
+                "タイトル", value=title, key=f"{app_name}_title_checkbox"
+            )
         graph_data.extract_subgraph(
             target,
             upstream_distance=upstream_distance,
@@ -103,6 +107,7 @@ def draw_diagram_column(
             parameters_dict["upstream_distance"] = upstream_distance
             parameters_dict["downstream_distance"] = downstream_distance
             parameters_dict["landscape"] = landscape_mod
+            parameters_dict["title"] = title_mod
 
             config = {
                 "detail": True,
@@ -117,6 +122,7 @@ def draw_diagram_column(
                 graph_data.subgraph,
                 title=None,
                 parameters_dict=parameters_dict,
+                diagram_title=requirements.get("title", ""),
             )
             svg_output = get_diagram(plantuml_code, config_data["plantuml"])
             svg_output = svg_output.replace(

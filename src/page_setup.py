@@ -68,6 +68,10 @@ def load_and_prepare_data(file_path, app_name):
     # URLパラメタから取得すると文字列なのでboolに変換
     landscape = True if landscape == "True" else False
 
+    title = st.query_params.get("title", False)
+    # URLパラメタから取得すると文字列なのでboolに変換
+    title = True if title == "True" else False
+
     # 選択されたエンティティを取得
     selected_entity = None
     if selected_unique_id == [None]:
@@ -103,6 +107,7 @@ def load_and_prepare_data(file_path, app_name):
         downstream_distance,
         selected_entity,
         landscape,
+        title,
     )
 
 
@@ -143,6 +148,7 @@ def setup_page_layout_and_data(
         downstream_distance,
         selected_entity,
         landscape,
+        title,
     ) = load_and_prepare_data(file_path, app_name)
 
     # 未選択の場合はデフォルトエンティティを設定
@@ -174,6 +180,7 @@ def setup_page_layout_and_data(
         scale,
         graph_data=graph_data,
         landscape=landscape,
+        title=title,
     )
 
     return {
@@ -196,6 +203,7 @@ def setup_page_layout_and_data(
         "downstream_distance": downstream_distance,
         "selected_entity": selected_entity,
         "landscape": landscape,
+        "title": title,
         "edit_column": edit_column,  # データ編集UIを配置するカラム
         "plantuml_code": plantuml_code,
     }
