@@ -45,7 +45,7 @@ def draw_diagram_column(
             landscape_column,
         ) = st.columns([2, 2, 1, 1, 1, 1])
         with title_column:
-            st.write(f"## {app_name}")
+            st.write(f"### {app_name}")
             st.write("クリックするとエンティティが選択されます")
         with filter_column:
             target = st.query_params.get("target", None)

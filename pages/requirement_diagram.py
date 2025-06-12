@@ -99,7 +99,7 @@ with edit_column:
     ]
     title_column, file_selector_column = st.columns([4, 4])
     with title_column:
-        st.write("## データ編集")
+        st.write("### データ編集")
     with file_selector_column:
         # ファイル選択boxを表示
         backup_files = get_backup_files_for_current_data()
