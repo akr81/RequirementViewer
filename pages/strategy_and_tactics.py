@@ -71,7 +71,7 @@ with edit_column:
         "**何がこの変化の具体的な目的なのか？**", tmp_entity["strategy"]
     )
     tmp_entity["parallel_assumption"] = st.text_area(
-        "なぜこの戦略をとるのか？", tmp_entity["parallel_assumption"]
+        "なぜこの戦術をとるのか？", tmp_entity["parallel_assumption"]
     )
     tmp_entity["tactics"] = st.text_area(
         "**どのようにこの変化を達成するのか？**", tmp_entity["tactics"]
