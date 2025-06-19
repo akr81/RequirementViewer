@@ -72,6 +72,10 @@ def load_and_prepare_data(file_path, app_name):
     # URLパラメタから取得すると文字列なのでboolに変換
     title = True if title == "True" else False
 
+    detail = st.query_params.get("detail", False)
+    # URLパラメタから取得すると文字列なのでboolに変換
+    detail = True if detail == "True" else False
+
     # 選択されたエンティティを取得
     selected_entity = None
     if selected_unique_id == [None]:
@@ -108,6 +112,7 @@ def load_and_prepare_data(file_path, app_name):
         selected_entity,
         landscape,
         title,
+        detail,
     )
 
 
@@ -149,6 +154,7 @@ def setup_page_layout_and_data(
         selected_entity,
         landscape,
         title,
+        detail,
     ) = load_and_prepare_data(file_path, app_name)
 
     # 未選択の場合はデフォルトエンティティを設定
@@ -181,6 +187,7 @@ def setup_page_layout_and_data(
         graph_data=graph_data,
         landscape=landscape,
         title=title,
+        detail=detail,
     )
 
     return {

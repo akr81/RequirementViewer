@@ -29,6 +29,7 @@ def draw_diagram_column(
     graph_data=None,
     landscape=False,
     title=False,
+    detail=False,
 ):
     target = None
     DATA_DIR = "data"  # Define data directory
@@ -87,6 +88,9 @@ def draw_diagram_column(
             title_mod = st.checkbox(
                 "タイトル", value=title, key=f"{app_name}_title_checkbox"
             )
+            detail_mod = st.checkbox(
+                "詳細", value=detail, key=f"{app_name}_detail_checkbox"
+            )
         graph_data.extract_subgraph(
             target,
             upstream_distance=upstream_distance,
@@ -108,6 +112,7 @@ def draw_diagram_column(
             parameters_dict["downstream_distance"] = downstream_distance
             parameters_dict["landscape"] = landscape_mod
             parameters_dict["title"] = title_mod
+            parameters_dict["detail"] = detail_mod
 
             config = {
                 "detail": True,

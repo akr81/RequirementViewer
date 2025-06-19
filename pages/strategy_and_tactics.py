@@ -68,13 +68,13 @@ with edit_column:
         "なぜこの変化が必要か？", tmp_entity["necessary_assumption"]
     )
     tmp_entity["strategy"] = st.text_area(
-        "**何がこの変化の具体的な目的なのか？**", tmp_entity["strategy"]
+        "**戦略：何がこの変化の具体的な目的なのか？**", tmp_entity["strategy"]
     )
     tmp_entity["parallel_assumption"] = st.text_area(
         "なぜこの戦術をとるのか？", tmp_entity["parallel_assumption"]
     )
     tmp_entity["tactics"] = st.text_area(
-        "**どのようにこの変化を達成するのか？**", tmp_entity["tactics"]
+        "**戦術：どのようにこの変化を達成するのか？**", tmp_entity["tactics"]
     )
     tmp_entity["sufficient_assumption"] = st.text_area(
         "なぜより詳細な具体策とアクションが必要なのか？",

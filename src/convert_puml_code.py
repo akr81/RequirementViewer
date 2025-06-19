@@ -112,7 +112,7 @@ skinparam ranksep {sep}
         landscape = "left to right direction" if landscape else ""
         diagram_title = (
             f"title {diagram_title}"
-            if diagram_title is not "" and title_flag is not False
+            if diagram_title != "" and title_flag is not False
             else ""
         )
 
@@ -617,15 +617,35 @@ right_shoulder_to_head .. right_shoulder"""
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
+
+        # Determine if detail mode is enabled
+        detail = parameters_dict.get("detail", False)
+
         # Ensure all expected keys exist, providing defaults if necessary
         node_id = node_attrs.get("id", "")
+        necessary_assumption = node_attrs.get("necessary_assumption", "")
         strategy = node_attrs.get("strategy", "")
+        parallel_assumption = node_attrs.get("parallel_assumption", "")
         tactics = node_attrs.get("tactics", "")
-        content = f"""{node_id}
+        sufficient_assumption = node_attrs.get("sufficient_assumption", "")
+        if not detail:
+            content = f"""{node_id}
 ---
 {strategy}
 ---
 {tactics}"""
+        else:
+            content = f"""{node_id}
+---
+{necessary_assumption}
+---
+{strategy}
+---
+{parallel_assumption}
+---
+{tactics}
+---
+{sufficient_assumption}"""
         return self._create_card_puml(
             node_attrs["unique_id"], content, parameters_str, color_str
         )
