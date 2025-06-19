@@ -65,7 +65,7 @@ def draw_diagram_column(
                 graph_data = RequirementGraph(copy.deepcopy(requirements), app_name)
         with upstream_distance_column:
             upstream_distance = st.slider(
-                "上流フィルタ距離",
+                "A方向フィルタ距離",
                 min_value=0,
                 max_value=config_data["upstream_filter_max"],
                 value=int(upstream_distance),
@@ -74,7 +74,7 @@ def draw_diagram_column(
             )
         with downstream_distance_column:
             downstream_distance = st.slider(
-                "下流フィルタ距離",
+                "B方向フィルタ距離",
                 min_value=0,
                 max_value=config_data["downstream_filter_max"],
                 value=int(downstream_distance),
