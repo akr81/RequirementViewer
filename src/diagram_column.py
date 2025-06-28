@@ -196,6 +196,7 @@ def draw_diagram_column(
                             )
                             st.query_params.clear()
                             st.query_params.selected = "default"
+                            st.query_params.detail = "True"
                             st.rerun()
                         except Exception as e:
                             st.error(
@@ -255,6 +256,7 @@ def draw_diagram_column(
                             )
                             st.query_params.clear()
                             st.query_params.selected = "default"
+                            st.query_params.detail = "True"
                             st.rerun()
                         except Exception as e:
                             st.error(f"ファイル設定の更新に失敗しました: {e}")

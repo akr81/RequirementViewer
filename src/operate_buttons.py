@@ -46,6 +46,7 @@ def add_operate_buttons(
         if not no_new:
             if st.button("新規"):
                 st.query_params.selected = "default"
+                st.query_params.detail = "True"
                 st.rerun()
     with add_button_column:
         if not no_add:
