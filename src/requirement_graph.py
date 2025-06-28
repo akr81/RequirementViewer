@@ -97,7 +97,11 @@ class RequirementGraph:
             self.graph.add_edge(edge["source"], edge["destination"], **edge)
 
     def extract_subgraph(
-        self, target_node: str, upstream_distance: int, downstream_distance: int
+        self,
+        target_node: str,
+        upstream_distance: int,
+        downstream_distance: int,
+        detail: bool = True,
     ):
         """Extract subgraph from graph with target node.
 
@@ -109,7 +113,18 @@ class RequirementGraph:
         """
         # Store graph itself as subgraph if target_node is None
         if target_node is None or target_node == "None":
-            self.subgraph = self.graph.copy()
+            if not detail:
+                # ノードの詳細情報がnoteの場合はreachable_nodesから除外する
+                reachable_nodes = {
+                    node
+                    for node in self.graph.nodes()
+                    if self.graph.nodes[node]["type"] != "note"
+                }
+
+                # これらのノードを含むサブグラフを作成
+                self.subgraph = self.graph.subgraph(reachable_nodes).copy()
+            else:
+                self.subgraph = self.graph.copy()
             return
 
         reachable_upper_nodes = None
@@ -132,6 +147,14 @@ class RequirementGraph:
             if length <= downstream_distance
         }
         reachable_nodes = reachable_upper_nodes.union(reachable_lower_nodes)
+
+        if not detail:
+            # ノードの詳細情報がnoteの場合はreachable_nodesから除外する
+            reachable_nodes = {
+                node
+                for node in reachable_nodes
+                if self.graph.nodes[node]["type"] != "note"
+            }
 
         # これらのノードを含むサブグラフを作成
         self.subgraph = self.graph.subgraph(reachable_nodes).copy()

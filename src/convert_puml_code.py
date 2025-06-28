@@ -142,11 +142,13 @@ skinparam class {{
 BackgroundColor White
 ArrowColor Black
 BorderColor Black
+FontSize 12
 }}
 skinparam cloud {{
 BackgroundColor White
 ArrowColor Black
 BorderColor Black
+FontSize 12
 }}
 skinparam note {{
 BackgroundColor White

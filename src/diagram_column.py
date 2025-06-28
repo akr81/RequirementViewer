@@ -95,6 +95,7 @@ def draw_diagram_column(
             target,
             upstream_distance=upstream_distance,
             downstream_distance=downstream_distance,
+            detail=detail_mod,
         )
         with scale_column:
             scale = st.slider(
@@ -122,13 +123,17 @@ def draw_diagram_column(
             }
             converter = ConvertPumlCode(config)
 
-            plantuml_code = converter.convert_to_puml(
-                app_name,
-                graph_data.subgraph,
-                title=None,
-                parameters_dict=parameters_dict,
-                diagram_title=requirements.get("title", ""),
-            )
+            try:
+                plantuml_code = converter.convert_to_puml(
+                    app_name,
+                    graph_data.subgraph,
+                    title=None,
+                    parameters_dict=parameters_dict,
+                    diagram_title=requirements.get("title", ""),
+                )
+            except:
+                st.error("PlantUMLコードの変換に失敗しました。")
+                plantuml_code = ""
             svg_output = get_diagram(plantuml_code, config_data["plantuml"])
             svg_output = svg_output.replace(
                 "<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>"
