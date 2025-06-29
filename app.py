@@ -6,17 +6,19 @@ from src.utility import (
 )  # 設定ファイル読み込み用とPlantUMLサーバ起動用
 
 # --- デフォルトアプリの設定読み込み ---
-config_data = load_config()
-AVAILABLE_APP_PAGES = {  # 表示名とページファイルパスのマッピング
-    "Current Reality Tree": "pages/current_reality_tree.py",  # pages/ ディレクトリ内のパス
-    # ... 他のアプリ ...
+config_data = load_config()  # 設定ファイルをロード
+
+# アプリの内部名とページファイルパスのマッピング
+AVAILABLE_APP_PAGES = {
+    "Current Reality Tree Viewer": "pages/current_reality_tree.py",
+    "Evaporating Cloud Viewer": "pages/evaporating_cloud.py",
+    "Process Flow Diagram Viewer": "pages/process_flow_diagram.py",
+    "Requirement Diagram Viewer": "pages/requirement_diagram.py",
+    "Strategy and Tactics Tree Viewer": "pages/strategy_and_tactics.py",
 }
-DEFAULT_APP_DISPLAY_NAME_KEY = (
-    "default_app_display_name_on_startup"  # config.hjson 内のキー
-)
-default_app_display_name = config_data.get(
-    DEFAULT_APP_DISPLAY_NAME_KEY, "Current Reality Tree"
-)
+DEFAULT_APP_INTERNAL_NAME = "Current Reality Tree Viewer"  # デフォルトページの内部名
+LAST_USED_PAGE_KEY = "last_used_page"  # config.hjson 内のキー
+last_used_page_name = config_data.get(LAST_USED_PAGE_KEY, DEFAULT_APP_INTERNAL_NAME)
 
 
 @st.dialog("注意")
@@ -60,19 +62,23 @@ def main_landing_page():
     # --- 自動遷移ロジック ---
     if "redirect_attempted" not in st.session_state:
         st.session_state.redirect_attempted = True  # 無限ループ防止
-        if default_app_display_name in AVAILABLE_APP_PAGES:
-            page_to_switch = AVAILABLE_APP_PAGES[default_app_display_name]
-            print(
-                f"デフォルトアプリ '{default_app_display_name}' ({page_to_switch}) に遷移します。"
-            )
-            try:
-                st.switch_page(page_to_switch)  # Streamlit 1.29+
-            except Exception as e:
-                st.error(f"ページ切り替えに失敗しました: {e}。手動で選択してください。")
-        else:
+
+        # 遷移先ページを決定
+        page_to_switch_name = last_used_page_name
+        if page_to_switch_name not in AVAILABLE_APP_PAGES:
             st.warning(
-                f"デフォルトアプリ '{default_app_display_name}' が見つかりません。"
+                f"最後に使用したページ '{page_to_switch_name}' が見つかりません。"
+                f"デフォルトの '{DEFAULT_APP_INTERNAL_NAME}' を開きます。"
             )
+            page_to_switch_name = DEFAULT_APP_INTERNAL_NAME
+
+        # ページ遷移
+        page_to_switch_path = AVAILABLE_APP_PAGES[page_to_switch_name]
+        print(f"ページ '{page_to_switch_name}' ({page_to_switch_path}) に遷移します。")
+        try:
+            st.switch_page(page_to_switch_path)
+        except Exception as e:
+            st.error(f"ページ切り替えに失敗しました: {e}。手動で選択してください。")
 
 
 if __name__ == "__main__":

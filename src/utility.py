@@ -222,6 +222,16 @@ def update_source_data(file_path: str, source_data: Dict):
         file_path (str): Path to JSON file
         source_data (Dict): Source data
     """
+    # --- 最後に使用したページをconfigに保存 ---
+    if "app_name" in st.session_state and "config_data" in st.session_state:
+        current_app_name = st.session_state.app_name
+        # config.hjsonに書き込むキーをapp.pyと合わせる
+        LAST_USED_PAGE_KEY = "last_used_page"
+        st.session_state.config_data[LAST_USED_PAGE_KEY] = current_app_name
+        save_config(st.session_state.config_data)
+        # デバッグ用にコンソールに出力
+        # print(f"最後に使用したページとして '{current_app_name}' を保存しました。")
+
     # list内の辞書型データをunique_id順に並び替える
     source_data["nodes"].sort(key=lambda x: x["unique_id"])
     source_data["edges"].sort(key=lambda x: x["source"])
