@@ -2,8 +2,8 @@
     plantuml: https://www.plantuml.com/plantuml
     // plantuml: http://localhost:8080
     viewer_height: 1200
-    upstream_filter_max: 5
-    downstream_filter_max: 5
+    upstream_filter_max: 10
+    downstream_filter_max: 10
     requirement_data: sample/requirement.hjson
     strategy_and_tactics_data: sample/stt.hjson
     current_reality_tree_data: sample/crt.hjson

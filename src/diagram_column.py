@@ -66,7 +66,7 @@ def draw_diagram_column(
         with upstream_distance_column:
             upstream_distance = st.slider(
                 "A方向フィルタ距離",
-                min_value=0,
+                min_value=-1,
                 max_value=config_data["upstream_filter_max"],
                 value=int(upstream_distance),
                 step=1,
@@ -75,7 +75,7 @@ def draw_diagram_column(
         with downstream_distance_column:
             downstream_distance = st.slider(
                 "B方向フィルタ距離",
-                min_value=0,
+                min_value=-1,
                 max_value=config_data["downstream_filter_max"],
                 value=int(downstream_distance),
                 step=1,

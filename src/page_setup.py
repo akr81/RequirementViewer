@@ -58,12 +58,8 @@ def load_and_prepare_data(file_path, app_name):
     # URL のクエリからパラメタを取得
     scale = float(st.query_params.get("scale", 1.0))
     selected_unique_id = st.query_params.get("selected", [None])
-    upstream_distance = st.query_params.get(
-        "upstream_distance", st.session_state.config_data["upstream_filter_max"]
-    )
-    downstream_distance = st.query_params.get(
-        "downstream_distance", st.session_state.config_data["downstream_filter_max"]
-    )
+    upstream_distance = int(st.query_params.get("upstream_distance", -1))
+    downstream_distance = int(st.query_params.get("downstream_distance", -1))
     landscape = st.query_params.get("landscape", False)
     # URLパラメタから取得すると文字列なのでboolに変換
     landscape = True if landscape == "True" else False

@@ -84,7 +84,7 @@ class RequirementGraph:
             )
         else:
             self.graph.add_edge(
-                entity["unique_id"], relation["destination"], type="flat"
+                entity["unique_id"], relation["destination"], type="flat_long"
             )
 
     def _convert_current_reality(self):
@@ -134,7 +134,9 @@ class RequirementGraph:
         # Downstream
         lengths = nx.single_source_shortest_path_length(self.graph, target_node)
         reachable_lower_nodes = {
-            node for node, length in lengths.items() if length <= upstream_distance
+            node
+            for node, length in lengths.items()
+            if upstream_distance == -1 or length <= upstream_distance
         }
 
         # Upstream
@@ -144,7 +146,7 @@ class RequirementGraph:
         reachable_upper_nodes = {
             node
             for node, length in lengths_reverse.items()
-            if length <= downstream_distance
+            if downstream_distance == -1 or length <= downstream_distance
         }
         reachable_nodes = reachable_upper_nodes.union(reachable_lower_nodes)
 
