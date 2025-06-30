@@ -118,7 +118,8 @@ class RequirementGraph:
                 reachable_nodes = {
                     node
                     for node in self.graph.nodes()
-                    if self.graph.nodes[node]["type"] != "note"
+                    if "type" not in self.graph.nodes[node]
+                    or self.graph.nodes[node]["type"] != "note"
                 }
 
                 # これらのノードを含むサブグラフを作成
