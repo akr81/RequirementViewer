@@ -78,6 +78,7 @@ def load_and_prepare_data(file_path, app_name):
         # エンティティが選択されていない場合はデフォルトのエンティティを選択してリロード
         st.query_params.setdefault("selected", "default")
         st.query_params.setdefault("detail", "True")
+        st.query_params.setdefault("title", "True")
         st.rerun()
     else:
         if selected_unique_id == "default":
