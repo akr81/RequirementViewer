@@ -393,7 +393,9 @@ right_shoulder_to_head .. right_shoulder"""
             or type == "physicalRequirement"
             or type == "designConstraint"
         ):
-            ret = self._convert_req_diagram_requirement_node(attr, type, parameters)
+            ret = self._convert_req_diagram_requirement_node(
+                attr, type, parameters, parameters_dict.get("detail", True)
+            )
         elif (
             type == "block" or type == "testCase"
         ):  # Requirement Diagram specific block/testCase
@@ -427,7 +429,7 @@ right_shoulder_to_head .. right_shoulder"""
         return f"usecase \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<usecase>> {parameters} {color_str}"
 
     def _convert_req_diagram_requirement_node(
-        self, data: Dict[str, Any], type: str, parameters: str
+        self, data: Dict[str, Any], type: str, parameters: str, detail: bool = True
     ) -> str:
         """Convert requirement node for Requirement Diagram to PlantUML code.
 
@@ -444,14 +446,17 @@ right_shoulder_to_head .. right_shoulder"""
         color_str = self._get_puml_color(data)
 
         # Ignore () as method using {field}
-        ret = (
-            f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str} "
-            + "{\n"
-        )
+        if detail:
+            ret = (
+                f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str} "
+                + "{\n"
+            )
 
-        ret += "{field}" + f"id=\"{data['id']}\"\n"
-        ret += "{field}" + f'text="{text}"\n'
-        ret += "}\n"
+            ret += "{field}" + f"id=\"{data['id']}\"\n"
+            ret += "{field}" + f'text="{text}"\n'
+            ret += "}\n"
+        else:
+            ret = f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str} "
         return ret
 
     def _convert_req_diagram_block_node(
