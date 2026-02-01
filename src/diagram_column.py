@@ -30,6 +30,8 @@ def draw_diagram_column(
     landscape=False,
     title=False,
     detail=False,
+    link_mode=False,
+    previous_selected="None"
 ):
     target = None
     DATA_DIR = "data"  # Define data directory
@@ -91,6 +93,7 @@ def draw_diagram_column(
             detail_mod = st.checkbox(
                 "詳細", value=detail, key=f"{app_name}_detail_checkbox"
             )
+            link_mod = st.toggle("🖱️ 接続モード", value=link_mode, key=f"{app_name}_connect_mode")
         graph_data.extract_subgraph(
             target,
             upstream_distance=upstream_distance,
@@ -114,6 +117,8 @@ def draw_diagram_column(
             parameters_dict["landscape"] = landscape_mod
             parameters_dict["title"] = title_mod
             parameters_dict["detail"] = detail_mod
+            parameters_dict["link_mode"] = link_mod
+            parameters_dict["previous_selected"] = previous_selected
 
             config = {
                 "detail": True,

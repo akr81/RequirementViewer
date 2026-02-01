@@ -5,6 +5,26 @@ import uuid
 class RequirementManager:
     def __init__(self, requirement_data: List[Dict]):
         self.requirements = requirement_data
+    
+    def update_edge(self, source: str, destination: str):
+        """Update (add or remove) edge to requirements(only for link_mode)
+        
+        Args:
+            source (str): Source node unique ID
+            destination (str): Destination node unique ID
+        """
+        existing_edge = [i for i, e in enumerate(self.requirements["edges"]) if e["source"] == source and e["destination"] == destination]
+        if existing_edge:
+            for index in existing_edge:
+                self.requirements["edges"].pop(index)
+        else:
+            self.requirements["edges"].append(
+                {
+                    "source": source,
+                    "destination": destination,
+                }
+            )
+
 
     def add(self, requirement: Dict, tmp_edges: List, new_edges: List) -> str:
         """Add new requirement to requirements.

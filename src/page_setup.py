@@ -9,6 +9,7 @@ from src.utility import (
     build_mapping,
     build_sorted_list,
     build_and_list,
+    update_source_data,
 )
 from src.diagram_configs import DEFAULT_ENTITY_GETTERS  # 追加
 from src.diagram_column import draw_diagram_column  # 追加
@@ -72,6 +73,32 @@ def load_and_prepare_data(file_path, app_name):
     # URLパラメタから取得すると文字列なのでboolに変換
     detail = True if detail == "True" else False
 
+    # 接続モード時、requirement_dataのエッジのみを直接更新する
+    link_mode = st.query_params.get("link_mode", "False")
+    link_mode = True if link_mode == "True" else False
+    previous_selected = st.query_params.get("previous_selected", "None")
+
+    # 2回連続で同じノードを選択したら接続モードにする
+    if (previous_selected == selected_unique_id):
+        if not link_mode:
+            link_mode = True
+            st.toast(f"接続モードON: 接続先ノードを選択")
+        else:
+            link_mode = False
+            st.toast(f"接続モードOFF")
+    else:
+        if link_mode:
+            # エッジを更新
+            requirement_manager.update_edge(previous_selected, selected_unique_id)
+            update_source_data(file_path, requirement_manager.requirements)
+            print("update file")
+            st.query_params["link_mode"] = "False"
+            st.rerun()
+        link_mode = False
+    st.query_params["link_mode"] = str(link_mode)
+
+    previous_selected = selected_unique_id
+
     # 選択されたエンティティを取得
     selected_entity = None
     if selected_unique_id == [None]:
@@ -111,6 +138,8 @@ def load_and_prepare_data(file_path, app_name):
         landscape,
         title,
         detail,
+        link_mode,
+        previous_selected,
     )
 
 
@@ -153,6 +182,8 @@ def setup_page_layout_and_data(
         landscape,
         title,
         detail,
+        link_mode,
+        previous_selected,
     ) = load_and_prepare_data(file_path, app_name)
 
     # 未選択の場合はデフォルトエンティティを設定
@@ -186,6 +217,8 @@ def setup_page_layout_and_data(
         landscape=landscape,
         title=title,
         detail=detail,
+        link_mode=link_mode,
+        previous_selected=previous_selected,
     )
 
     return {
