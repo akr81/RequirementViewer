@@ -88,8 +88,19 @@ def load_and_prepare_data(file_path, app_name):
             st.toast(f"接続モードOFF")
     else:
         if link_mode:
+            # アプリケーションごとに必須の属性を定義
+            edge_defaults = {"type": "arrow"} # 共通のデフォルト
+
+            if app_name == "Current Reality Tree Viewer":
+                edge_defaults["and"] = "None"
+            elif app_name == "Process Flow Diagram Viewer":
+                edge_defaults["comment"] = ""
+            elif app_name == "Requirement Diagram Viewer":
+                edge_defaults["type"] = "deriveReqt"
+                # 必要に応じて 'note': {} なども追加
+
             # エッジを更新
-            requirement_manager.update_edge(previous_selected, selected_unique_id)
+            requirement_manager.update_edge(previous_selected, selected_unique_id, edge_defaults)
             update_source_data(file_path, requirement_manager.requirements)
             print("update file")
             st.query_params["link_mode"] = "False"
