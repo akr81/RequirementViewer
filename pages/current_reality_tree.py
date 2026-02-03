@@ -152,12 +152,15 @@ with edit_column:
         key="diagram_title_input",
     )
     requirement_data["title"] = diagram_title  # タイトルを更新
-    st.write("---")
+    
     # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
     tmp_entity.setdefault("type", "entity")  # typeがない場合はentityを設定
+
+    # 後でボタンを配置する
+    top_button_container = st.container()
 
     tmp_entity["type"] = st.selectbox(
         "タイプ", entity_list, index=entity_list.index(tmp_entity["type"])
@@ -206,6 +209,21 @@ with edit_column:
 
     new_edges = [temp_predecessor, temp_ancestor]
 
+    # 上部のボタンを配置
+    with top_button_container:
+        add_operate_buttons(
+            selected_unique_id,
+            tmp_entity,
+            requirement_manager,
+            file_path,
+            id_title_dict,
+            unique_id_dict,
+            tmp_edges=tmp_edges,
+            new_edges=new_edges,
+            key_suffix="top"  # 重複エラー回避用
+        )
+
+    # 下部のボタンを配置
     add_operate_buttons(
         selected_unique_id,
         tmp_entity,
@@ -215,6 +233,7 @@ with edit_column:
         unique_id_dict,
         tmp_edges=tmp_edges,
         new_edges=new_edges,
+        key_suffix="bottom"  # 重複エラー回避用
     )
 
 # セッション状態にgraph_dataを追加

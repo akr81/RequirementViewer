@@ -32,6 +32,7 @@ def add_operate_buttons(
     no_remove=False,
     tmp_edges=None,
     new_edges=None,
+    key_suffix="",
 ):
     (
         new_button_column,
@@ -44,14 +45,14 @@ def add_operate_buttons(
         # 新規ボタンを表示
         # デフォルトエンティティが選択された状態にする
         if not no_new:
-            if st.button("新規"):
+            if st.button("新規", key=f"new_button_{key_suffix}"):
                 st.query_params.selected = "default"
                 st.query_params.detail = "True"
                 st.rerun()
     with add_button_column:
         if not no_add:
             # 追加ボタンを表示
-            if st.button("追加"):
+            if st.button("追加", key=f"add_button_{key_suffix}"):
                 if (tmp_entity["id"]) in id_title_dict:
                     st.error("IDが既存のエンティティと重複しています。")
                 else:
@@ -63,7 +64,7 @@ def add_operate_buttons(
                     st.rerun()
     with update_button_column:
         # 更新ボタンを表示
-        if st.button("更新"):
+        if st.button("更新", key=f"update_button_{key_suffix}"):
             if not selected_unique_id in unique_id_dict:
                 st.error("更新すべきエンティティがありません。")
             else:
@@ -80,7 +81,7 @@ def add_operate_buttons(
     with remove_button_column:
         if not no_remove:
             # 削除ボタンを表示
-            if st.button("削除"):
+            if st.button("削除", key=f"remove_button_{key_suffix}"):
                 if not (tmp_entity["id"]) in id_title_dict:
                     st.error("削除すべきエンティティがありません。")
                 else:

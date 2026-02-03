@@ -155,6 +155,17 @@ with edit_column:
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
     tmp_entity.setdefault("type", "entity")  # typeがない場合はentityを設定
 
+    add_operate_buttons(
+        selected_unique_id,
+        tmp_entity,
+        requirement_manager,
+        file_path,
+        id_title_dict,
+        unique_id_dict,
+        tmp_edges=tmp_edges,
+        new_edges=new_edges,
+    )
+    
     tmp_entity["type"] = st.selectbox(
         "タイプ", pfd_type_list, index=pfd_type_list.index(tmp_entity["type"])
     )
