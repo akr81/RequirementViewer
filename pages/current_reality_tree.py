@@ -5,7 +5,6 @@ from src.utility import (
     copy_file,
 )  # draw_diagram_column を削除
 from src.operate_buttons import add_operate_buttons
-from src.diagram_configs import *
 from src.page_setup import setup_page_layout_and_data  # 変更
 import uuid
 import copy

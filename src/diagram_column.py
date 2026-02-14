@@ -1,4 +1,12 @@
 import streamlit as st
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+import copy
+import os
+import datetime
+import hjson
+import shutil
+
 from src.utility import (
     get_diagram,
     save_config,
@@ -7,25 +15,6 @@ from src.utility import (
 )
 from src.requirement_graph import RequirementGraph
 from src.convert_puml_code import ConvertPumlCode
-import copy
-import os
-import datetime
-import hjson
-import shutil
-
-
-# ConvertPumlCode の共通設定（不変のためモジュールレベルで定義）
-_CONVERTER_CONFIG = {
-    "detail": True,
-    "debug": False,
-    "width": 1200,
-    "left_to_right": False,
-}
-_converter = ConvertPumlCode(_CONVERTER_CONFIG)
-
-
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
 
 @dataclass
 class DiagramContext:
@@ -47,6 +36,16 @@ class DiagramOptions:
     detail: bool = False
     link_mode: bool = False
     previous_selected: str = "None"
+
+# ConvertPumlCode の共通設定（不変のためモジュールレベルで定義）
+_CONVERTER_CONFIG = {
+    "detail": True,
+    "debug": False,
+    "width": 1200,
+    "left_to_right": False,
+}
+_converter = ConvertPumlCode(_CONVERTER_CONFIG)
+
 
 def draw_diagram_column(
     column,

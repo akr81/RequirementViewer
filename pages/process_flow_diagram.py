@@ -1,11 +1,11 @@
 import streamlit as st
 from src.operate_buttons import add_operate_buttons
-from src.diagram_configs import *
 from src.page_setup import setup_page_layout_and_data  # 変更
 from src.utility import (  # copy_file, get_backup_files_for_current_data のみ使用
     get_backup_files_for_current_data,
     copy_file,
 )
+import uuid
 import copy
 
 
