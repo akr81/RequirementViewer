@@ -14,10 +14,10 @@ class RequirementManager:
             destination (str): Destination node unique ID
             defaults (dict): Default edge attributes
         """
-        existing_edge = [i for i, e in enumerate(self.requirements["edges"]) if e["source"] == source and e["destination"] == destination]
+        existing_edge = [e for e in self.requirements["edges"] if e["source"] == source and e["destination"] == destination]
         if existing_edge:
-            for index in existing_edge:
-                self.requirements["edges"].pop(index)
+            # 該当エッジを除外（pop+ループはインデックスずれのバグがあるため内包表記で除外）
+            self.requirements["edges"] = [e for e in self.requirements["edges"] if not (e["source"] == source and e["destination"] == destination)]
         else:
             new_edge = defaults.copy()
             new_edge["source"] = source
