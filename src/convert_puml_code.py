@@ -35,6 +35,17 @@ class ConvertPumlCode:
             "Evaporating Cloud Viewer": {"ortho": False, "sep": 0},
         }
 
+    def _escape_puml(self, text: str) -> str:
+        """Escape text for PlantUML."""
+        if not text:
+            return ""
+        # PlantUMLで特別扱いされる文字をエスケープまたは置換
+        # ダブルクォートをシングルクォートに置換して文字列リテラル脱出を防ぐ
+        text = text.replace('"', "'")
+        # 改行を \n に置換
+        text = text.replace("\n", "\\n")
+        return text
+
     def convert_to_puml(
         self,
         page_title: str,
@@ -110,9 +121,12 @@ skinparam ranksep {sep}
             else ""
         )
         landscape = "left to right direction" if landscape else ""
-        diagram_title = (
-            f"title {diagram_title}"
-            if diagram_title != "" and title_flag is not False
+        
+        # タイトルをエスケープ
+        escaped_title = self._escape_puml(diagram_title)
+        diagram_title_str = (
+            f"title {escaped_title}"
+            if escaped_title != "" and title_flag is not False
             else ""
         )
 
@@ -159,7 +173,7 @@ FontSize 12
 allowmixing
 
 scale {scale}
-{diagram_title}
+{diagram_title_str}
 """
 
     def _get_puml_color(self, node_attributes: Dict) -> str:
@@ -195,7 +209,6 @@ scale {scale}
     ) -> str:
         """Convert requirement graph to PlantUML code.
         Args:
-
             target (str): Target node that filters the graph.
             graph (nx.DiGraph): Graph of requirements.
             title (str): Title of diagram.
@@ -208,9 +221,13 @@ scale {scale}
                 title = '"req Requirements [all]"'
             else:
                 target_title = graph.nodes(data=True)[target]["title"]
-                title = f'"req {target_title} ' + 'related requirements"'
+                # タイトルの一部として使われるためエスケープ
+                escaped_target_title = self._escape_puml(target_title)
+                title = f'"req {escaped_target_title} ' + 'related requirements"'
         else:
-            title = f'"req {title}"'
+            # タイトル全体をエスケープ
+            escaped_title = self._escape_puml(title)
+            title = f'"req {escaped_title}"'
 
         puml_parts = []
 
@@ -270,8 +287,11 @@ scale {scale}
                 link_for_content = "[[]]"
 
         stereotype_line = f"<<{stereotype}>>\n" if stereotype else ""
-
-        body_content = stereotype_line + content_text
+        
+        # コンテンツをエスケープ
+        escaped_content = self._escape_puml(content_text)
+        
+        body_content = stereotype_line + escaped_content
         # リンクが存在し、かつ空リンクでない場合にスペースを挟んで結合
         if link_for_content and link_for_content != "[[]]":
             body_content += " " + link_for_content
@@ -286,6 +306,7 @@ end note"""
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
+        # titleがノートの内容になる
         return self._create_note_puml(
             node_attrs["unique_id"],
             node_attrs["title"],
@@ -341,6 +362,8 @@ right_shoulder_to_head .. right_shoulder"""
         self, unique_id: str, content: str, parameters_str: str, color_str: str
     ) -> str:
         """Generates the PlantUML string for a card element."""
+        # contentは呼び出し元ですでに整形されている場合があるため、ここではエスケープしない
+        # 呼び出し元で個別にエスケープを行う
         return f"""card {unique_id} {parameters_str} {color_str} [
 {content}
 ]
@@ -353,9 +376,11 @@ right_shoulder_to_head .. right_shoulder"""
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
-        content = node_attrs.get(
-            content_field, ""
-        )  # content_field が存在しない場合も考慮
+        
+        raw_content = node_attrs.get(content_field, "")
+        # コンテンツをエスケープ
+        content = self._escape_puml(raw_content)
+        
         return self._create_card_puml(
             node_attrs["unique_id"], content, parameters_str, color_str
         )
@@ -425,8 +450,15 @@ right_shoulder_to_head .. right_shoulder"""
         """
         # For PlantUML, the "usecase" entity cannot used on class diagram
         title = data["title"]
+        # タイトルをエスケープ
+        escaped_title = self._escape_puml(title)
+        
+        # ID+タイトル文字列の生成もエスケープ済みタイトルを使用するよう _get_title_string を調整するか、
+        # ここで組み立てる
+        full_title = self._get_title_string(data['id'], escaped_title)
+        
         color_str = self._get_puml_color(data)
-        return f"usecase \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<usecase>> {parameters} {color_str}"
+        return f"usecase \"{full_title}\" as {data['unique_id']} <<usecase>> {parameters} {color_str}"
 
     def _convert_req_diagram_requirement_node(
         self, data: Dict[str, Any], type: str, parameters: str, detail: bool = True
@@ -443,20 +475,25 @@ right_shoulder_to_head .. right_shoulder"""
         """
         title = data["title"]
         text = data["text"]
+        
+        # エスケープ
+        escaped_title = self._escape_puml(title)
+        escaped_text = self._escape_puml(text)
+        
         color_str = self._get_puml_color(data)
 
         # Ignore () as method using {field}
         if detail:
             ret = (
-                f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str} "
+                f"class \"{escaped_title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str} "
                 + "{\n"
             )
 
             ret += "{field}" + f"id=\"{data['id']}\"\n"
-            ret += "{field}" + f'text="{text}"\n'
+            ret += "{field}" + f'text="{escaped_text}"\n'
             ret += "}\n"
         else:
-            ret = f"class \"{title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str} "
+            ret = f"class \"{escaped_title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str} "
         return ret
 
     def _convert_req_diagram_block_node(
@@ -473,8 +510,11 @@ right_shoulder_to_head .. right_shoulder"""
             str: PlantUML code
         """
         title = data["title"]
+        escaped_title = self._escape_puml(title)
+        full_title = self._get_title_string(data['id'], escaped_title)
+        
         color_str = self._get_puml_color(data)
-        return f"class \"{self._get_title_string(data['id'], title)}\" as {data['unique_id']} <<{type}>> {parameters} {color_str}"
+        return f"class \"{full_title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str}"
 
     def _convert_req_diagram_note_node(
         self, data: Dict[str, Any], parameters: str
@@ -498,6 +538,7 @@ right_shoulder_to_head .. right_shoulder"""
         color_str = self._get_puml_color(data)
         # Requirement Diagramのノートはリンク形式の変更が不要
         # リンクはノートのコンテンツの末尾に配置されるように変更
+        # コンテンツのエスケープは _create_note_puml 内で行われる
         return self._create_note_puml(
             data["unique_id"],
             string,  # content_text
@@ -517,6 +558,7 @@ right_shoulder_to_head .. right_shoulder"""
         Returns:
             str: Title string
         """
+        # titleは呼び出し元ですでにエスケープされていることを想定
         if id != "":
             return f"{id}\\n{title}"
         else:
@@ -534,10 +576,13 @@ right_shoulder_to_head .. right_shoulder"""
         if not note_data or not note_data.get("text"):
             return ""
 
+        # テキストをエスケープ
+        escaped_text = self._escape_puml(note_data['text'])
+
         note_puml = "\nnote on link\n"
         if note_data.get("type") and note_data["type"] != "None":
             note_puml += f"<<{note_data['type']}>>\n"
-        note_puml += f"{note_data['text']}\n"
+        note_puml += f"{escaped_text}\n"
         note_puml += "end note\n"
         return note_puml
 
@@ -550,6 +595,9 @@ right_shoulder_to_head .. right_shoulder"""
         note_on_link_puml: str = "",
     ) -> str:
         """Generates a generic PlantUML string for an edge."""
+        # label_textはテンプレートから生成される固定文字列(<<type>>)が多いため、
+        # ここではエスケープ対象としないが、動的な内容が含まれる場合は注意が必要。
+        # 今回の要件図の仕様では label_text は固定フォーマットのみ。
         label_part = f" : {label_text}" if label_text else ""
         return f"{puml_node1} {line_style} {puml_node2}{label_part}{note_on_link_puml}"
 
@@ -629,12 +677,14 @@ right_shoulder_to_head .. right_shoulder"""
         detail = parameters_dict.get("detail", False)
 
         # Ensure all expected keys exist, providing defaults if necessary
+        # コンテンツをエスケープ
         node_id = node_attrs.get("id", "")
-        necessary_assumption = node_attrs.get("necessary_assumption", "")
-        strategy = node_attrs.get("strategy", "")
-        parallel_assumption = node_attrs.get("parallel_assumption", "")
-        tactics = node_attrs.get("tactics", "")
-        sufficient_assumption = node_attrs.get("sufficient_assumption", "")
+        necessary_assumption = self._escape_puml(node_attrs.get("necessary_assumption", ""))
+        strategy = self._escape_puml(node_attrs.get("strategy", ""))
+        parallel_assumption = self._escape_puml(node_attrs.get("parallel_assumption", ""))
+        tactics = self._escape_puml(node_attrs.get("tactics", ""))
+        sufficient_assumption = self._escape_puml(node_attrs.get("sufficient_assumption", ""))
+        
         if not detail:
             content = f"""{node_id}
 ---
@@ -676,6 +726,8 @@ right_shoulder_to_head .. right_shoulder"""
 
         edge_type = edge_attrs.get("type", "arrow")  # Default to arrow if not specified
         comment_text = edge_attrs.get("comment", "")
+        # コメントをエスケープ
+        escaped_comment = self._escape_puml(comment_text)
 
         # Determine node order based on style
         puml_node1, puml_node2 = (
@@ -693,7 +745,7 @@ right_shoulder_to_head .. right_shoulder"""
             raise ValueError(f"Unknown card edge type: {edge_type}")
 
         return self._create_generic_edge_puml(
-            puml_node1, puml_node2, line_style, comment_text
+            puml_node1, puml_node2, line_style, escaped_comment
         )
 
     def _dispatch_crt_node_conversion(
@@ -784,6 +836,7 @@ right_shoulder_to_head .. right_shoulder"""
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
+        # content_fieldとして"id"を使用するが、これはユーザー入力文字列
         return self._create_note_puml(
             node_attrs["unique_id"],
             node_attrs["id"],  # content_text
