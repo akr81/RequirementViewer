@@ -22,6 +22,41 @@ from src.puml_templates import (
 class ConvertPumlCode:
     """Convert graph to PlantUML code."""
 
+    def _dispatch_conversion(
+        self,
+        node_data: Tuple[str, Dict],
+        parameters_dict: Dict,
+        converters: Dict,
+        default_converter=None,
+    ) -> str:
+        """Generic dispatch for node conversion."""
+        node_attrs = node_data[1]
+        node_type = node_attrs.get("type", "card")
+        converter = converters.get(node_type, default_converter)
+        if converter:
+            return converter(node_data, parameters_dict)
+        return ""
+
+    def _convert_note_using_field(
+        self,
+        node: Tuple[str, Dict],
+        parameters_dict: Dict,
+        field: str,
+        keep_newline: bool = False,
+    ) -> str:
+        """Generic note converter using a specific field for content."""
+        node_attrs = node[1]
+        parameters_str = self._convert_parameters_dict(node, parameters_dict)
+        color_str = self._get_puml_color(node_attrs)
+        return self._create_note_puml(
+            node_attrs["unique_id"],
+            node_attrs.get(field, ""),
+            parameters_str,
+            color_str,
+            apply_link_modification=True,
+            keep_newline=keep_newline,
+        )
+
     def __init__(self, config: Dict[str, Any]):
         """Initializer
 
@@ -64,25 +99,26 @@ class ConvertPumlCode:
         }
         
         # Process Flow Diagram Node Converters
+        # Process Flow Diagram Node Converters
         self.pfd_node_converters = {
             "process": self._convert_pfd_usecase_node,
             "cloud": self._convert_pfd_cloud_node,
-            "card": self._convert_pfd_card_node,
-            "deliverable": self._convert_pfd_card_node,
-            "note": self._convert_pfd_note_node,
+            "card": lambda n, p: self._convert_simple_card_node(n, p, "id"),
+            "deliverable": lambda n, p: self._convert_simple_card_node(n, p, "id"),
+            "note": lambda n, p: self._convert_note_using_field(n, p, "id", keep_newline=True),
         }
 
         # Current Reality Tree Node Converters
         self.crt_node_converters = {
             "and": lambda n, p: f'usecase "AND{n[1]["unique_id"]}" as {n[1]["unique_id"]}',
-            "entity": self._convert_crt_entity_node,
-            "note": self._convert_crt_note_node,
+            "entity": lambda n, p: self._convert_simple_card_node(n, p, "id"),
+            "note": lambda n, p: self._convert_note_using_field(n, p, "id", keep_newline=True),
         }
 
         # Evaporating Cloud Node Converters
         self.ec_node_converters = {
-            "note": self._convert_evaporating_cloud_note,
-            "card": self._convert_evaporating_cloud_card_node,
+            "note": lambda n, p: self._convert_note_using_field(n, p, "title", keep_newline=True),
+            "card": lambda n, p: self._convert_simple_card_node(n, p, "title"),
         }
 
     def _escape_puml(self, text: str, keep_newline: bool = False) -> str:
@@ -311,38 +347,20 @@ class ConvertPumlCode:
             body_content=body_content,
         )
 
-    def _convert_evaporating_cloud_note(
-        self, node: Tuple[str, Dict], parameters_dict: Dict
-    ) -> str:
-        node_attrs = node[1]
-        parameters_str = self._convert_parameters_dict(node, parameters_dict)
-        color_str = self._get_puml_color(node_attrs)
-        # titleがノートの内容になる
-        return self._create_note_puml(
-            node_attrs["unique_id"],
-            node_attrs["title"],
-            parameters_str,
-            color_str,
-            apply_link_modification=True,
-            keep_newline=True,
-        )
 
-    def _dispatch_evaporating_cloud_node_conversion(
-        self, node_data_tuple: Tuple[str, Dict], parameters_dict: Dict
-    ) -> str:
-        """Dispatches node conversion for Evaporating Cloud based on node type."""
-        node_attrs = node_data_tuple[1]
-        node_type = node_attrs.get("type", "card") # Default to card if not present but usually it is.
-        
-        converter = self.ec_node_converters.get(node_type, self.ec_node_converters["card"])
-        return converter(node_data_tuple, parameters_dict)
+
+
 
     def _convert_evaporating_cloud(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
         puml_parts = list(
             self._convert_nodes_to_puml(  # Ensure it's a list for extend
-                graph, parameters_dict, self._dispatch_evaporating_cloud_node_conversion
+                graph,
+                parameters_dict,
+                lambda n, p: self._dispatch_conversion(
+                    n, p, self.ec_node_converters, self.ec_node_converters["card"]
+                ),
             )
         )
         puml_parts.extend(self._convert_edges_to_puml(graph, self._convert_card_edge))
@@ -380,12 +398,7 @@ class ConvertPumlCode:
             node_attrs["unique_id"], content, parameters_str, color_str
         )
 
-    def _convert_evaporating_cloud_card_node(
-        self, node: Tuple[str, Dict], parameters_dict: Dict
-    ) -> str:
-        return self._convert_simple_card_node(
-            node, parameters_dict, content_field="title"
-        )
+
 
     def _convert_requirement_node(
         self, node: Tuple[str, Dict], parameters_dict: Dict
@@ -741,18 +754,7 @@ class ConvertPumlCode:
             puml_node1, puml_node2, line_style, escaped_comment
         )
 
-    def _dispatch_crt_node_conversion(
-        self, node_data_tuple: Tuple[str, Dict], parameters_dict: Dict
-    ) -> str:
-        """Dispatches node conversion for Current Reality Tree based on node type."""
-        node_attrs = node_data_tuple[1]
-        node_type = node_attrs["type"]
-        
-        converter = self.crt_node_converters.get(node_type, self.crt_node_converters["note"])
-        if node_type == "and":
-             return converter(node_data_tuple, parameters_dict)
-        else:
-             return converter(node_data_tuple, parameters_dict)
+
 
     def _convert_current_reality(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
@@ -768,7 +770,11 @@ class ConvertPumlCode:
         """
         puml_parts = list(
             self._convert_nodes_to_puml(  # Ensure it's a list for extend
-                graph, parameters_dict, self._dispatch_crt_node_conversion
+                graph,
+                parameters_dict,
+                lambda n, p: self._dispatch_conversion(
+                    n, p, self.crt_node_converters, self.crt_node_converters["note"]
+                ),
             )
         )
 
@@ -816,35 +822,11 @@ class ConvertPumlCode:
 
         return "\n".join(puml_parts)
 
-    def _convert_crt_entity_node(
-        self, node: Tuple[str, Dict], parameters_dict: Dict
-    ) -> str:
-        return self._convert_simple_card_node(node, parameters_dict, content_field="id")
 
-    def _convert_crt_note_node(
-        self, node: Tuple[str, Dict], parameters_dict: Dict
-    ) -> str:
-        node_attrs = node[1]
-        parameters_str = self._convert_parameters_dict(node, parameters_dict)
-        color_str = self._get_puml_color(node_attrs)
-        # content_fieldとして"id"を使用するが、これはユーザー入力文字列
-        return self._create_note_puml(
-            node_attrs["unique_id"],
-            node_attrs["id"],  # content_text
-            parameters_str,  # parameters_for_link
-            color_str,
-            apply_link_modification=True,
-        )
 
-    def _dispatch_pfd_node_conversion(
-        self, node_data_tuple: Tuple[str, Dict], parameters_dict: Dict
-    ) -> str:
-        """Dispatches node conversion for Process Flow Diagram based on node type."""
-        node_attrs = node_data_tuple[1]
-        node_type = node_attrs.get("type", "card")  # Default to card
-        
-        converter = self.pfd_node_converters.get(node_type, self.pfd_node_converters["note"])
-        return converter(node_data_tuple, parameters_dict)
+
+
+
 
     def _convert_process_flow_diagram(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
@@ -860,7 +842,11 @@ class ConvertPumlCode:
         """
         puml_parts = list(
             self._convert_nodes_to_puml(  # Ensure it's a list for extend
-                graph, parameters_dict, self._dispatch_pfd_node_conversion
+                graph,
+                parameters_dict,
+                lambda n, p: self._dispatch_conversion(
+                    n, p, self.pfd_node_converters, self.pfd_node_converters["note"]
+                ),
             )
         )
         puml_parts.extend(
@@ -871,24 +857,9 @@ class ConvertPumlCode:
 
         return "\n".join(puml_parts)
 
-    def _convert_pfd_card_node(
-        self, node: Tuple[str, Dict], parameters_dict: Dict
-    ) -> str:
-        return self._convert_simple_card_node(node, parameters_dict, content_field="id")
 
-    def _convert_pfd_note_node(
-        self, node: Tuple[str, Dict], parameters_dict: Dict
-    ) -> str:
-        node_attrs = node[1]
-        parameters_str = self._convert_parameters_dict(node, parameters_dict)
-        color_str = self._get_puml_color(node_attrs)
-        return self._create_note_puml(
-            node_attrs["unique_id"],
-            node_attrs["id"],  # content_text
-            parameters_str,  # parameters_for_link
-            color_str,
-            apply_link_modification=True,
-        )
+
+
 
     def _convert_pfd_usecase_node(
         self, node: Tuple[str, Dict], parameters_dict: Dict
