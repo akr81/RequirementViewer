@@ -4,6 +4,19 @@ import re
 import unicodedata
 import hjson
 import copy
+from src.puml_templates import (
+    PUML_HEADER_TEMPLATE,
+    ORTHO_SETTINGS,
+    SEP_SETTINGS,
+    EVAPORATING_CLOUD_LAYOUT,
+    CARD_TEMPLATE,
+    NOTE_TEMPLATE,
+    REQ_NODE_DETAIL_TEMPLATE,
+    REQ_NODE_SIMPLE_TEMPLATE,
+    REQ_USECASE_TEMPLATE,
+    ST_CONTENT_SIMPLE,
+    ST_CONTENT_DETAIL,
+)
 
 with open("setting/colors.json", "r", encoding="utf-8") as f:
     color_to_archimate = hjson.load(f)
@@ -104,22 +117,9 @@ class ConvertPumlCode:
         title_flag: bool = False,
         diagram_title: str = "",
     ) -> str:
-        ortho_str = (
-            """
-skinparam linetype polyline
-skinparam linetype ortho
-"""
-            if ortho
-            else ""
-        )
-        sep_str = (
-            f"""
-skinparam nodesep {sep}
-skinparam ranksep {sep}
-"""
-            if sep != 0
-            else ""
-        )
+        ortho_str = ORTHO_SETTINGS if ortho else ""
+        sep_str = SEP_SETTINGS.format(sep=sep) if sep != 0 else ""
+
         landscape = "left to right direction" if landscape else ""
         
         # タイトルをエスケープ
@@ -130,51 +130,13 @@ skinparam ranksep {sep}
             else ""
         )
 
-        return f"""
-@startuml
-'!pragma layout elk
-hide circle
-hide empty members
-hide method
-{ortho_str}
-{sep_str}
-{landscape}
-skinparam HyperlinkUnderline false
-skinparam usecase {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam card {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam class {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam cloud {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam note {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-allowmixing
-
-scale {scale}
-{diagram_title_str}
-"""
+        return PUML_HEADER_TEMPLATE.format(
+            ortho_str=ortho_str,
+            sep_str=sep_str,
+            landscape=landscape,
+            scale=scale,
+            diagram_title_str=diagram_title_str,
+        )
 
     def _get_puml_color(self, node_attributes: Dict) -> str:
         """ノード属性からPlantUML用の色指定文字列を取得する。"""
@@ -296,9 +258,11 @@ scale {scale}
         if link_for_content and link_for_content != "[[]]":
             body_content += " " + link_for_content
 
-        return f"""note as {unique_id} {color_str}
-{body_content}
-end note"""
+        return NOTE_TEMPLATE.format(
+            unique_id=unique_id,
+            color_str=color_str,
+            body_content=body_content,
+        )
 
     def _convert_evaporating_cloud_note(
         self, node: Tuple[str, Dict], parameters_dict: Dict
@@ -339,22 +303,7 @@ end note"""
         )
         puml_parts.extend(self._convert_edges_to_puml(graph, self._convert_card_edge))
         # conflict
-        puml_parts.append(
-            """left_hand <=> right_hand #red
-left_shoulder <=> right_shoulder #red
-left_shoulder <.. right_hand #blue
-right_shoulder <.. left_hand #blue
-left_hand .. left_hand_note
-right_hand .. right_hand_note
-left_hand_to_shoulder .r. left_shoulder
-left_hand_to_shoulder .. left_hand
-right_hand_to_shoulder .l. right_shoulder
-right_hand_to_shoulder .. right_hand
-left_shoulder_to_head .r. head
-left_shoulder_to_head .. left_shoulder
-right_shoulder_to_head .l. head
-right_shoulder_to_head .. right_shoulder"""
-        )
+        puml_parts.append(EVAPORATING_CLOUD_LAYOUT)
 
         return "\n".join(puml_parts)
 
@@ -364,10 +313,12 @@ right_shoulder_to_head .. right_shoulder"""
         """Generates the PlantUML string for a card element."""
         # contentは呼び出し元ですでに整形されている場合があるため、ここではエスケープしない
         # 呼び出し元で個別にエスケープを行う
-        return f"""card {unique_id} {parameters_str} {color_str} [
-{content}
-]
-"""
+        return CARD_TEMPLATE.format(
+            unique_id=unique_id,
+            parameters_str=parameters_str,
+            color_str=color_str,
+            content=content,
+        )
 
     def _convert_simple_card_node(
         self, node: Tuple[str, Dict], parameters_dict: Dict, content_field: str
@@ -458,7 +409,12 @@ right_shoulder_to_head .. right_shoulder"""
         full_title = self._get_title_string(data['id'], escaped_title)
         
         color_str = self._get_puml_color(data)
-        return f"usecase \"{full_title}\" as {data['unique_id']} <<usecase>> {parameters} {color_str}"
+        return REQ_USECASE_TEMPLATE.format(
+            full_title=full_title,
+            unique_id=data['unique_id'],
+            parameters=parameters,
+            color_str=color_str,
+        )
 
     def _convert_req_diagram_requirement_node(
         self, data: Dict[str, Any], type: str, parameters: str, detail: bool = True
@@ -484,16 +440,24 @@ right_shoulder_to_head .. right_shoulder"""
 
         # Ignore () as method using {field}
         if detail:
-            ret = (
-                f"class \"{escaped_title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str} "
-                + "{\n"
+            ret = REQ_NODE_DETAIL_TEMPLATE.format(
+                title=escaped_title,
+                unique_id=data['unique_id'],
+                type=type,
+                parameters=parameters,
+                color_str=color_str,
+                field="{field}",
+                id=data['id'],
+                text=escaped_text,
             )
-
-            ret += "{field}" + f"id=\"{data['id']}\"\n"
-            ret += "{field}" + f'text="{escaped_text}"\n'
-            ret += "}\n"
         else:
-            ret = f"class \"{escaped_title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str} "
+            ret = REQ_NODE_SIMPLE_TEMPLATE.format(
+                title=escaped_title,
+                unique_id=data['unique_id'],
+                type=type,
+                parameters=parameters,
+                color_str=color_str,
+            )
         return ret
 
     def _convert_req_diagram_block_node(
@@ -686,23 +650,20 @@ right_shoulder_to_head .. right_shoulder"""
         sufficient_assumption = self._escape_puml(node_attrs.get("sufficient_assumption", ""))
         
         if not detail:
-            content = f"""{node_id}
----
-{strategy}
----
-{tactics}"""
+            content = ST_CONTENT_SIMPLE.format(
+                node_id=node_id,
+                strategy=strategy,
+                tactics=tactics,
+            )
         else:
-            content = f"""{node_id}
----
-{necessary_assumption}
----
-{strategy}
----
-{parallel_assumption}
----
-{tactics}
----
-{sufficient_assumption}"""
+            content = ST_CONTENT_DETAIL.format(
+                node_id=node_id,
+                necessary_assumption=necessary_assumption,
+                strategy=strategy,
+                parallel_assumption=parallel_assumption,
+                tactics=tactics,
+                sufficient_assumption=sufficient_assumption,
+            )
         return self._create_card_puml(
             node_attrs["unique_id"], content, parameters_str, color_str
         )
