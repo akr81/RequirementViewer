@@ -17,10 +17,19 @@ def start_plantuml_server():
     """Launch PlantUML server as a background process."""
     # plantuml.jarは同一ディレクトリに配置していると仮定
     command = ["java", "-jar", "plantuml.jar", "-picoweb"]
-    process = subprocess.Popen(command)
-    # プロセス終了時にクリーンアップするため、atexitに登録
-    atexit.register(lambda: process.terminate())
-    return process
+    try:
+        process = subprocess.Popen(command)
+        # プロセス終了時にクリーンアップするため、atexitに登録
+        atexit.register(lambda: process.terminate())
+        return process
+    except FileNotFoundError:
+        st.error(
+            "Javaまたはplantuml.jarが見つかりません。Javaがインストールされているか、plantuml.jarが配置されているか確認してください。"
+        )
+        return None
+    except Exception as e:
+        st.error(f"PlantUMLサーバの起動に失敗しました: {e}")
+        return None
 
 
 # PlantUMLサーバ向けのエンコード関数

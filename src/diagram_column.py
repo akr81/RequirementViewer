@@ -144,8 +144,12 @@ def draw_diagram_column(
                 "<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>"
             )
 
-        with open("debug.svg", "w") as out:
-            out.writelines(svg_output)
+        try:
+            with open("debug.svg", "w", encoding="utf-8") as out:
+                out.writelines(svg_output)
+        except Exception as e:
+            # print(f"デバッグ用SVGファイルの保存に失敗しました: {e}")
+            pass
         st.markdown(
             f"""
             <div style="width:100%; height:{config_data['viewer_height']}px; overflow:auto; border:0px solid black;">
