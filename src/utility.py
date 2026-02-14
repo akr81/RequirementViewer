@@ -11,7 +11,7 @@ import copy
 import tempfile
 import time
 from contextlib import contextmanager
-from typing import Tuple, List, Dict, Tuple, Any, Optional
+from typing import Tuple, List, Dict, Any, Optional
 
 
 @contextmanager
@@ -321,25 +321,6 @@ def build_sorted_list(
             lst.insert(0, x)
     return lst
 
-
-def extract_and_list(
-    items: List[Dict[str, Any]], *, prepend: Optional[List[str]] = None
-) -> List[str]:
-    """
-    全 requirements の relations[].and をユニークに集めてソートしたリスト。
-    prepend（例: ["None","New"]）を先頭に挿入可能。
-    """
-    vals = {
-        str(rel["and"])
-        for item in items
-        for rel in item.get("relations", [])
-        if rel.get("and") not in (None, "", "None")
-    }
-    sorted_vals = sorted(vals, key=lambda v: (not v.isdigit(), v))
-    if prepend:
-        for x in reversed(prepend):
-            sorted_vals.insert(0, x)
-    return sorted_vals
 
 
 def build_and_list(
