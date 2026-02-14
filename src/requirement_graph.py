@@ -4,8 +4,9 @@ import copy
 
 
 class RequirementGraph:
-    def __init__(self, entities: List[Dict], title):
+    def __init__(self, entities: List[Dict], page_title: str):
         self.entities = entities
+        self.page_title = page_title
 
         # 要求図全体のグラフ
         self.graph = nx.DiGraph()
@@ -13,42 +14,44 @@ class RequirementGraph:
         # フィルタリングされたサブグラフ
         self.subgraph = nx.DiGraph()
 
-        # グラフの構築（Dispatch Table）
-        converters = {
-            "Requirement Diagram Viewer": self._convert_requirements,
-            "Strategy and Tactics Tree Viewer": self._convert_strategy_and_tactics,
-            "Current Reality Tree Viewer": self._convert_current_reality,
-            "Process Flow Diagram Viewer": self._convert_process_flow,
-            "Evaporating Cloud Viewer": self._convert_evaporating_cloud,
-        }
-        converter = converters.get(title)
-        if converter is None:
-            raise ValueError(f"Invalid title specified: {title}")
-        converter()
+        # グラフの構築
+        self._build_graph()
 
-    def _convert_evaporating_cloud(self):
-        for entity in self.entities["nodes"]:
-            entity.setdefault("color", "None")  # colorがない場合はNoneを設定
-            self.graph.add_node(entity["unique_id"], **entity)
-
-        for edge in self.entities["edges"]:
-            edge.setdefault("type", "arrow")  # typeがない場合はarrowを設定
-            self.graph.add_edge(edge["source"], edge["destination"], **edge)
-
-    def _convert_strategy_and_tactics(self):
+    def _build_graph(self):
+        """Build graph from entities."""
+        # ノードの追加
         for node in self.entities["nodes"]:
+            # デフォルト値の設定 (必要に応じて)
+            # Evaporating Cloud, Current Reality Tree は color="None" がデフォルト
+            if self.page_title in [
+                "Evaporating Cloud Viewer",
+                "Current Reality Tree Viewer",
+            ]:
+                node.setdefault("color", "None")
+            
             self.graph.add_node(node["unique_id"], **node)
 
+        # エッジの追加
         for edge in self.entities["edges"]:
-            edge.setdefault("color", "None")  # colorがない場合はNoneを設定
-            self.graph.add_edge(edge["source"], edge["destination"], **edge)
+            # デフォルト値の設定
+            if self.page_title in [
+                "Evaporating Cloud Viewer",
+                "Current Reality Tree Viewer",
+                "Process Flow Diagram Viewer",
+            ]:
+                edge.setdefault("type", "arrow")
+            
+            if self.page_title in [
+                "Strategy and Tactics Tree Viewer",
+                "Requirement Diagram Viewer",
+            ]:
+                edge.setdefault("color", "None")
 
-    def _convert_process_flow(self):
-        for node in self.entities["nodes"]:
-            self.graph.add_node(node["unique_id"], **node)
-        for edge in self.entities["edges"]:
-            edge.setdefault("type", "arrow")
-            if self.graph.nodes[edge["source"]]["type"] == "note":
+            # Process Flow Diagram の特殊処理: note からのエッジは flat_long に変更
+            if (
+                self.page_title == "Process Flow Diagram Viewer"
+                and self.graph.nodes[edge["source"]].get("type") == "note"
+            ):
                 modified_edge = copy.deepcopy(edge)
                 modified_edge["type"] = "flat_long"
                 self.graph.add_edge(
@@ -58,42 +61,6 @@ class RequirementGraph:
                 )
             else:
                 self.graph.add_edge(edge["source"], edge["destination"], **edge)
-
-    def _convert_requirements(self):
-        """Convert requirements to graph."""
-        for node in self.entities["nodes"]:
-            self.graph.add_node(node["unique_id"], **node)
-        for edge in self.entities["edges"]:
-            edge.setdefault("color", "None")  # colorがない場合はNoneを設定
-            self.graph.add_edge(
-                edge["source"],
-                edge["destination"],
-                **edge,  # edgeの情報をそのまま渡す
-            )
-
-    def _add_note_edge(self, entity, relation):
-        """Add edge for note type entity.
-        Note type entity is connected to destination with flat or flat_long edge.
-        """
-        if len(entity["relations"]) > 1:
-            self.graph.add_edge(
-                entity["unique_id"],
-                relation["destination"],
-                type="flat_long",
-            )
-        else:
-            self.graph.add_edge(
-                entity["unique_id"], relation["destination"], type="flat_long"
-            )
-
-    def _convert_current_reality(self):
-        """Convert current reality tree to graph."""
-        for node in self.entities["nodes"]:
-            node.setdefault("color", "None")  # colorがない場合はNoneを設定
-            self.graph.add_node(node["unique_id"], **node)
-        for edge in self.entities["edges"]:
-            edge.setdefault("type", "arrow")  # typeがない場合はarrowを設定
-            self.graph.add_edge(edge["source"], edge["destination"], **edge)
 
     def extract_subgraph(
         self,
