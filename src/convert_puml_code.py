@@ -730,6 +730,9 @@ right_shoulder_to_head .. right_shoulder"""
         )
 
         # Convert edges for Current Reality Tree
+        seen_and_nodes = set()
+        seen_edges_from_and = set()
+
         for edge_data_tuple in graph.edges(data=True):
             src_node_id = edge_data_tuple[0]
             dst_node_id = edge_data_tuple[1]
@@ -739,24 +742,31 @@ right_shoulder_to_head .. right_shoulder"""
 
             if and_node_id and and_node_id != "None":
                 # ANDノードを経由するエッジ: src -> AND -> dst
-                # ANDノードをここで追加
-                puml_parts.append(f'usecase "AND{and_node_id}" as {and_node_id}')
+                
+                # ANDノードをここで追加 (重複回避)
+                if and_node_id not in seen_and_nodes:
+                    puml_parts.append(f'usecase "AND{and_node_id}" as {and_node_id}')
+                    seen_and_nodes.add(and_node_id)
 
-                # src -> AND エッジ
+                # src -> AND エッジ (これは常にユニークはず)
                 attrs_to_and = copy.deepcopy(edge_attributes)
                 attrs_to_and.pop("and", None)  # このエッジ自体はANDを経由しない
                 edge_to_and_representation = (src_node_id, and_node_id, attrs_to_and)
                 puml_parts.append(self._convert_card_edge(edge_to_and_representation))
 
-                # AND -> dst エッジ
-                attrs_from_and = copy.deepcopy(edge_attributes)
-                attrs_from_and.pop("and", None)
-                edge_from_and_representation = (
-                    and_node_id,
-                    dst_node_id,
-                    attrs_from_and,
-                )
-                puml_parts.append(self._convert_card_edge(edge_from_and_representation))
+                # AND -> dst エッジ (重複回避)
+                # ANDノードと宛先が同じなら、既に生成されている可能性がある
+                edge_key = (and_node_id, dst_node_id)
+                if edge_key not in seen_edges_from_and:
+                    attrs_from_and = copy.deepcopy(edge_attributes)
+                    attrs_from_and.pop("and", None)
+                    edge_from_and_representation = (
+                        and_node_id,
+                        dst_node_id,
+                        attrs_from_and,
+                    )
+                    puml_parts.append(self._convert_card_edge(edge_from_and_representation))
+                    seen_edges_from_and.add(edge_key)
             else:
                 # 通常のエッジ
                 puml_parts.append(self._convert_card_edge(edge_data_tuple))
