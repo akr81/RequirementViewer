@@ -79,6 +79,7 @@ def encode64(data: bytes) -> str:
 
 
 # PlantUMLコードからSVG画像を取得する関数
+@st.cache_data(show_spinner=False)
 def get_diagram(plantuml_code: str, plantuml_server: str, *, png_out=False) -> Any:
     """Get SVG diagram from PlantUML code.
 
