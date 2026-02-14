@@ -13,19 +13,18 @@ class RequirementGraph:
         # フィルタリングされたサブグラフ
         self.subgraph = nx.DiGraph()
 
-        # グラフの構築
-        if title == "Requirement Diagram Viewer":
-            self._convert_requirements()
-        elif title == "Strategy and Tactics Tree Viewer":
-            self._convert_strategy_and_tactics()
-        elif title == "Current Reality Tree Viewer":
-            self._convert_current_reality()
-        elif title == "Process Flow Diagram Viewer":
-            self._convert_process_flow()
-        elif title == "Evaporating Cloud Viewer":
-            self._convert_evaporating_cloud()
-        else:
-            raise ValueError("Invalid title specified.")
+        # グラフの構築（Dispatch Table）
+        converters = {
+            "Requirement Diagram Viewer": self._convert_requirements,
+            "Strategy and Tactics Tree Viewer": self._convert_strategy_and_tactics,
+            "Current Reality Tree Viewer": self._convert_current_reality,
+            "Process Flow Diagram Viewer": self._convert_process_flow,
+            "Evaporating Cloud Viewer": self._convert_evaporating_cloud,
+        }
+        converter = converters.get(title)
+        if converter is None:
+            raise ValueError(f"Invalid title specified: {title}")
+        converter()
 
     def _convert_evaporating_cloud(self):
         for entity in self.entities["nodes"]:
