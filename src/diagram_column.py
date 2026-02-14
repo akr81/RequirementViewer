@@ -14,6 +14,16 @@ import hjson
 import shutil
 
 
+# ConvertPumlCode の共通設定（不変のためモジュールレベルで定義）
+_CONVERTER_CONFIG = {
+    "detail": True,
+    "debug": False,
+    "width": 1200,
+    "left_to_right": False,
+}
+_converter = ConvertPumlCode(_CONVERTER_CONFIG)
+
+
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -131,16 +141,8 @@ def draw_diagram_column(
             parameters_dict["link_mode"] = is_link_mode
             parameters_dict["previous_selected"] = options.previous_selected
 
-            config = {
-                "detail": True,
-                "debug": False,
-                "width": 1200,
-                "left_to_right": False,
-            }
-            converter = ConvertPumlCode(config)
-
             try:
-                plantuml_code = converter.convert_to_puml(
+                plantuml_code = _converter.convert_to_puml(
                     context.app_name,
                     options.graph_data.subgraph,
                     title=None,
@@ -155,11 +157,18 @@ def draw_diagram_column(
                 "<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>"
             )
 
+        # デバッグ用SVG出力（内容が変わった場合のみ書き出し）
         try:
-            with open("debug.svg", "w", encoding="utf-8") as out:
-                out.writelines(svg_output)
-        except Exception as e:
-            # print(f"デバッグ用SVGファイルの保存に失敗しました: {e}")
+            debug_svg_path = "debug.svg"
+            should_write = True
+            if os.path.exists(debug_svg_path):
+                with open(debug_svg_path, "r", encoding="utf-8") as f:
+                    if f.read() == svg_output:
+                        should_write = False
+            if should_write:
+                with open(debug_svg_path, "w", encoding="utf-8") as out:
+                    out.writelines(svg_output)
+        except Exception:
             pass
         st.markdown(
             f"""
