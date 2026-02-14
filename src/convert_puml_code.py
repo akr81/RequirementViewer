@@ -48,6 +48,43 @@ class ConvertPumlCode:
             "Evaporating Cloud Viewer": {"ortho": False, "sep": 0},
         }
 
+        # Requirement Diagram Node Converters
+        self.req_node_converters = {
+            "usecase": self._convert_req_diagram_usecase_node,
+            "requirement": self._convert_req_diagram_requirement_node,
+            "functionalRequirement": self._convert_req_diagram_requirement_node,
+            "interfaceRequirement": self._convert_req_diagram_requirement_node,
+            "performanceRequirement": self._convert_req_diagram_requirement_node,
+            "physicalRequirement": self._convert_req_diagram_requirement_node,
+            "designConstraint": self._convert_req_diagram_requirement_node,
+            "block": self._convert_req_diagram_block_node,
+            "testCase": self._convert_req_diagram_block_node,
+            "rationale": self._convert_req_diagram_note_node,
+            "problem": self._convert_req_diagram_note_node,
+        }
+        
+        # Process Flow Diagram Node Converters
+        self.pfd_node_converters = {
+            "process": self._convert_pfd_usecase_node,
+            "cloud": self._convert_pfd_cloud_node,
+            "card": self._convert_pfd_card_node,
+            "deliverable": self._convert_pfd_card_node,
+            "note": self._convert_pfd_note_node,
+        }
+
+        # Current Reality Tree Node Converters
+        self.crt_node_converters = {
+            "and": lambda n, p: f'usecase "AND{n[1]["unique_id"]}" as {n[1]["unique_id"]}',
+            "entity": self._convert_crt_entity_node,
+            "note": self._convert_crt_note_node,
+        }
+
+        # Evaporating Cloud Node Converters
+        self.ec_node_converters = {
+            "note": self._convert_evaporating_cloud_note,
+            "card": self._convert_evaporating_cloud_card_node,
+        }
+
     def _escape_puml(self, text: str, keep_newline: bool = False) -> str:
         """Escape text for PlantUML.
         
@@ -295,14 +332,10 @@ class ConvertPumlCode:
     ) -> str:
         """Dispatches node conversion for Evaporating Cloud based on node type."""
         node_attrs = node_data_tuple[1]
-        if node_attrs["type"] == "note":
-            return self._convert_evaporating_cloud_note(
-                node_data_tuple, parameters_dict
-            )
-        else:  # Assumes card or other types are card-like
-            return self._convert_evaporating_cloud_card_node(
-                node_data_tuple, parameters_dict
-            )
+        node_type = node_attrs.get("type", "card") # Default to card if not present but usually it is.
+        
+        converter = self.ec_node_converters.get(node_type, self.ec_node_converters["card"])
+        return converter(node_data_tuple, parameters_dict)
 
     def _convert_evaporating_cloud(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
@@ -368,35 +401,23 @@ class ConvertPumlCode:
         """
         parameters = self._convert_parameters_dict(node, parameters_dict)
         attr = node[1]
-        type = attr["type"]
-        ret = ""
-        if type == "usecase":  # Requirement Diagram specific usecase
-            ret = self._convert_req_diagram_usecase_node(attr, parameters)
-        elif (  # Requirement Diagram specific requirement types
-            type == "requirement"
-            or type == "functionalRequirement"
-            or type == "interfaceRequirement"
-            or type == "performanceRequirement"
-            or type == "physicalRequirement"
-            or type == "designConstraint"
-        ):
-            ret = self._convert_req_diagram_requirement_node(
-                attr, type, parameters, parameters_dict.get("detail", True)
-            )
-        elif (
-            type == "block" or type == "testCase"
-        ):  # Requirement Diagram specific block/testCase
-            ret = self._convert_req_diagram_block_node(attr, type, parameters)
-        elif (
-            type == "rationale" or type == "problem"
-        ):  # Requirement Diagram specific note-like entities
-            ret = self._convert_req_diagram_note_node(attr, parameters)
+        node_type = attr["type"]
+        
+        converter = self.req_node_converters.get(node_type)
+        if converter:
+            if converter == self._convert_req_diagram_requirement_node:
+                return converter(
+                    attr, node_type, parameters, parameters_dict.get("detail", True)
+                )
+            elif converter == self._convert_req_diagram_block_node:
+                return converter(attr, node_type, parameters)
+            else:
+                # usecase, note-like entities
+                return converter(attr, parameters)
         else:
-            raise ValueError(
-                f"Requirement Diagram: No convert rule defined for type: {type}"
+             raise ValueError(
+                f"Requirement Diagram: No convert rule defined for type: {node_type}"
             )
-
-        return ret
 
     def _convert_req_diagram_usecase_node(
         self, data: Dict[str, Any], parameters: str
@@ -725,15 +746,13 @@ class ConvertPumlCode:
     ) -> str:
         """Dispatches node conversion for Current Reality Tree based on node type."""
         node_attrs = node_data_tuple[1]
-        if node_attrs["type"] == "and":
-            # Convert "and" node
-            return (
-                f"usecase \"AND{node_attrs['unique_id']}\" as {node_attrs['unique_id']}"
-            )
-        elif node_attrs["type"] == "entity":
-            return self._convert_crt_entity_node(node_data_tuple, parameters_dict)
-        else:  # Assume note
-            return self._convert_crt_note_node(node_data_tuple, parameters_dict)
+        node_type = node_attrs["type"]
+        
+        converter = self.crt_node_converters.get(node_type, self.crt_node_converters["note"])
+        if node_type == "and":
+             return converter(node_data_tuple, parameters_dict)
+        else:
+             return converter(node_data_tuple, parameters_dict)
 
     def _convert_current_reality(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
@@ -822,18 +841,10 @@ class ConvertPumlCode:
     ) -> str:
         """Dispatches node conversion for Process Flow Diagram based on node type."""
         node_attrs = node_data_tuple[1]
-        node_type = node_attrs.get(
-            "type", "card"
-        )  # Default to card if type is not specified
-
-        if node_type == "process":
-            return self._convert_pfd_usecase_node(node_data_tuple, parameters_dict)
-        elif node_type == "cloud":
-            return self._convert_pfd_cloud_node(node_data_tuple, parameters_dict)
-        elif node_type in ("card", "deliverable"):
-            return self._convert_pfd_card_node(node_data_tuple, parameters_dict)
-        else:  # Assume other types (e.g., 'note' or unspecified) become notes
-            return self._convert_pfd_note_node(node_data_tuple, parameters_dict)
+        node_type = node_attrs.get("type", "card")  # Default to card
+        
+        converter = self.pfd_node_converters.get(node_type, self.pfd_node_converters["note"])
+        return converter(node_data_tuple, parameters_dict)
 
     def _convert_process_flow_diagram(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
