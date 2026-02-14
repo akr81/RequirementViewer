@@ -1,4 +1,7 @@
 import streamlit as st
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Union
+
 from src.requirement_manager import RequirementManager
 from src.requirement_graph import RequirementGraph
 from src.utility import (
@@ -13,6 +16,22 @@ from src.utility import (
 )
 from src.diagram_configs import DEFAULT_ENTITY_GETTERS  # 追加
 from src.diagram_column import draw_diagram_column, DiagramContext, DiagramOptions  # 追加
+
+
+@dataclass
+class LoadedData:
+    requirement_data: Dict[str, Any]
+    nodes: List[Dict[str, Any]]
+    edges: List[Dict[str, Any]]
+    requirement_manager: RequirementManager
+    graph_data: RequirementGraph
+    id_title_dict: Dict[str, str]
+    unique_id_dict: Dict[str, str]
+    id_title_list: List[str]
+    add_list: List[str]
+    selected_unique_id: Union[str, List[None], None]
+    selected_entity: Optional[Dict[str, Any]]
+    options: DiagramOptions
 
 
 def initialize_page(app_name: str):
@@ -131,26 +150,29 @@ def load_and_prepare_data(file_path, app_name):
                     d for d in nodes if d["unique_id"] == selected_unique_id
                 ][0]
 
-    return (
-        requirement_data,
-        nodes,
-        edges,
-        requirement_manager,
-        graph_data,
-        id_title_dict,
-        unique_id_dict,
-        id_title_list,
-        add_list,
-        scale,
-        selected_unique_id,
-        upstream_distance,
-        downstream_distance,
-        selected_entity,
-        landscape,
-        title,
-        detail,
-        link_mode,
-        previous_selected,
+    return LoadedData(
+        requirement_data=requirement_data,
+        nodes=nodes,
+        edges=edges,
+        requirement_manager=requirement_manager,
+        graph_data=graph_data,
+        id_title_dict=id_title_dict,
+        unique_id_dict=unique_id_dict,
+        id_title_list=id_title_list,
+        add_list=add_list,
+        selected_unique_id=selected_unique_id,
+        selected_entity=selected_entity,
+        options=DiagramOptions(
+            upstream_distance=upstream_distance,
+            downstream_distance=downstream_distance,
+            scale=scale,
+            graph_data=graph_data,
+            landscape=landscape,
+            title=title,
+            detail=detail,
+            link_mode=link_mode,
+            previous_selected=previous_selected,
+        ),
     )
 
 
@@ -175,27 +197,14 @@ def setup_page_layout_and_data(
     st.session_state["file_path"] = file_path
 
     # データの読み込みと準備
-    (
-        requirement_data,
-        nodes,
-        edges,
-        requirement_manager,
-        graph_data,
-        id_title_dict,
-        unique_id_dict,
-        id_title_list,
-        add_list,
-        scale,
-        selected_unique_id,
-        upstream_distance,
-        downstream_distance,
-        selected_entity,
-        landscape,
-        title,
-        detail,
-        link_mode,
-        previous_selected,
-    ) = load_and_prepare_data(file_path, app_name)
+    loaded_data = load_and_prepare_data(file_path, app_name)
+    
+    # Extract data for easier access
+    nodes = loaded_data.nodes
+    unique_id_dict = loaded_data.unique_id_dict
+    selected_unique_id = loaded_data.selected_unique_id
+    selected_entity = loaded_data.selected_entity
+    options = loaded_data.options
 
     # 未選択の場合はデフォルトエンティティを設定
     if not selected_entity:
@@ -216,23 +225,13 @@ def setup_page_layout_and_data(
     context = DiagramContext(
         app_name=app_name,
         unique_id_dict=unique_id_dict,
-        id_title_dict=id_title_dict,
-        id_title_list=id_title_list,
+        id_title_dict=loaded_data.id_title_dict,
+        id_title_list=loaded_data.id_title_list,
         config_data=config_data,
-        requirements=requirement_data,
+        requirements=loaded_data.requirement_data,
     )
     
-    options = DiagramOptions(
-        upstream_distance=upstream_distance,
-        downstream_distance=downstream_distance,
-        scale=scale,
-        graph_data=graph_data,
-        landscape=landscape,
-        title=title,
-        detail=detail,
-        link_mode=link_mode,
-        previous_selected=previous_selected,
-    )
+    # options is already created in load_and_prepare_data
 
     plantuml_code = draw_diagram_column(
         diagram_column,
@@ -245,22 +244,22 @@ def setup_page_layout_and_data(
         "config_data": config_data,
         "app_data": app_data,
         "file_path": file_path,
-        "requirement_data": requirement_data,
+        "requirement_data": loaded_data.requirement_data,
         "nodes": nodes,
-        "edges": edges,
-        "requirement_manager": requirement_manager,
-        "graph_data": graph_data,
-        "id_title_dict": id_title_dict,
+        "edges": loaded_data.edges,
+        "requirement_manager": loaded_data.requirement_manager,
+        "graph_data": loaded_data.graph_data,
+        "id_title_dict": loaded_data.id_title_dict,
         "unique_id_dict": unique_id_dict,
-        "id_title_list": id_title_list,
-        "add_list": add_list,  # current_reality_tree で必要
-        "scale": scale,
+        "id_title_list": loaded_data.id_title_list,
+        "add_list": loaded_data.add_list,  # current_reality_tree で必要
+        "scale": options.scale,
         "selected_unique_id": selected_unique_id,
-        "upstream_distance": upstream_distance,
-        "downstream_distance": downstream_distance,
+        "upstream_distance": options.upstream_distance,
+        "downstream_distance": options.downstream_distance,
         "selected_entity": selected_entity,
-        "landscape": landscape,
-        "title": title,
+        "landscape": options.landscape,
+        "title": options.title,
         "edit_column": edit_column,  # データ編集UIを配置するカラム
         "plantuml_code": plantuml_code,
     }
