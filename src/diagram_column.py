@@ -95,21 +95,21 @@ def draw_diagram_column(
                 key=f"{context.app_name}_downstream_slider",
             )
         with landscape_column:
-            landscape_mod = st.checkbox(
+            is_landscape = st.checkbox(
                 "横向き", value=options.landscape, key=f"{context.app_name}_landscape_checkbox"
             )
-            title_mod = st.checkbox(
+            show_title = st.checkbox(
                 "タイトル", value=options.title, key=f"{context.app_name}_title_checkbox"
             )
-            detail_mod = st.checkbox(
+            show_detail = st.checkbox(
                 "詳細", value=options.detail, key=f"{context.app_name}_detail_checkbox"
             )
-            link_mod = st.toggle("🖱️ 接続モード", value=options.link_mode, key=f"{context.app_name}_connect_mode")
+            is_link_mode = st.toggle("🖱️ 接続モード", value=options.link_mode, key=f"{context.app_name}_connect_mode")
         options.graph_data.extract_subgraph(
             target,
             upstream_distance=options.upstream_distance,
             downstream_distance=options.downstream_distance,
-            detail=detail_mod,
+            detail=show_detail,
         )
         with scale_column:
             options.scale = st.slider(
@@ -125,10 +125,10 @@ def draw_diagram_column(
             parameters_dict["target"] = target
             parameters_dict["upstream_distance"] = options.upstream_distance
             parameters_dict["downstream_distance"] = options.downstream_distance
-            parameters_dict["landscape"] = landscape_mod
-            parameters_dict["title"] = title_mod
-            parameters_dict["detail"] = detail_mod
-            parameters_dict["link_mode"] = link_mod
+            parameters_dict["landscape"] = is_landscape
+            parameters_dict["title"] = show_title
+            parameters_dict["detail"] = show_detail
+            parameters_dict["link_mode"] = is_link_mode
             parameters_dict["previous_selected"] = options.previous_selected
 
             config = {

@@ -399,34 +399,34 @@ class ConvertPumlCode:
         Returns:
             str: PlantUML code.
         """
-        parameters = self._convert_parameters_dict(node, parameters_dict)
-        attr = node[1]
-        node_type = attr["type"]
+        parameters_str = self._convert_parameters_dict(node, parameters_dict)
+        node_attrs = node[1]
+        node_type = node_attrs["type"]
         
         converter = self.req_node_converters.get(node_type)
         if converter:
             if converter == self._convert_req_diagram_requirement_node:
                 return converter(
-                    attr, node_type, parameters, parameters_dict.get("detail", True)
+                    node_attrs, node_type, parameters_str, parameters_dict.get("detail", True)
                 )
             elif converter == self._convert_req_diagram_block_node:
-                return converter(attr, node_type, parameters)
+                return converter(node_attrs, node_type, parameters_str)
             else:
                 # usecase, note-like entities
-                return converter(attr, parameters)
+                return converter(node_attrs, parameters_str)
         else:
              raise ValueError(
                 f"Requirement Diagram: No convert rule defined for type: {node_type}"
             )
 
     def _convert_req_diagram_usecase_node(
-        self, data: Dict[str, Any], parameters: str
+        self, data: Dict[str, Any], parameters_str: str
     ) -> str:
         """Convert usecase node for Requirement Diagram to PlantUML code.
 
         Args:
             data (Dict[str, Any]): Usecase node attributes.
-            parameters (str): Parameter string for link.
+            parameters_str (str): Parameter string for link.
 
         Returns:
             str: PlantUML code
@@ -444,19 +444,19 @@ class ConvertPumlCode:
         return REQ_USECASE_TEMPLATE.format(
             full_title=full_title,
             unique_id=data['unique_id'],
-            parameters=parameters,
+            parameters=parameters_str,
             color_str=color_str,
         )
 
     def _convert_req_diagram_requirement_node(
-        self, data: Dict[str, Any], type: str, parameters: str, detail: bool = True
+        self, data: Dict[str, Any], node_type: str, parameters_str: str, detail: bool = True
     ) -> str:
         """Convert requirement node for Requirement Diagram to PlantUML code.
 
         Args:
             data (Dict[str, Any]): Requirement information
-            type (str): Type of requirement
-            parameters (str): Parameter string for link
+            node_type (str): Type of requirement
+            parameters_str (str): Parameter string for link
 
         Returns:
             str: PlantUML code
@@ -472,35 +472,35 @@ class ConvertPumlCode:
 
         # Ignore () as method using {field}
         if detail:
-            ret = REQ_NODE_DETAIL_TEMPLATE.format(
+            puml_code = REQ_NODE_DETAIL_TEMPLATE.format(
                 title=escaped_title,
                 unique_id=data['unique_id'],
-                type=type,
-                parameters=parameters,
+                type=node_type,
+                parameters=parameters_str,
                 color_str=color_str,
                 field="{field}",
                 id=data['id'],
                 text=escaped_text,
             )
         else:
-            ret = REQ_NODE_SIMPLE_TEMPLATE.format(
+            puml_code = REQ_NODE_SIMPLE_TEMPLATE.format(
                 title=escaped_title,
                 unique_id=data['unique_id'],
-                type=type,
-                parameters=parameters,
+                type=node_type,
+                parameters=parameters_str,
                 color_str=color_str,
             )
-        return ret
+        return puml_code
 
     def _convert_req_diagram_block_node(
-        self, data: Dict[str, Any], type: str, parameters: str
+        self, data: Dict[str, Any], node_type: str, parameters_str: str
     ) -> str:
         """Convert block/testCase node for Requirement Diagram to PlantUML code.
 
         Args:
             data (Dict[str, Any]): Block information
-            type (str): Type information
-            parameters (str): Parameter string for link
+            node_type (str): Type information
+            parameters_str (str): Parameter string for link
 
         Returns:
             str: PlantUML code
@@ -510,16 +510,16 @@ class ConvertPumlCode:
         full_title = self._get_title_string(data['id'], escaped_title)
         
         color_str = self._get_puml_color(data)
-        return f"class \"{full_title}\" as {data['unique_id']} <<{type}>> {parameters} {color_str}"
+        return f"class \"{full_title}\" as {data['unique_id']} <<{node_type}>> {parameters_str} {color_str}"
 
     def _convert_req_diagram_note_node(
-        self, data: Dict[str, Any], parameters: str
+        self, data: Dict[str, Any], parameters_str: str
     ) -> str:
         """Convert rationale/problem (note-like) node for Requirement Diagram to PlantUML code.
 
         Args:
             data (Dict[str, Any]): Node attributes for rationale or problem.
-            parameters (str): Parameter string for link.
+            parameters_str (str): Parameter string for link.
 
 
         Returns:
@@ -527,9 +527,9 @@ class ConvertPumlCode:
         """
         # Display longer string from title and text
         if len(data["title"]) >= len(data["text"]):
-            string = data["title"]
+            display_text = data["title"]
         else:
-            string = data["text"]
+            display_text = data["text"]
 
         color_str = self._get_puml_color(data)
         # Requirement Diagramのノートはリンク形式の変更が不要
@@ -537,8 +537,8 @@ class ConvertPumlCode:
         # コンテンツのエスケープは _create_note_puml 内で行われる
         return self._create_note_puml(
             data["unique_id"],
-            string,  # content_text
-            parameters,  # parameters_for_link
+            display_text,  # content_text
+            parameters_str,  # parameters_for_link
             color_str,
             stereotype=data["type"],
             apply_link_modification=False,  # 通常のリンク形式を使用
@@ -608,7 +608,7 @@ class ConvertPumlCode:
         """
         src = data[0]
         dst = data[1]
-        type = data[2]["type"]
+        relation_type = data[2]["type"]
         edge_attrs = data[2]
         note_data = edge_attrs.get("note")
 
@@ -625,12 +625,12 @@ class ConvertPumlCode:
             "rationale": (dst, src, "..", ""),
         }
 
-        config = edge_configs.get(type)
+        config = edge_configs.get(relation_type)
         if not config:
-            raise ValueError(f"No implement exist for relation type: {type}")
+            raise ValueError(f"No implement exist for relation type: {relation_type}")
 
         puml_node1, puml_node2, puml_line_style, label_template = config
-        label_text = label_template.format(type=type) if label_template else ""
+        label_text = label_template.format(type=relation_type) if label_template else ""
         note_puml = self._create_note_on_link_puml(note_data) if note_data else ""
 
         return self._create_generic_edge_puml(
