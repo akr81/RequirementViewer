@@ -4,6 +4,7 @@ import re
 import unicodedata
 import hjson
 import copy
+from src.constants import AppName, NodeType, Color
 from src.puml_templates import (
     PUML_HEADER_TEMPLATE,
     ORTHO_SETTINGS,
@@ -31,7 +32,7 @@ class ConvertPumlCode:
     ) -> str:
         """Generic dispatch for node conversion."""
         node_attrs = node_data[1]
-        node_type = node_attrs.get("type", "card")
+        node_type = node_attrs.get("type", NodeType.CARD)
         converter = converters.get(node_type, default_converter)
         if converter:
             return converter(node_data, parameters_dict)
@@ -69,56 +70,56 @@ class ConvertPumlCode:
         with open("setting/colors.json", "r", encoding="utf-8") as f:
             self._color_to_archimate = hjson.load(f)
         self.diagram_converters = {
-            "Requirement Diagram Viewer": self._convert_requirement_diagram,
-            "Strategy and Tactics Tree Viewer": self._convert_strategy_and_tactics,
-            "Current Reality Tree Viewer": self._convert_current_reality,
-            "Process Flow Diagram Viewer": self._convert_process_flow_diagram,
-            "Evaporating Cloud Viewer": self._convert_evaporating_cloud,
+            AppName.REQUIREMENT: self._convert_requirement_diagram,
+            AppName.STRATEGY_TACTICS: self._convert_strategy_and_tactics,
+            AppName.CURRENT_REALITY: self._convert_current_reality,
+            AppName.PROCESS_FLOW: self._convert_process_flow_diagram,
+            AppName.EVAPORATING_CLOUD: self._convert_evaporating_cloud,
         }
         self.diagram_specific_settings = {
-            "Requirement Diagram Viewer": {"ortho": True, "sep": 0},
-            "Strategy and Tactics Tree Viewer": {"ortho": True, "sep": 0},
-            "Current Reality Tree Viewer": {"ortho": False, "sep": 20},
-            "Process Flow Diagram Viewer": {"ortho": False, "sep": 20},
-            "Evaporating Cloud Viewer": {"ortho": False, "sep": 0},
+            AppName.REQUIREMENT: {"ortho": True, "sep": 0},
+            AppName.STRATEGY_TACTICS: {"ortho": True, "sep": 0},
+            AppName.CURRENT_REALITY: {"ortho": False, "sep": 20},
+            AppName.PROCESS_FLOW: {"ortho": False, "sep": 20},
+            AppName.EVAPORATING_CLOUD: {"ortho": False, "sep": 0},
         }
 
         # Requirement Diagram Node Converters
         self.req_node_converters = {
-            "usecase": self._convert_req_diagram_usecase_node,
-            "requirement": self._convert_req_diagram_requirement_node,
-            "functionalRequirement": self._convert_req_diagram_requirement_node,
-            "interfaceRequirement": self._convert_req_diagram_requirement_node,
-            "performanceRequirement": self._convert_req_diagram_requirement_node,
-            "physicalRequirement": self._convert_req_diagram_requirement_node,
-            "designConstraint": self._convert_req_diagram_requirement_node,
-            "block": self._convert_req_diagram_block_node,
-            "testCase": self._convert_req_diagram_block_node,
-            "rationale": self._convert_req_diagram_note_node,
-            "problem": self._convert_req_diagram_note_node,
+            NodeType.USECASE: self._convert_req_diagram_usecase_node,
+            NodeType.REQUIREMENT: self._convert_req_diagram_requirement_node,
+            NodeType.FUNCTIONAL_REQUIREMENT: self._convert_req_diagram_requirement_node,
+            NodeType.INTERFACE_REQUIREMENT: self._convert_req_diagram_requirement_node,
+            NodeType.PERFORMANCE_REQUIREMENT: self._convert_req_diagram_requirement_node,
+            NodeType.PHYSICAL_REQUIREMENT: self._convert_req_diagram_requirement_node,
+            NodeType.DESIGN_CONSTRAINT: self._convert_req_diagram_requirement_node,
+            NodeType.BLOCK: self._convert_req_diagram_block_node,
+            NodeType.TEST_CASE: self._convert_req_diagram_block_node,
+            NodeType.RATIONALE: self._convert_req_diagram_note_node,
+            NodeType.PROBLEM: self._convert_req_diagram_note_node,
         }
         
         # Process Flow Diagram Node Converters
         # Process Flow Diagram Node Converters
         self.pfd_node_converters = {
-            "process": lambda n, p: self._convert_pfd_element(n, p, "usecase"),
-            "cloud": lambda n, p: self._convert_pfd_element(n, p, "cloud"),
-            "card": lambda n, p: self._convert_simple_card_node(n, p, "id"),
-            "deliverable": lambda n, p: self._convert_simple_card_node(n, p, "id"),
-            "note": lambda n, p: self._convert_note_using_field(n, p, "id", keep_newline=True),
+            NodeType.PROCESS: lambda n, p: self._convert_pfd_element(n, p, NodeType.USECASE),
+            NodeType.CLOUD: lambda n, p: self._convert_pfd_element(n, p, NodeType.CLOUD),
+            NodeType.CARD: lambda n, p: self._convert_simple_card_node(n, p, "id"),
+            NodeType.DELIVERABLE: lambda n, p: self._convert_simple_card_node(n, p, "id"),
+            NodeType.NOTE: lambda n, p: self._convert_note_using_field(n, p, "id", keep_newline=True),
         }
 
         # Current Reality Tree Node Converters
         self.crt_node_converters = {
-            "and": lambda n, p: f'usecase "AND{n[1]["unique_id"]}" as {n[1]["unique_id"]}',
-            "entity": lambda n, p: self._convert_simple_card_node(n, p, "id"),
-            "note": lambda n, p: self._convert_note_using_field(n, p, "id", keep_newline=True),
+            NodeType.AND: lambda n, p: f'usecase "AND{n[1]["unique_id"]}" as {n[1]["unique_id"]}',
+            NodeType.ENTITY: lambda n, p: self._convert_simple_card_node(n, p, "id"),
+            NodeType.NOTE: lambda n, p: self._convert_note_using_field(n, p, "id", keep_newline=True),
         }
 
         # Evaporating Cloud Node Converters
         self.ec_node_converters = {
-            "note": lambda n, p: self._convert_note_using_field(n, p, "title", keep_newline=True),
-            "card": lambda n, p: self._convert_simple_card_node(n, p, "title"),
+            NodeType.NOTE: lambda n, p: self._convert_note_using_field(n, p, "title", keep_newline=True),
+            NodeType.CARD: lambda n, p: self._convert_simple_card_node(n, p, "title"),
         }
 
     def _escape_puml(self, text: str, keep_newline: bool = False) -> str:
@@ -875,19 +876,30 @@ class ConvertPumlCode:
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
         
-        id_val = node_attrs["id"]
-        # Escape newlines for PlantUML label
-        id_val = id_val.replace("\n", "\\n")
-        escaped_id_val = self._escape_puml(id_val) # Further escape if needed (though existing code only replaced newline)
-        # 既存ロジックはダブルクォートのエスケープをしていないが、安全のため _escape_puml を通すべきか？
-        # 元のコードは id_val.replace("\n", "\\n") のみだった。
-        # ここでは安全側に倒して _escape_puml を使うが、改行は維持しつつ自分で \\n に置換しているので keep_newline=True にして、
-        # その後 replace するか、あるいは _escape_puml の挙動に任せる。
-        # _escape_puml(text, keep_newline=False) は改行を \\n に置換する。
-        # なので、単に self._escape_puml(node_attrs["id"]) で良いはず。
+        id_val = node_attrs.get("id", "")
+        # エスケープ処理 (改行は保持して \n に変換)
+        escaped_id_val = self._escape_puml(id_val, keep_newline=True)
         
-        escaped_id_val = self._escape_puml(node_attrs["id"])
-        
-        return f"{puml_type} \"{escaped_id_val}\" as {node_attrs['unique_id']} {parameters_str} {color_str}\n"
+        return f'{puml_type} "{escaped_id_val}" as {node_attrs["unique_id"]} {parameters_str} {color_str}\n'
+
+    def _get_puml_color(self, node_attrs: Dict) -> str:
+        color_key = node_attrs.get("color", Color.NONE)
+        if color_key == Color.NONE or color_key is None:
+            return ""
+        # アーキメイト色の変換
+        return self._color_to_archimate.get(color_key, f"#{color_key}")
+
+    def _escape_puml(self, text: str, keep_newline: bool = False) -> str:
+        if not text:
+            return ""
+        # ダブルクォートをエスケープ
+        escaped = text.replace('"', '\\"')
+        if keep_newline:
+            # 改行をPlantUMLの改行コードに置換
+            escaped = escaped.replace('\n', '\\n')
+        else:
+             # 通常も改行は \n に置換するのが安全
+             escaped = escaped.replace('\n', '\\n')
+        return escaped
 
 

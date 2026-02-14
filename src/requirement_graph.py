@@ -3,6 +3,8 @@ import networkx as nx
 import copy
 
 
+from src.constants import AppName, NodeType, EdgeType, Color
+
 class RequirementGraph:
     def __init__(self, entities: List[Dict], page_title: str):
         self.entities = entities
@@ -24,10 +26,10 @@ class RequirementGraph:
             # デフォルト値の設定 (必要に応じて)
             # Evaporating Cloud, Current Reality Tree は color="None" がデフォルト
             if self.page_title in [
-                "Evaporating Cloud Viewer",
-                "Current Reality Tree Viewer",
+                AppName.EVAPORATING_CLOUD,
+                AppName.CURRENT_REALITY,
             ]:
-                node.setdefault("color", "None")
+                node.setdefault("color", Color.NONE)
             
             self.graph.add_node(node["unique_id"], **node)
 
@@ -35,25 +37,25 @@ class RequirementGraph:
         for edge in self.entities["edges"]:
             # デフォルト値の設定
             if self.page_title in [
-                "Evaporating Cloud Viewer",
-                "Current Reality Tree Viewer",
-                "Process Flow Diagram Viewer",
+                AppName.EVAPORATING_CLOUD,
+                AppName.CURRENT_REALITY,
+                AppName.PROCESS_FLOW,
             ]:
-                edge.setdefault("type", "arrow")
+                edge.setdefault("type", EdgeType.ARROW)
             
             if self.page_title in [
-                "Strategy and Tactics Tree Viewer",
-                "Requirement Diagram Viewer",
+                AppName.STRATEGY_TACTICS,
+                AppName.REQUIREMENT,
             ]:
-                edge.setdefault("color", "None")
+                edge.setdefault("color", Color.NONE)
 
             # Process Flow Diagram の特殊処理: note からのエッジは flat_long に変更
             if (
-                self.page_title == "Process Flow Diagram Viewer"
-                and self.graph.nodes[edge["source"]].get("type") == "note"
+                self.page_title == AppName.PROCESS_FLOW
+                and self.graph.nodes[edge["source"]].get("type") == NodeType.NOTE
             ):
                 modified_edge = copy.deepcopy(edge)
-                modified_edge["type"] = "flat_long"
+                modified_edge["type"] = EdgeType.FLAT_LONG
                 self.graph.add_edge(
                     modified_edge["source"],
                     modified_edge["destination"],

@@ -15,6 +15,7 @@ from src.utility import (
     build_and_list,
     update_source_data,
 )
+from src.constants import AppName, EdgeType  # 追加
 from src.diagram_configs import DEFAULT_ENTITY_GETTERS  # 追加
 from src.diagram_column import draw_diagram_column, DiagramContext, DiagramOptions  # 追加
 
@@ -162,16 +163,16 @@ def load_and_prepare_data(file_path, app_name):
     else:
         if link_mode:
             # アプリケーションごとに必須の属性を定義
-            edge_defaults = {"type": "arrow"} # 共通のデフォルト
+            edge_defaults = {"type": EdgeType.ARROW} # 共通のデフォルト
 
-            if app_name == "Current Reality Tree Viewer":
+            if app_name == AppName.CURRENT_REALITY:
                 edge_defaults["and"] = "None"
-            elif app_name == "Process Flow Diagram Viewer":
+            elif app_name == AppName.PROCESS_FLOW:
                 edge_defaults["comment"] = ""
-            elif app_name == "Requirement Diagram Viewer":
-                edge_defaults["type"] = "deriveReqt"
+            elif app_name == AppName.REQUIREMENT:
+                edge_defaults["type"] = EdgeType.DERIVE_KEY
                 # 必要に応じて 'note': {} なども追加
-
+ 
             # エッジを更新
             requirement_manager.update_edge(previous_selected, selected_unique_id, edge_defaults)
             update_source_data(file_path, requirement_manager.requirements)
@@ -269,7 +270,7 @@ def setup_page_layout_and_data(
             selected_entity = getter_func()
 
     # Requirement Diagram Viewer の場合、selected_unique_idが"default"の時に実際のIDを割り当てる
-    if app_name == "Requirement Diagram Viewer" and selected_unique_id == "default":
+    if app_name == AppName.REQUIREMENT and selected_unique_id == "default":
         if selected_entity:  # selected_entityがNoneでないことを確認
             selected_unique_id = selected_entity["unique_id"]
 

@@ -1,5 +1,6 @@
 import uuid
 from typing import Dict, List
+from src.constants import AppName, NodeType, Color
 
 
 def get_crt_default_entity() -> Dict:
@@ -10,7 +11,7 @@ def get_crt_default_entity() -> Dict:
     """
     return {
         "id": "",
-        "color": "None",
+        "color": Color.NONE,
         "unique_id": f"{uuid.uuid4()}".replace("-", ""),
     }
 
@@ -35,9 +36,9 @@ def get_pfd_default_entity() -> Dict:
         entity_types: Entity data list
     """
     return {
-        "type": "deliverable",
+        "type": NodeType.DELIVERABLE,
         "id": "",
-        "color": "None",
+        "color": Color.NONE,
         "unique_id": f"{uuid.uuid4()}".replace("-", ""),
     }
 
@@ -56,7 +57,7 @@ def get_req_default_entity(entity_types: List[str]) -> Dict:
         "id": "",
         "title": "",
         "text": "",
-        "color": "None",
+        "color": Color.NONE,
         "unique_id": f"{uuid.uuid4()}".replace("-", ""),
     }
 
@@ -79,9 +80,9 @@ def get_st_default_entity() -> Dict:
 
 
 DEFAULT_ENTITY_GETTERS = {
-    "Current Reality Tree Viewer": get_crt_default_entity,
-    "Evaporating Cloud Viewer": get_ec_default_entity,
-    "Process Flow Diagram Viewer": get_pfd_default_entity,
-    "Requirement Diagram Viewer": get_req_default_entity,
-    "Strategy and Tactics Tree Viewer": get_st_default_entity,
+    AppName.CURRENT_REALITY: get_crt_default_entity,
+    AppName.EVAPORATING_CLOUD: get_ec_default_entity,
+    AppName.PROCESS_FLOW: get_pfd_default_entity,
+    AppName.REQUIREMENT: get_req_default_entity,
+    AppName.STRATEGY_TACTICS: get_st_default_entity,
 }
