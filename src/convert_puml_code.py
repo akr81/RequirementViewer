@@ -248,6 +248,7 @@ class ConvertPumlCode:
         color_str: str,
         stereotype: str = None,
         apply_link_modification: bool = False,
+        keep_newline: bool = False,
     ) -> str:
         """汎用的なノート要素のPlantUML文字列を生成する。"""
         link_for_content = parameters_for_link
@@ -260,7 +261,7 @@ class ConvertPumlCode:
         stereotype_line = f"<<{stereotype}>>\n" if stereotype else ""
         
         # コンテンツをエスケープ
-        escaped_content = self._escape_puml(content_text)
+        escaped_content = self._escape_puml(content_text, keep_newline=keep_newline)
         
         body_content = stereotype_line + escaped_content
         # リンクが存在し、かつ空リンクでない場合にスペースを挟んで結合
@@ -286,6 +287,7 @@ class ConvertPumlCode:
             parameters_str,
             color_str,
             apply_link_modification=True,
+            keep_newline=True,
         )
 
     def _dispatch_evaporating_cloud_node_conversion(
