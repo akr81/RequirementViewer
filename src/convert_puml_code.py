@@ -18,9 +18,6 @@ from src.puml_templates import (
     ST_CONTENT_DETAIL,
 )
 
-with open("setting/colors.json", "r", encoding="utf-8") as f:
-    color_to_archimate = hjson.load(f)
-
 
 class ConvertPumlCode:
     """Convert graph to PlantUML code."""
@@ -33,6 +30,9 @@ class ConvertPumlCode:
         """
         self.detail = config["detail"]
         self.debug = config["debug"]
+        # 色マッピングの読み込み
+        with open("setting/colors.json", "r", encoding="utf-8") as f:
+            self._color_to_archimate = hjson.load(f)
         self.diagram_converters = {
             "Requirement Diagram Viewer": self._convert_requirement_diagram,
             "Strategy and Tactics Tree Viewer": self._convert_strategy_and_tactics,
@@ -189,7 +189,7 @@ class ConvertPumlCode:
         color_name = node_attributes.get("color")
         if color_name and color_name != "None":
             # color_to_archimate に存在しないキーの場合は空文字を返す
-            return color_to_archimate.get(color_name, "")
+            return self._color_to_archimate.get(color_name, "")
         return ""
 
     def _convert_nodes_to_puml(
