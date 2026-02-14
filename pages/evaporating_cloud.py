@@ -4,6 +4,8 @@ from src.page_setup import setup_page_layout_and_data  # 変更
 from src.utility import (  # copy_file, get_backup_files_for_current_data のみ使用
     get_backup_files_for_current_data,
     copy_file,
+    calculate_text_area_height,
+    unescape_newline,
 )
 import copy
 
@@ -81,9 +83,18 @@ def render_edit_panel():
         question = "行動は何か？"
     else:
         question = "仮定・前提条件は何か？"
-    tmp_entity["title"] = st.text_area(question, tmp_entity["title"], height=400)
+    tmp_entity["title"] = st.text_area(
+        question,
+        unescape_newline(tmp_entity["title"]),
+        height=calculate_text_area_height(unescape_newline(tmp_entity["title"])),
+        key=f"ec_title_{selected_unique_id}",
+    )
+
     tmp_entity["color"] = st.selectbox(
-        "色", color_list, index=color_list.index(tmp_entity["color"])
+        "色",
+        color_list,
+        index=color_list.index(tmp_entity["color"]),
+        key=f"ec_color_{selected_unique_id}",
     )
 
     # 更新しないが旧フォーマットを更新するために読み込む

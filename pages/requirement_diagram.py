@@ -4,6 +4,8 @@ from src.page_setup import setup_page_layout_and_data  # 変更
 from src.utility import (  # copy_file, get_backup_files_for_current_data のみ使用
     get_backup_files_for_current_data,
     copy_file,
+    calculate_text_area_height,
+    unescape_newline,
 )
 import hjson
 import os
@@ -112,7 +114,7 @@ def render_edit_panel():
     diagram_title = st.text_input(
         "REQタイトル",
         value=requirement_data.get("title", ""),
-        key="diagram_title_input",
+        key="diagram_title_input",  # ページ全体の設定なので固定keyでよい
     )
     requirement_data["title"] = diagram_title  # タイトルを更新
     st.write("---")
@@ -125,12 +127,30 @@ def render_edit_panel():
         "エンティティタイプ",
         entity_types,
         index=entity_types.index(tmp_entity["type"]),
+        key=f"entity_type_{selected_unique_id}",
     )
-    tmp_entity["title"] = st.text_input("タイトル", tmp_entity["title"])
-    tmp_entity["id"] = st.text_input("ID", tmp_entity["id"])
-    tmp_entity["text"] = st.text_area("説明", tmp_entity["text"])
+    tmp_entity["title"] = st.text_input(
+        "タイトル",
+        tmp_entity["title"],
+        key=f"entity_title_{selected_unique_id}",
+    )
+    tmp_entity["id"] = st.text_input(
+        "ID",
+        tmp_entity["id"],
+        key=f"entity_id_{selected_unique_id}",
+    )
+    tmp_entity["text"] = st.text_area(
+        "説明",
+        unescape_newline(tmp_entity["text"]),
+        height=calculate_text_area_height(unescape_newline(tmp_entity["text"])),
+        key=f"entity_text_{selected_unique_id}",
+    )
+    
     tmp_entity["color"] = st.selectbox(
-        "色", color_list, index=color_list.index(tmp_entity["color"])
+        "色",
+        color_list,
+        index=color_list.index(tmp_entity["color"]),
+        key=f"entity_color_{selected_unique_id}",
     )
 
     # テキストエリアでエンティティの詳細情報を入力
@@ -176,17 +196,23 @@ def render_edit_panel():
             tmp_edge["note"]["type"] = st.selectbox(
                 "注釈タイプ",
                 note_types,
-                key=f"note_type{i}",
+                key=f"note_type_{selected_unique_id}_{i}",
                 index=note_types.index(tmp_edge.get("note").get("type", "None")),
             )
             if "note" in tmp_edge:
                 tmp_edge["note"]["text"] = st.text_area(
                     "説明",
-                    tmp_edge.get("note").get("text", ""),
-                    key=f"relation_note{i}",
+                    unescape_newline(tmp_edge.get("note").get("text", "")),
+                    key=f"relation_note_{selected_unique_id}_{i}",
+                    height=calculate_text_area_height(unescape_newline(tmp_edge.get("note").get("text", ""))),
                 )
             else:
-                tmp_edge["note"] = st.text_area("説明", "", key=f"relation_note{i}")
+                tmp_edge["note"] = st.text_area(
+                    "説明",
+                    "",
+                    key=f"relation_note_{selected_unique_id}_{i}",
+                    height=calculate_text_area_height(""),
+                )
         visibility = "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
 
     # 関係追加の操作があるため、1つは常に表示
@@ -213,7 +239,12 @@ def render_edit_panel():
         relation_note["type"] = st.selectbox(
             "注釈タイプ", note_types, key="new_relation_note_type"
         )
-        relation_note["text"] = st.text_area("説明", "", key="new_relation_note_text")
+        relation_note["text"] = st.text_area(
+            "説明",
+            "",
+            key="new_relation_note_text",
+            height=calculate_text_area_height(""),
+        )
 
     new_edge = []
     if not relation_note:

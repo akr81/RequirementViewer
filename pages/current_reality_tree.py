@@ -3,6 +3,8 @@ from src.utility import (
     get_next_and_number,
     get_backup_files_for_current_data,
     copy_file,
+    calculate_text_area_height,
+    unescape_newline,
 )  # draw_diagram_column を削除
 from src.operate_buttons import add_operate_buttons
 from src.page_setup import setup_page_layout_and_data  # 変更
@@ -166,9 +168,18 @@ def render_edit_panel():
     tmp_entity["type"] = st.selectbox(
         "タイプ", entity_list, index=entity_list.index(tmp_entity["type"])
     )
-    tmp_entity["id"] = st.text_area("課題・状況", tmp_entity["id"])
+    tmp_entity["id"] = st.text_area(
+        "課題・状況",
+        unescape_newline(tmp_entity["id"]),
+        height=calculate_text_area_height(unescape_newline(tmp_entity["id"])),
+        key=f"crt_text_{selected_unique_id}",
+    )
+    
     tmp_entity["color"] = st.selectbox(
-        "色", color_list, index=color_list.index(tmp_entity["color"])
+        "色",
+        color_list,
+        index=color_list.index(tmp_entity["color"]),
+        key=f"crt_color_{selected_unique_id}",
     )
 
     # 保存するまで表示が変わらないよう、edge本体は更新しない

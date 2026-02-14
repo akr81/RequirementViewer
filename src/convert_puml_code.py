@@ -49,13 +49,20 @@ class ConvertPumlCode:
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
+        # コンテンツをエスケープ（keep_newline=True 相当の処理を直接記述）
+        # _escape_puml を呼ばずに直接処理することで、意図しない改行コード変換を防ぐ
+        content = node_attrs.get(field, "")
+        if content:
+            content = content.replace('"', "'")
+            # 改行は置換しない
+
         return self._create_note_puml(
             node_attrs["unique_id"],
-            node_attrs.get(field, ""),
+            content,
             parameters_str,
             color_str,
             apply_link_modification=True,
-            keep_newline=keep_newline,
+            keep_newline=True, # _create_note_puml にも渡すが、念のため
         )
 
     def __init__(self, config: Dict[str, Any]):
@@ -335,7 +342,11 @@ class ConvertPumlCode:
         stereotype_line = f"<<{stereotype}>>\n" if stereotype else ""
         
         # コンテンツをエスケープ
-        escaped_content = self._escape_puml(content_text, keep_newline=keep_newline)
+        if keep_newline:
+            # 呼び出し元で既にクォート処理等は行われている前提、かつ改行は維持
+            escaped_content = content_text
+        else:
+            escaped_content = self._escape_puml(content_text, keep_newline=False)
         
         body_content = stereotype_line + escaped_content
         # リンクが存在し、かつ空リンクでない場合にスペースを挟んで結合
@@ -392,8 +403,16 @@ class ConvertPumlCode:
         color_str = self._get_puml_color(node_attrs)
         
         raw_content = node_attrs.get(content_field, "")
-        # コンテンツをエスケープ
-        content = self._escape_puml(raw_content, keep_newline=True)
+        
+        # DEBUG: 特定のIDの場合のみログ出力
+        if "7707cb4e" in node_attrs["unique_id"]:
+             import streamlit as st
+             st.sidebar.markdown(f"**Debug Node {node_attrs['unique_id']}**")
+             st.sidebar.code(f"Raw: {repr(raw_content)}\nKeepNewline: True")
+
+        # コンテンツをエスケープ (keep_newline=True 相当)
+        # _escape_puml を経由せず直接処理
+        content = raw_content.replace('"', "'")
         
         return self._create_card_puml(
             node_attrs["unique_id"], content, parameters_str, color_str
@@ -693,13 +712,24 @@ class ConvertPumlCode:
         detail = parameters_dict.get("detail", False)
 
         # Ensure all expected keys exist, providing defaults if necessary
-        # コンテンツをエスケープ
+        # コンテンツをエスケープ (keep_newline=True 相当)
+        # _escape_puml を呼ばずに直接処理
         node_id = node_attrs.get("id", "")
-        necessary_assumption = self._escape_puml(node_attrs.get("necessary_assumption", ""), keep_newline=True)
-        strategy = self._escape_puml(node_attrs.get("strategy", ""), keep_newline=True)
-        parallel_assumption = self._escape_puml(node_attrs.get("parallel_assumption", ""), keep_newline=True)
-        tactics = self._escape_puml(node_attrs.get("tactics", ""), keep_newline=True)
-        sufficient_assumption = self._escape_puml(node_attrs.get("sufficient_assumption", ""), keep_newline=True)
+        # necessary_assumption
+        val = node_attrs.get("necessary_assumption", "")
+        necessary_assumption = val.replace('"', "'") if val else ""
+        # strategy
+        val = node_attrs.get("strategy", "")
+        strategy = val.replace('"', "'") if val else ""
+        # parallel_assumption
+        val = node_attrs.get("parallel_assumption", "")
+        parallel_assumption = val.replace('"', "'") if val else ""
+        # tactics
+        val = node_attrs.get("tactics", "")
+        tactics = val.replace('"', "'") if val else ""
+        # sufficient_assumption
+        val = node_attrs.get("sufficient_assumption", "")
+        sufficient_assumption = val.replace('"', "'") if val else ""
         
         if not detail:
             content = ST_CONTENT_SIMPLE.format(

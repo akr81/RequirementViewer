@@ -4,6 +4,8 @@ from src.page_setup import setup_page_layout_and_data  # 変更
 from src.utility import (  # copy_file, get_backup_files_for_current_data のみ使用
     get_backup_files_for_current_data,
     copy_file,
+    calculate_text_area_height,
+    unescape_newline,
 )
 import uuid
 import copy
@@ -64,25 +66,47 @@ def render_edit_panel():
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
 
-    tmp_entity["id"] = st.text_input("ID", tmp_entity["id"])
-    tmp_entity["necessary_assumption"] = st.text_area(
-        "なぜこの変化が必要か？", tmp_entity["necessary_assumption"]
+    tmp_entity["id"] = st.text_input(
+        "ID",
+        tmp_entity["id"],
+        key=f"stt_id_{selected_unique_id}",
     )
+    tmp_entity["necessary_assumption"] = st.text_area(
+        "なぜこの変化が必要か？",
+        unescape_newline(tmp_entity["necessary_assumption"]),
+        height=calculate_text_area_height(unescape_newline(tmp_entity["necessary_assumption"])),
+        key=f"stt_necessary_{selected_unique_id}",
+    )
+    
     tmp_entity["strategy"] = st.text_area(
-        "**戦略：何がこの変化の具体的な目的なのか？**", tmp_entity["strategy"]
+        "**戦略：何がこの変化の具体的な目的なのか？**",
+        unescape_newline(tmp_entity["strategy"]),
+        height=calculate_text_area_height(unescape_newline(tmp_entity["strategy"])),
+        key=f"stt_strategy_{selected_unique_id}",
     )
     tmp_entity["parallel_assumption"] = st.text_area(
-        "なぜこの戦術をとるのか？", tmp_entity["parallel_assumption"]
+        "なぜこの戦術をとるのか？",
+        unescape_newline(tmp_entity["parallel_assumption"]),
+        height=calculate_text_area_height(unescape_newline(tmp_entity["parallel_assumption"])),
+        key=f"stt_parallel_{selected_unique_id}",
     )
     tmp_entity["tactics"] = st.text_area(
-        "**戦術：どのようにこの変化を達成するのか？**", tmp_entity["tactics"]
+        "**戦術：どのようにこの変化を達成するのか？**",
+        unescape_newline(tmp_entity["tactics"]),
+        height=calculate_text_area_height(unescape_newline(tmp_entity["tactics"])),
+        key=f"stt_tactics_{selected_unique_id}",
     )
     tmp_entity["sufficient_assumption"] = st.text_area(
         "なぜより詳細な具体策とアクションが必要なのか？",
-        tmp_entity["sufficient_assumption"],
+        unescape_newline(tmp_entity["sufficient_assumption"]),
+        height=calculate_text_area_height(unescape_newline(tmp_entity["sufficient_assumption"])),
+        key=f"stt_sufficient_{selected_unique_id}",
     )
     tmp_entity["color"] = st.selectbox(
-        "色", color_list, index=color_list.index(tmp_entity["color"])
+        "色",
+        color_list,
+        index=color_list.index(tmp_entity["color"]),
+        key=f"stt_color_{selected_unique_id}",
     )
 
     # 接続元の関係を取得

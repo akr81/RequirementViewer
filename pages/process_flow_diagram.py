@@ -4,6 +4,8 @@ from src.page_setup import setup_page_layout_and_data  # 変更
 from src.utility import (  # copy_file, get_backup_files_for_current_data のみ使用
     get_backup_files_for_current_data,
     copy_file,
+    calculate_text_area_height,
+    unescape_newline,
 )
 import uuid
 import copy
@@ -28,11 +30,12 @@ def render_edge_connection(
                 )
             ]
         with params["description_column"]:
-            edge["comment"] = st.text_input(
+            edge["comment"] = st.text_area(
                 "説明",
-                edge["comment"],
-                key=f"comment_{params['selectbox_key']}{index}",
+                unescape_newline(edge["comment"]),
+                key=f"comment_{params['selectbox_key']}_{selected_unique_id}_{index}",
                 label_visibility=visibility,
+                height=calculate_text_area_height(unescape_newline(edge["comment"])),
             )
         return "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
     return visibility
@@ -57,11 +60,12 @@ def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict
         edge[params["selectbox_index"]] = id_title_dict[selected_value_from_widget]
     with params["description_column"]:
         comment_key = f"comment_{params['selectbox_key']}_new"
-        edge["comment"] = st.text_input(
+        edge["comment"] = st.text_area(
             "説明(新規)",
             value="",  # 明示的にデフォルト値を設定
             key=comment_key,
             label_visibility=visibility,
+            height=calculate_text_area_height(""),
         )
 
 
@@ -163,9 +167,18 @@ def render_edit_panel():
     tmp_entity["type"] = st.selectbox(
         "タイプ", pfd_type_list, index=pfd_type_list.index(tmp_entity["type"])
     )
-    tmp_entity["id"] = st.text_area("課題・状況", tmp_entity["id"])
+    tmp_entity["id"] = st.text_area(
+        "課題・状況",
+        unescape_newline(tmp_entity["id"]),
+        height=calculate_text_area_height(unescape_newline(tmp_entity["id"])),
+        key=f"pfd_text_{selected_unique_id}",
+    )
+
     tmp_entity["color"] = st.selectbox(
-        "色", color_list, index=color_list.index(tmp_entity["color"])
+        "色",
+        color_list,
+        index=color_list.index(tmp_entity["color"]),
+        key=f"pfd_color_{selected_unique_id}",
     )
 
     # 接続元の関係を取得
