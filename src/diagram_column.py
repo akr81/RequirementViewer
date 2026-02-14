@@ -14,26 +14,37 @@ import hjson
 import shutil
 
 
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
+@dataclass
+class DiagramContext:
+    app_name: str
+    unique_id_dict: Dict[str, str]
+    id_title_dict: Dict[str, str]
+    id_title_list: List[str]
+    config_data: Dict[str, Any]
+    requirements: Dict[str, Any]
+
+@dataclass
+class DiagramOptions:
+    upstream_distance: int
+    downstream_distance: int
+    scale: float
+    graph_data: Any = None
+    landscape: bool = False
+    title: bool = False
+    detail: bool = False
+    link_mode: bool = False
+    previous_selected: str = "None"
+
 def draw_diagram_column(
-    app_name,  # Renamed page_title to app_name for clarity
     column,
-    unique_id_dict,
-    id_title_dict,
-    id_title_list,
-    config_data,  # This is st.session_state.config_data
-    requirements,
-    upstream_distance,
-    downstream_distance,
-    scale,
-    *,
-    graph_data=None,
-    landscape=False,
-    title=False,
-    detail=False,
-    link_mode=False,
-    previous_selected="None"
+    context: DiagramContext,
+    options: DiagramOptions,
 ):
     target = None
+    plantuml_code = ""
     DATA_DIR = "data"  # Define data directory
     os.makedirs(DATA_DIR, exist_ok=True)  # Ensure data directory exists
 
@@ -48,77 +59,77 @@ def draw_diagram_column(
             landscape_column,
         ) = st.columns([2, 2, 1, 1, 1, 1])
         with title_column:
-            st.write(f"### {app_name}")
+            st.write(f"### {context.app_name}")
             st.write("クリックするとエンティティが選択されます")
         with filter_column:
             target = st.query_params.get("target", None)
-            if target == None or target == "None" or target not in unique_id_dict:
+            if target == None or target == "None" or target not in context.unique_id_dict:
                 target = "None"
-            target = id_title_dict[
+            target = context.id_title_dict[
                 st.selectbox(
                     "フィルタ",
-                    id_title_list,
-                    index=id_title_list.index(unique_id_dict[target]),
-                    key=f"{app_name}_filter_selectbox",
+                    context.id_title_list,
+                    index=context.id_title_list.index(context.unique_id_dict[target]),
+                    key=f"{context.app_name}_filter_selectbox",
                 )
             ]
 
-            if graph_data is None:
-                graph_data = RequirementGraph(copy.deepcopy(requirements), app_name)
+            if options.graph_data is None:
+                options.graph_data = RequirementGraph(copy.deepcopy(context.requirements), context.app_name)
         with upstream_distance_column:
-            upstream_distance = st.slider(
+            options.upstream_distance = st.slider(
                 "A方向フィルタ距離",
                 min_value=-1,
-                max_value=config_data["upstream_filter_max"],
-                value=int(upstream_distance),
+                max_value=context.config_data["upstream_filter_max"],
+                value=int(options.upstream_distance),
                 step=1,
-                key=f"{app_name}_upstream_slider",
+                key=f"{context.app_name}_upstream_slider",
             )
         with downstream_distance_column:
-            downstream_distance = st.slider(
+            options.downstream_distance = st.slider(
                 "B方向フィルタ距離",
                 min_value=-1,
-                max_value=config_data["downstream_filter_max"],
-                value=int(downstream_distance),
+                max_value=context.config_data["downstream_filter_max"],
+                value=int(options.downstream_distance),
                 step=1,
-                key=f"{app_name}_downstream_slider",
+                key=f"{context.app_name}_downstream_slider",
             )
         with landscape_column:
             landscape_mod = st.checkbox(
-                "横向き", value=landscape, key=f"{app_name}_landscape_checkbox"
+                "横向き", value=options.landscape, key=f"{context.app_name}_landscape_checkbox"
             )
             title_mod = st.checkbox(
-                "タイトル", value=title, key=f"{app_name}_title_checkbox"
+                "タイトル", value=options.title, key=f"{context.app_name}_title_checkbox"
             )
             detail_mod = st.checkbox(
-                "詳細", value=detail, key=f"{app_name}_detail_checkbox"
+                "詳細", value=options.detail, key=f"{context.app_name}_detail_checkbox"
             )
-            link_mod = st.toggle("🖱️ 接続モード", value=link_mode, key=f"{app_name}_connect_mode")
-        graph_data.extract_subgraph(
+            link_mod = st.toggle("🖱️ 接続モード", value=options.link_mode, key=f"{context.app_name}_connect_mode")
+        options.graph_data.extract_subgraph(
             target,
-            upstream_distance=upstream_distance,
-            downstream_distance=downstream_distance,
+            upstream_distance=options.upstream_distance,
+            downstream_distance=options.downstream_distance,
             detail=detail_mod,
         )
         with scale_column:
-            scale = st.slider(
+            options.scale = st.slider(
                 "スケール",
                 min_value=0.1,
                 max_value=3.0,
-                value=scale,
+                value=options.scale,
                 step=0.1,
-                key=f"{app_name}_scale_slider",
+                key=f"{context.app_name}_scale_slider",
             )
             parameters_dict = {}
-            parameters_dict["scale"] = scale
+            parameters_dict["scale"] = options.scale
             parameters_dict["target"] = target
-            parameters_dict["upstream_distance"] = upstream_distance
-            parameters_dict["downstream_distance"] = downstream_distance
+            parameters_dict["upstream_distance"] = options.upstream_distance
+            parameters_dict["downstream_distance"] = options.downstream_distance
             parameters_dict["landscape"] = landscape_mod
             parameters_dict["title"] = title_mod
             parameters_dict["detail"] = detail_mod
             parameters_dict["link_mode"] = link_mod
-            parameters_dict["previous_selected"] = previous_selected
+            parameters_dict["previous_selected"] = options.previous_selected
 
             config = {
                 "detail": True,
@@ -130,16 +141,16 @@ def draw_diagram_column(
 
             try:
                 plantuml_code = converter.convert_to_puml(
-                    app_name,
-                    graph_data.subgraph,
+                    context.app_name,
+                    options.graph_data.subgraph,
                     title=None,
                     parameters_dict=parameters_dict,
-                    diagram_title=requirements.get("title", ""),
+                    diagram_title=context.requirements.get("title", ""),
                 )
             except:
                 st.error("PlantUMLコードの変換に失敗しました。")
                 plantuml_code = ""
-            svg_output = get_diagram(plantuml_code, config_data["plantuml"])
+            svg_output = get_diagram(plantuml_code, context.config_data["plantuml"])
             svg_output = svg_output.replace(
                 "<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>"
             )
@@ -152,7 +163,7 @@ def draw_diagram_column(
             pass
         st.markdown(
             f"""
-            <div style="width:100%; height:{config_data['viewer_height']}px; overflow:auto; border:0px solid black;">
+            <div style="width:100%; height:{context.config_data['viewer_height']}px; overflow:auto; border:0px solid black;">
                 {svg_output}
             </div>
             """,
@@ -169,8 +180,8 @@ def draw_diagram_column(
 
         # New File Section
         with st.expander("新しいファイルを作成"):
-            new_file_name_key = f"{app_name}_new_file_name"
-            postfix = st.session_state.app_data[app_name].get("postfix", "data")
+            new_file_name_key = f"{context.app_name}_new_file_name"
+            postfix = st.session_state.app_data[context.app_name].get("postfix", "data")
             if new_file_name_key not in st.session_state:
                 current_time_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 st.session_state[new_file_name_key] = (
@@ -180,7 +191,7 @@ def draw_diagram_column(
             new_file_name = st.text_input(
                 "新しいファイル名 (.hjson):", key=new_file_name_key
             )
-            if st.button("作成して開く", key=f"{app_name}_create_new_file"):
+            if st.button("作成して開く", key=f"{context.app_name}_create_new_file"):
                 if new_file_name and new_file_name.endswith(".hjson"):
                     new_file_path = os.path.join(DATA_DIR, new_file_name)
                     if os.path.exists(new_file_path):
@@ -196,7 +207,7 @@ def draw_diagram_column(
                                 # For Evaporating Cloud Viewer, copy default template
                                 shutil.copyfile("template/ec.hjson", new_file_path)
 
-                            data_file_key = st.session_state.app_data[app_name]["data"]
+                            data_file_key = st.session_state.app_data[context.app_name]["data"]
                             st.session_state.config_data[data_file_key] = new_file_path
                             save_config(st.session_state.config_data)
                             st.session_state.file_path = new_file_path
@@ -246,15 +257,15 @@ def draw_diagram_column(
                     options=options_paths,
                     format_func=lambda path: file_options_map[path],
                     index=default_index,
-                    key=f"{app_name}_select_open_file",
+                    key=f"{context.app_name}_select_open_file",
                 )
 
                 if st.button(
-                    "選択したファイルを開く", key=f"{app_name}_open_selected_file"
+                    "選択したファイルを開く", key=f"{context.app_name}_open_selected_file"
                 ):
                     if selected_file_to_open:
                         try:
-                            data_file_key = st.session_state.app_data[app_name]["data"]
+                            data_file_key = st.session_state.app_data[context.app_name]["data"]
                             st.session_state.config_data[data_file_key] = (
                                 selected_file_to_open
                             )
@@ -275,12 +286,12 @@ def draw_diagram_column(
         st.markdown("---")  # Separator
 
         if st.session_state.get("save_png", False):
-            postfix_file = st.session_state.app_data[st.session_state.app_name][
+            postfix_file = st.session_state.app_data[context.app_name][
                 "postfix"
             ]
             os.makedirs("back", exist_ok=True)
             png_output = get_diagram(
-                plantuml_code, config_data["plantuml"], png_out=True
+                plantuml_code, context.config_data["plantuml"], png_out=True
             )
             filename = (
                 datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

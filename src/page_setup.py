@@ -12,7 +12,7 @@ from src.utility import (
     update_source_data,
 )
 from src.diagram_configs import DEFAULT_ENTITY_GETTERS  # 追加
-from src.diagram_column import draw_diagram_column  # 追加
+from src.diagram_column import draw_diagram_column, DiagramContext, DiagramOptions  # 追加
 
 
 def initialize_page(app_name: str):
@@ -213,23 +213,31 @@ def setup_page_layout_and_data(
     # 図表示とデータ編集のレイアウトを設定
     diagram_column, edit_column = st.columns([4, 1])
 
-    plantuml_code = draw_diagram_column(
-        app_name,
-        diagram_column,
-        unique_id_dict,
-        id_title_dict,
-        id_title_list,
-        config_data,
-        requirement_data,
-        upstream_distance,
-        downstream_distance,
-        scale,
+    context = DiagramContext(
+        app_name=app_name,
+        unique_id_dict=unique_id_dict,
+        id_title_dict=id_title_dict,
+        id_title_list=id_title_list,
+        config_data=config_data,
+        requirements=requirement_data,
+    )
+    
+    options = DiagramOptions(
+        upstream_distance=upstream_distance,
+        downstream_distance=downstream_distance,
+        scale=scale,
         graph_data=graph_data,
         landscape=landscape,
         title=title,
         detail=detail,
         link_mode=link_mode,
         previous_selected=previous_selected,
+    )
+
+    plantuml_code = draw_diagram_column(
+        diagram_column,
+        context=context,
+        options=options,
     )
 
     return {
