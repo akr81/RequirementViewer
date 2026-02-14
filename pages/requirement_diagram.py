@@ -82,7 +82,9 @@ selected_entity = page_elements["selected_entity"]
 edit_column = page_elements["edit_column"]
 plantuml_code = page_elements["plantuml_code"]
 
-with edit_column:
+@st.fragment
+def render_edit_panel():
+    """右側操作パネルの描画（部分再描画対応）"""
     # --- リセット対象キーの登録 ---
     if "clearable_new_connection_keys" not in st.session_state:
         st.session_state.clearable_new_connection_keys = {}
@@ -246,7 +248,8 @@ with edit_column:
     )
 
 
-# セッション状態にgraph_dataを追加
+with edit_column:
+    render_edit_panel()
 st.session_state.graph_data = graph_data
 
 # テキストエリアで PlantUML コードが確認可能

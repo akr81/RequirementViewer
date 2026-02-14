@@ -12,7 +12,7 @@ import copy
 
 
 def render_edge_connection(
-    edge: dict, index: int, visibility: str, params: dict
+    edge: dict, index: int, visibility: str, params: dict, entity_type: str = "entity"
 ) -> str:
     if edge[params["condition"]] == selected_unique_id:
         with params["connection_column"]:
@@ -38,7 +38,7 @@ def render_edge_connection(
             edge["and"] = get_next_and_number(add_list, edge["and"])
             if not edge["and"]:
                 edge["and"] = "None"
-        if tmp_entity["type"] == "note":
+        if entity_type == "note":
             edge["type"] = "flat_long"
 
         return "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
@@ -119,7 +119,9 @@ edit_column = page_elements["edit_column"]
 plantuml_code = page_elements["plantuml_code"]
 
 
-with edit_column:
+@st.fragment
+def render_edit_panel():
+    """右側操作パネルの描画（部分再描画対応）"""
     # --- リセット対象キーの登録 ---
     if "clearable_new_connection_keys" not in st.session_state:
         st.session_state.clearable_new_connection_keys = {}
@@ -177,7 +179,7 @@ with edit_column:
     params_to["connection_column"], params_to["and_column"] = st.columns([7, 2])
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        visibility = render_edge_connection(edge, i, visibility, params_to)
+        visibility = render_edge_connection(edge, i, visibility, params_to, tmp_entity["type"])
 
     # 関係追加の操作があるため、1つは常に表示
     temp_predecessor = {
@@ -195,7 +197,7 @@ with edit_column:
     params_from["connection_column"], params_from["and_column"] = st.columns([7, 2])
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
-        visibility = render_edge_connection(edge, i, visibility, params_from)
+        visibility = render_edge_connection(edge, i, visibility, params_from, tmp_entity["type"])
 
     # 関係追加の操作があるため、1つは常に表示
     temp_ancestor = {
@@ -236,7 +238,9 @@ with edit_column:
         key_suffix="bottom"  # 重複エラー回避用
     )
 
-# セッション状態にgraph_dataを追加
+
+with edit_column:
+    render_edit_panel()
 st.session_state.graph_data = graph_data
 
 # テキストエリアで PlantUML コードが確認可能
