@@ -101,8 +101,8 @@ class ConvertPumlCode:
         # Process Flow Diagram Node Converters
         # Process Flow Diagram Node Converters
         self.pfd_node_converters = {
-            "process": self._convert_pfd_usecase_node,
-            "cloud": self._convert_pfd_cloud_node,
+            "process": lambda n, p: self._convert_pfd_element(n, p, "usecase"),
+            "cloud": lambda n, p: self._convert_pfd_element(n, p, "cloud"),
             "card": lambda n, p: self._convert_simple_card_node(n, p, "id"),
             "deliverable": lambda n, p: self._convert_simple_card_node(n, p, "id"),
             "note": lambda n, p: self._convert_note_using_field(n, p, "id", keep_newline=True),
@@ -418,22 +418,20 @@ class ConvertPumlCode:
         
         converter = self.req_node_converters.get(node_type)
         if converter:
-            if converter == self._convert_req_diagram_requirement_node:
-                return converter(
-                    node_attrs, node_type, parameters_str, parameters_dict.get("detail", True)
-                )
-            elif converter == self._convert_req_diagram_block_node:
-                return converter(node_attrs, node_type, parameters_str)
-            else:
-                # usecase, note-like entities
-                return converter(node_attrs, parameters_str)
+            return converter(
+                node_attrs, node_type, parameters_str, detail=parameters_dict.get("detail", True)
+            )
         else:
              raise ValueError(
                 f"Requirement Diagram: No convert rule defined for type: {node_type}"
             )
 
     def _convert_req_diagram_usecase_node(
-        self, data: Dict[str, Any], parameters_str: str
+        self,
+        data: Dict[str, Any],
+        node_type: str,
+        parameters_str: str,
+        detail: bool = True,
     ) -> str:
         """Convert usecase node for Requirement Diagram to PlantUML code.
 
@@ -506,7 +504,11 @@ class ConvertPumlCode:
         return puml_code
 
     def _convert_req_diagram_block_node(
-        self, data: Dict[str, Any], node_type: str, parameters_str: str
+        self,
+        data: Dict[str, Any],
+        node_type: str,
+        parameters_str: str,
+        detail: bool = True,
     ) -> str:
         """Convert block/testCase node for Requirement Diagram to PlantUML code.
 
@@ -526,7 +528,11 @@ class ConvertPumlCode:
         return f"class \"{full_title}\" as {data['unique_id']} <<{node_type}>> {parameters_str} {color_str}"
 
     def _convert_req_diagram_note_node(
-        self, data: Dict[str, Any], parameters_str: str
+        self,
+        data: Dict[str, Any],
+        node_type: str,
+        parameters_str: str,
+        detail: bool = True,
     ) -> str:
         """Convert rationale/problem (note-like) node for Requirement Diagram to PlantUML code.
 
@@ -861,48 +867,27 @@ class ConvertPumlCode:
 
 
 
-    def _convert_pfd_usecase_node(
-        self, node: Tuple[str, Dict], parameters_dict: Dict
+    def _convert_pfd_element(
+        self, node: Tuple[str, Dict], parameters_dict: Dict, puml_type: str
     ) -> str:
-        """Convert usecase information to PlantUML code.
-        (Specifically for Process Flow Diagram)
-        The original _convert_usecase method had a different signature for Requirement Diagram.
-
-        Args:
-            node (Tuple[str, Dict]): Usecase information (node_id, attributes_dict).
-            parameters_dict (Dict): Parameters for link.
-
-        Returns:
-            str: PlantUML code.
-        """
-        node_attrs = node[1]  # node is (unique_id, attributes_dict)
+        """Convert generic element (usecase, cloud) for PFD."""
+        node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
-        if node_attrs["type"] == "process":
-            # Convert and node
-            id_val = node_attrs["id"]
-            id_val = id_val.replace("\n", "\\n")  # Escape newlines for PlantUML label
-            return f"usecase \"{id_val}\" as {node_attrs['unique_id']} {parameters_str} {color_str}\n"
-        return ""  # Should not happen if called correctly
+        
+        id_val = node_attrs["id"]
+        # Escape newlines for PlantUML label
+        id_val = id_val.replace("\n", "\\n")
+        escaped_id_val = self._escape_puml(id_val) # Further escape if needed (though existing code only replaced newline)
+        # 既存ロジックはダブルクォートのエスケープをしていないが、安全のため _escape_puml を通すべきか？
+        # 元のコードは id_val.replace("\n", "\\n") のみだった。
+        # ここでは安全側に倒して _escape_puml を使うが、改行は維持しつつ自分で \\n に置換しているので keep_newline=True にして、
+        # その後 replace するか、あるいは _escape_puml の挙動に任せる。
+        # _escape_puml(text, keep_newline=False) は改行を \\n に置換する。
+        # なので、単に self._escape_puml(node_attrs["id"]) で良いはず。
+        
+        escaped_id_val = self._escape_puml(node_attrs["id"])
+        
+        return f"{puml_type} \"{escaped_id_val}\" as {node_attrs['unique_id']} {parameters_str} {color_str}\n"
 
-    def _convert_pfd_cloud_node(
-        self, node: Tuple[str, Dict], parameters_dict: Dict
-    ) -> str:
-        """Convert cloud information to PlantUML code.
-        (Specifically for Process Flow Diagram)
 
-        Args:
-            node (Tuple[str, Dict]): Cloud information (node_id, attributes_dict)
-            parameters_dict (Dict): Parameters for link.
-
-        Returns:
-            str: PlantUML code.
-        """
-        node_attrs = node[1]  # node is (unique_id, attributes_dict)
-        parameters_str = self._convert_parameters_dict(node, parameters_dict)
-        color_str = self._get_puml_color(node_attrs)
-        if node_attrs["type"] == "cloud":
-            id_val = node_attrs["id"]
-            id_val = id_val.replace("\n", "\\n")  # Escape newlines for PlantUML label
-            return f"cloud \"{id_val}\" as {node_attrs['unique_id']} {parameters_str} {color_str}\n"
-        return ""  # Should not happen if called correctly
