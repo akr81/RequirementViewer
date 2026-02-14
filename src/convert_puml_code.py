@@ -48,15 +48,24 @@ class ConvertPumlCode:
             "Evaporating Cloud Viewer": {"ortho": False, "sep": 0},
         }
 
-    def _escape_puml(self, text: str) -> str:
-        """Escape text for PlantUML."""
+    def _escape_puml(self, text: str, keep_newline: bool = False) -> str:
+        """Escape text for PlantUML.
+        
+        Args:
+            text (str): Input text
+            keep_newline (bool): If True, keeps newline characters as is. 
+                                 If False (default), replaces newline with \\n.
+        """
         if not text:
             return ""
         # PlantUMLで特別扱いされる文字をエスケープまたは置換
         # ダブルクォートをシングルクォートに置換して文字列リテラル脱出を防ぐ
         text = text.replace('"', "'")
-        # 改行を \n に置換
-        text = text.replace("\n", "\\n")
+        
+        if not keep_newline:
+            # 改行を \n に置換
+            text = text.replace("\n", "\\n")
+            
         return text
 
     def convert_to_puml(
@@ -330,7 +339,7 @@ class ConvertPumlCode:
         
         raw_content = node_attrs.get(content_field, "")
         # コンテンツをエスケープ
-        content = self._escape_puml(raw_content)
+        content = self._escape_puml(raw_content, keep_newline=True)
         
         return self._create_card_puml(
             node_attrs["unique_id"], content, parameters_str, color_str
@@ -643,11 +652,11 @@ class ConvertPumlCode:
         # Ensure all expected keys exist, providing defaults if necessary
         # コンテンツをエスケープ
         node_id = node_attrs.get("id", "")
-        necessary_assumption = self._escape_puml(node_attrs.get("necessary_assumption", ""))
-        strategy = self._escape_puml(node_attrs.get("strategy", ""))
-        parallel_assumption = self._escape_puml(node_attrs.get("parallel_assumption", ""))
-        tactics = self._escape_puml(node_attrs.get("tactics", ""))
-        sufficient_assumption = self._escape_puml(node_attrs.get("sufficient_assumption", ""))
+        necessary_assumption = self._escape_puml(node_attrs.get("necessary_assumption", ""), keep_newline=True)
+        strategy = self._escape_puml(node_attrs.get("strategy", ""), keep_newline=True)
+        parallel_assumption = self._escape_puml(node_attrs.get("parallel_assumption", ""), keep_newline=True)
+        tactics = self._escape_puml(node_attrs.get("tactics", ""), keep_newline=True)
+        sufficient_assumption = self._escape_puml(node_attrs.get("sufficient_assumption", ""), keep_newline=True)
         
         if not detail:
             content = ST_CONTENT_SIMPLE.format(
