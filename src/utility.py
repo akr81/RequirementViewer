@@ -8,6 +8,7 @@ import os
 import shutil
 import datetime
 import copy
+import tempfile
 from typing import Tuple, List, Dict, Tuple, Any, Optional
 
 
@@ -145,8 +146,7 @@ def save_config(config_data: dict):
     """
     config_file_path = "setting/config.hjson"
     try:
-        with open(config_file_path, "w", encoding="utf-8") as f:
-            hjson.dump(config_data, f, ensure_ascii=False, indent=4)
+        atomic_write_json(config_file_path, config_data)
     except Exception as e:
         st.error(f"設定ファイルの保存に失敗しました: {e}")
 
@@ -198,9 +198,9 @@ def load_source_data(file_path: str) -> Dict:
         with open(file_path, "r", encoding="utf-8") as f:
             try:
                 source_data = hjson.load(f)
-            except:
-                st.error("JSONファイルの読み込みに失敗しました。")
-                st.stop()
+            except Exception as e:
+                st.error(f"JSONファイルの読み込みに失敗しました: {file_path}\nError: {e}")
+                return []
     else:
         # 存在しない場合は空で始める
         source_data = []
@@ -259,8 +259,7 @@ def update_source_data(file_path: str, source_data: Dict):
 
     source_data["edges"] = filtered_edges
 
-    with open(file_path, "w", encoding="utf-8") as f:
-        hjson.dump(source_data, f, ensure_ascii=False, indent=4)
+    atomic_write_json(file_path, source_data)
 
     # for backup
     postfix_file = st.session_state.app_data[st.session_state.app_name]["postfix"]
@@ -268,8 +267,7 @@ def update_source_data(file_path: str, source_data: Dict):
     filename = (
         datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{postfix_file}.hjson"
     )
-    with open(os.path.join("back", filename), "w", encoding="utf-8") as out:
-        hjson.dump(source_data, out, ensure_ascii=False, indent=4)
+    atomic_write_json(os.path.join("back", filename), source_data)
 
     # 変更に合わせてPNG画像を保存
     st.session_state["save_png"] = True
@@ -415,3 +413,34 @@ def make_hashable(data):
     # 他のハッシュ可能な型 (int, str, tuple, frozensetなど) はそのまま返す
     # 注意: float型は完全一致の問題があるため、用途によっては丸め処理などが必要
     return data
+
+
+def atomic_write_json(file_path: str, data: Any):
+    """Write data to JSON file atomically.
+
+    Args:
+        file_path (str): Path to JSON file
+        data (Any): Data to write
+    """
+    dir_name = os.path.dirname(file_path) or "."
+    # 同じディレクトリに一時ファイルを作成
+    with tempfile.NamedTemporaryFile(
+        mode="w", dir=dir_name, delete=False, encoding="utf-8"
+    ) as tf:
+        temp_path = tf.name
+        try:
+            hjson.dump(data, tf, ensure_ascii=False, indent=4)
+            tf.flush()
+            os.fsync(tf.fileno())
+        except Exception:
+            # 書き込み失敗時は一時ファイルを削除して例外を再送出
+            tf.close()
+            os.remove(temp_path)
+            raise
+
+    # 正常に書き込めた場合のみリネーム（アトミック操作）
+    try:
+        os.replace(temp_path, file_path)
+    except OSError:
+        os.remove(temp_path)
+        raise
