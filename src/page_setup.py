@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
@@ -16,6 +17,19 @@ from src.utility import (
 )
 from src.diagram_configs import DEFAULT_ENTITY_GETTERS  # 追加
 from src.diagram_column import draw_diagram_column, DiagramContext, DiagramOptions  # 追加
+
+
+@dataclass
+class GraphData:
+    requirement_data: Dict[str, Any]
+    nodes: List[Dict[str, Any]]
+    edges: List[Dict[str, Any]]
+    requirement_manager: RequirementManager
+    graph_data: RequirementGraph
+    id_title_dict: Dict[str, str]
+    unique_id_dict: Dict[str, str]
+    id_title_list: List[str]
+    add_list: List[str]
 
 
 @dataclass
@@ -59,21 +73,61 @@ def initialize_page(app_name: str):
     return color_list, config_data, app_data
 
 
-def load_and_prepare_data(file_path, app_name):
-    # JSONからノードとエッジ情報を取得
+@st.cache_data
+def load_graph_data(file_path: str, mtime: float, app_name: str) -> GraphData:
+    """データの読み込みとグラフ構築をキャッシュ付きで実行する。
+
+    Args:
+        file_path: HJSONファイルパス
+        mtime: ファイル更新時刻（キャッシュ無効化用）
+        app_name: アプリケーション名
+
+    Returns:
+        GraphData: 構築済みのグラフデータ
+    """
     requirement_data = load_source_data(file_path)
     nodes = requirement_data["nodes"]
     edges = requirement_data["edges"]
-
-    # requirement情報とgraphを取得
     requirement_manager = RequirementManager(requirement_data)
     graph_data = RequirementGraph(requirement_data, app_name)
-
-    # ノードとエッジからなる辞書・リストを取得
     id_title_dict = build_mapping(nodes, "id", "unique_id", add_empty=True)
     unique_id_dict = build_mapping(nodes, "unique_id", "id", add_empty=True)
     id_title_list = build_sorted_list(nodes, "id", prepend=["None"])
     add_list = build_and_list(edges, prepend=["None", "New"])
+
+    return GraphData(
+        requirement_data=requirement_data,
+        nodes=nodes,
+        edges=edges,
+        requirement_manager=requirement_manager,
+        graph_data=graph_data,
+        id_title_dict=id_title_dict,
+        unique_id_dict=unique_id_dict,
+        id_title_list=id_title_list,
+        add_list=add_list,
+    )
+
+
+def load_and_prepare_data(file_path, app_name):
+    # ファイルの更新時刻を取得（キャッシュキーとして使用）
+    try:
+        mtime = os.path.getmtime(file_path)
+    except OSError:
+        mtime = 0.0
+
+    # キャッシュされたデータをロード
+    gd = load_graph_data(file_path, mtime, app_name)
+
+    # キャッシュから展開
+    requirement_data = gd.requirement_data
+    nodes = gd.nodes
+    edges = gd.edges
+    requirement_manager = gd.requirement_manager
+    graph_data = gd.graph_data
+    id_title_dict = gd.id_title_dict
+    unique_id_dict = gd.unique_id_dict
+    id_title_list = gd.id_title_list
+    add_list = gd.add_list
 
     # URL のクエリからパラメタを取得
     scale = float(st.query_params.get("scale", 1.0))

@@ -9,7 +9,21 @@ import shutil
 import datetime
 import copy
 import tempfile
+import time
+from contextlib import contextmanager
 from typing import Tuple, List, Dict, Tuple, Any, Optional
+
+
+@contextmanager
+def log_time(label: str):
+    """Execution time logging context manager."""
+    start_time = time.time()
+    try:
+        yield
+    finally:
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"[{label}] Execution time: {elapsed_time:.4f} seconds")
 
 
 # PlantUMLサーバをバックグラウンドプロセスとして起動し、キャッシュする
