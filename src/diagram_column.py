@@ -12,6 +12,10 @@ from src.utility import (
     save_config,
     get_default_data_structure,
     list_hjson_files,
+    load_source_data,
+    embed_hjson_in_puml,
+    extract_hjson_from_png,
+    atomic_write_json,
 )
 from src.requirement_graph import RequirementGraph
 from src.convert_puml_code import ConvertPumlCode
@@ -326,8 +330,11 @@ def _render_file_operations(
     if st.session_state.get("save_png", False):
         postfix_file = st.session_state.app_data[context.app_name]["postfix"]
         os.makedirs("back", exist_ok=True)
+        # hjsonデータをPlantUMLコメントとして埋め込んでからPNG生成
+        source_data = load_source_data(st.session_state.get("file_path", ""))
+        plantuml_code_with_hjson = embed_hjson_in_puml(plantuml_code, source_data)
         png_output = get_diagram(
-            plantuml_code, context.config_data["plantuml"], png_out=True
+            plantuml_code_with_hjson, context.config_data["plantuml"], png_out=True
         )
         filename = (
             datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -336,6 +343,72 @@ def _render_file_operations(
         with open(os.path.join("back", filename), "wb") as out:
             out.write(png_output)
         st.session_state["save_png"] = False
+
+    # --- PNGからインポート ---
+    with st.expander("PNGからインポート"):
+        st.caption("hjsonデータが埋め込まれたPNGファイルからデータを復元します。")
+        uploaded_png = st.file_uploader(
+            "PNGファイルをアップロード",
+            type=["png"],
+            key=f"{context.app_name}_import_png",
+        )
+        if uploaded_png is not None:
+            if st.button("インポート実行", key=f"{context.app_name}_do_import_png"):
+                try:
+                    # アップロードされたPNGを一時ファイルに保存
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(
+                        suffix=".png", delete=False
+                    ) as tmp:
+                        tmp.write(uploaded_png.getbuffer())
+                        tmp_path = tmp.name
+
+                    try:
+                        # PNGからhjsonデータを抽出
+                        restored_data = extract_hjson_from_png(tmp_path)
+
+                        # 新しいhjsonファイルとして保存
+                        DATA_DIR = "data"
+                        os.makedirs(DATA_DIR, exist_ok=True)
+                        postfix = st.session_state.app_data[
+                            context.app_name
+                        ].get("postfix", "data")
+                        import_time_str = datetime.datetime.now().strftime(
+                            "%Y%m%d_%H%M%S"
+                        )
+                        import_filename = (
+                            f"{import_time_str}_{postfix}_imported.hjson"
+                        )
+                        import_path = os.path.join(DATA_DIR, import_filename)
+                        atomic_write_json(import_path, restored_data)
+
+                        # インポートしたファイルを開く
+                        data_file_key = st.session_state.app_data[
+                            context.app_name
+                        ]["data"]
+                        st.session_state.config_data[data_file_key] = (
+                            import_path
+                        )
+                        save_config(st.session_state.config_data)
+                        st.session_state.file_path = import_path
+                        st.success(
+                            f"PNGからデータを復元し、'{import_filename}' "
+                            f"として保存しました。"
+                        )
+                        st.query_params.clear()
+                        st.query_params.selected = "default"
+                        st.query_params.detail = "True"
+                        st.rerun()
+                    finally:
+                        # 一時ファイルを削除
+                        os.unlink(tmp_path)
+
+                except ValueError as e:
+                    st.error(str(e))
+                except RuntimeError as e:
+                    st.error(f"PNGの処理中にエラーが発生しました: {e}")
+                except Exception as e:
+                    st.error(f"予期しないエラーが発生しました: {e}")
 
 
 def draw_diagram_column(
