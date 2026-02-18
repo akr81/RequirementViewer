@@ -459,8 +459,8 @@ def calculate_text_area_height(text: str, min_height: int = 100, line_height: in
     if not text:
         return min_height
     
-    # 行数をカウント（改行の数 + 1）
-    lines = text.count('\n') + 1
+    # 行数をカウント（改行の数 + 1 + 末尾の空行分1）
+    lines = text.count('\n') + 2
     
     # なぜか1行でも高くなりすぎることがあるので、少し調整
     # base height (padding etc.) + lines * line_height
