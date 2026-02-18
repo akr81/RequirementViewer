@@ -404,12 +404,6 @@ class ConvertPumlCode:
         
         raw_content = node_attrs.get(content_field, "")
         
-        # DEBUG: 特定のIDの場合のみログ出力
-        if "7707cb4e" in node_attrs["unique_id"]:
-             import streamlit as st
-             st.sidebar.markdown(f"**Debug Node {node_attrs['unique_id']}**")
-             st.sidebar.code(f"Raw: {repr(raw_content)}\nKeepNewline: True")
-
         # コンテンツをエスケープ (keep_newline=True 相当)
         # _escape_puml を経由せず直接処理
         content = raw_content.replace('"', "'")
