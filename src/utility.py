@@ -369,6 +369,11 @@ def get_backup_files_for_current_data():
     Returns:
         list: List of backup files
     """
+    # copy_fileによるファイルコピー後のページ全体再描画をここで処理する
+    # （fragment内の通常レンダリングパスなのでst.rerunが正常動作する）
+    if st.session_state.pop("need_full_rerun", False):
+        st.rerun(scope="app")
+
     # バックアップファイルのリストを取得
     backup_files = [
         f
@@ -391,11 +396,15 @@ def copy_file():
     """
 
     src = st.session_state["selected_backup_file"]
+    # プレースホルダー（「バックアップから読込」）が選択された場合はスキップ
+    if src == "バックアップから読込":
+        return
     dst = st.session_state["file_path"]
-    """Copy file from src to dst."""
     src = os.path.join("back", src)
     if os.path.exists(src):
         shutil.copy(src, dst)
+        # @st.fragment 内からの呼び出しでもページ全体を再描画するためフラグを設定
+        st.session_state["need_full_rerun"] = True
 
 
 def make_hashable(data):
