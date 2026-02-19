@@ -45,7 +45,10 @@ def main_landing_page():
     # PlantUMLサーバを起動（キャッシュされるので再度起動されません）
     # この処理はアプリケーション起動時に一度だけ行われるのが望ましい
     if not ("www.plantuml.com" in config_data.get("plantuml", "")):
-        start_plantuml_server()
+        # 設定データを渡してサーバー起動（ポート探索を含む）
+        url = start_plantuml_server(config_data)
+        if url:
+            st.session_state["runtime_plantuml_url"] = url
 
     # PlantUMLが外部の公開サーバを使用している場合の注意喚起
     # セッションステートでダイアログの表示状態を管理

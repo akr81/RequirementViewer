@@ -12,6 +12,8 @@ import datetime
 import copy
 import tempfile
 import time
+import socket
+from urllib.parse import urlparse
 from contextlib import contextmanager
 from typing import Tuple, List, Dict, Any, Optional
 
@@ -29,16 +31,71 @@ def log_time(label: str):
 
 
 # PlantUMLサーバをバックグラウンドプロセスとして起動し、キャッシュする
+def find_available_port(start_port: int, max_attempts: int = 20) -> int:
+    """指定されたポートから開始して、利用可能なポートを見つける。
+
+    Args:
+        start_port (int): 探索開始ポート
+        max_attempts (int): 最大試行回数
+
+    Returns:
+        int: 利用可能なポート番号
+    
+    Raises:
+        RuntimeError: 利用可能なポートが見つからない場合
+    """
+    for port in range(start_port, start_port + max_attempts):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            result = sock.connect_ex(("localhost", port))
+            if result != 0:  # 0以外なら接続不可＝空いている可能性が高い
+                return port
+    raise RuntimeError(
+        f"利用可能なポートが見つかりませんでした (探索範囲: {start_port}-{start_port + max_attempts - 1})"
+    )
+
+
 @st.cache_resource
-def start_plantuml_server():
-    """Launch PlantUML server as a background process."""
+def start_plantuml_server(config_data: dict = None) -> str:
+    """Launch PlantUML server as a background process.
+    
+    Args:
+        config_data (dict): 設定データ。plantumlのURL設定を含む。指定がない場合はデフォルト(8080)を使用。
+
+    Returns:
+        str: 起動したPlantUMLサーバーのURL (例: http://localhost:8081)
+    """
+    # configからポートを取得 (デフォルト 8080)
+    start_port = 8080
+    base_url = "http://localhost"
+    
+    if config_data and "plantuml" in config_data:
+        try:
+            parsed = urlparse(config_data["plantuml"])
+            if parsed.port:
+                start_port = parsed.port
+            if parsed.scheme and parsed.hostname:
+                 base_url = f"{parsed.scheme}://{parsed.hostname}"
+        except Exception:
+            pass  # パースエラー時はデフォルトを使用
+
+    # 空きポートを探す
+    try:
+        port = find_available_port(start_port)
+    except RuntimeError as e:
+        st.error(f"PlantUMLサーバの起動に失敗しました: {e}")
+        return None
+
     # plantuml.jarは同一ディレクトリに配置していると仮定
-    command = ["java", "-jar", "plantuml.jar", "-picoweb"]
+    command = ["java", "-jar", "plantuml.jar", f"-picoweb:{port}"]
     try:
         process = subprocess.Popen(command)
         # プロセス終了時にクリーンアップするため、atexitに登録
         atexit.register(lambda: process.terminate())
-        return process
+        
+        runtime_url = f"{base_url}:{port}"
+        # 起動直後は接続できない可能性があるため少し待つなどの処理を入れることも検討できるが、
+        # Streamlitの起動シーケンス上、リクエストが飛ぶまでには時間があるため現状はそのまま返す
+        return runtime_url
     except FileNotFoundError:
         st.error(
             "Javaまたはplantuml.jarが見つかりません。Javaがインストールされているか、plantuml.jarが配置されているか確認してください。"
