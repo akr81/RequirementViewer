@@ -19,28 +19,12 @@ config_data = page_elements["config_data"]
 app_data = page_elements["app_data"]
 file_path = page_elements["file_path"]
 requirement_data = page_elements["requirement_data"]
-nodes = page_elements["nodes"]  # Evaporating Cloud では直接使われないが、一応取得
-# edges は Evaporating Cloud では直接使われない
 requirement_manager = page_elements["requirement_manager"]
 graph_data = page_elements["graph_data"]
 id_title_dict = page_elements["id_title_dict"]
 unique_id_dict = page_elements["unique_id_dict"]
-id_title_list = page_elements[
-    "id_title_list"
-]  # Evaporating Cloud では直接使われないが、一応取得
-# add_list は Evaporating Cloud では使われない
-scale = page_elements["scale"]  # Evaporating Cloud では直接使われないが、一応取得
 selected_unique_id = page_elements["selected_unique_id"]
-upstream_distance = page_elements[
-    "upstream_distance"
-]  # Evaporating Cloud では直接使われないが、一応取得
-downstream_distance = page_elements[
-    "downstream_distance"
-]  # Evaporating Cloud では直接使われないが、一応取得
 selected_entity = page_elements["selected_entity"]
-landscape = page_elements[
-    "landscape"
-]  # Evaporating Cloud では直接使われないが、一応取得
 
 # 編集用カラムとPlantUMLコードを page_elements から取得
 edit_column = page_elements["edit_column"]
@@ -83,11 +67,11 @@ def render_edit_panel():
         question = "行動は何か？"
     else:
         question = "仮定・前提条件は何か？"
-    tmp_entity["title"] = st.text_area(
+    tmp_entity["text"] = st.text_area(
         question,
-        unescape_newline(tmp_entity["title"]),
-        height=calculate_text_area_height(unescape_newline(tmp_entity["title"])),
-        key=f"ec_title_{selected_unique_id}",
+        unescape_newline(tmp_entity.get("text", "")),
+        height=calculate_text_area_height(unescape_newline(tmp_entity.get("text", ""))),
+        key=f"ec_text_{selected_unique_id}",
     )
 
     tmp_entity["color"] = st.selectbox(
@@ -111,6 +95,7 @@ def render_edit_panel():
         no_add=True,
         no_remove=True,
         tmp_edges=tmp_edges,
+        display_key="text",
     )
 
 

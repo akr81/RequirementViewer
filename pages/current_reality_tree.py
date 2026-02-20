@@ -85,7 +85,7 @@ edge_params = {
         "condition": "source",
         "selectbox_label": "接続先",
         "selectbox_index": "destination",
-        "selectbox_key": "ancestors",
+        "selectbox_key": "successors",
         "connection_column": None,
         "and_column": None,
     },
@@ -108,12 +108,8 @@ id_title_dict = page_elements["id_title_dict"]
 unique_id_dict = page_elements["unique_id_dict"]
 id_title_list = page_elements["id_title_list"]
 add_list = page_elements["add_list"]
-scale = page_elements["scale"]
 selected_unique_id = page_elements["selected_unique_id"]
-upstream_distance = page_elements["upstream_distance"]
-downstream_distance = page_elements["downstream_distance"]
 selected_entity = page_elements["selected_entity"]
-landscape = page_elements["landscape"]
 
 # 編集用カラムとPlantUMLコードを page_elements から取得
 edit_column = page_elements["edit_column"]
@@ -168,10 +164,10 @@ def render_edit_panel():
     tmp_entity["type"] = st.selectbox(
         "タイプ", entity_list, index=entity_list.index(tmp_entity["type"])
     )
-    tmp_entity["id"] = st.text_area(
+    tmp_entity["text"] = st.text_area(
         "課題・状況",
-        unescape_newline(tmp_entity["id"]),
-        height=calculate_text_area_height(unescape_newline(tmp_entity["id"])),
+        unescape_newline(tmp_entity.get("text", "")),
+        height=calculate_text_area_height(unescape_newline(tmp_entity.get("text", ""))),
         key=f"crt_text_{selected_unique_id}",
     )
     
@@ -226,6 +222,7 @@ def render_edit_panel():
         "unique_id_dict": unique_id_dict,
         "tmp_edges": tmp_edges,
         "new_edges": new_edges,
+        "display_key": "text",
     }
 
     # 上部のボタンを配置

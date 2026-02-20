@@ -102,26 +102,26 @@ class ConvertPumlCode:
         }
         
         # Process Flow Diagram Node Converters
-        # Process Flow Diagram Node Converters
         self.pfd_node_converters = {
             NodeType.PROCESS: lambda n, p: self._convert_pfd_element(n, p, NodeType.USECASE),
+            NodeType.ENTITY: lambda n, p: self._convert_pfd_element(n, p, NodeType.USECASE),
             NodeType.CLOUD: lambda n, p: self._convert_pfd_element(n, p, NodeType.CLOUD),
-            NodeType.CARD: lambda n, p: self._convert_simple_card_node(n, p, "id"),
-            NodeType.DELIVERABLE: lambda n, p: self._convert_simple_card_node(n, p, "id"),
-            NodeType.NOTE: lambda n, p: self._convert_note_using_field(n, p, "id", keep_newline=True),
+            NodeType.CARD: lambda n, p: self._convert_simple_card_node(n, p, "title"),
+            NodeType.DELIVERABLE: lambda n, p: self._convert_simple_card_node(n, p, "title"),
+            NodeType.NOTE: lambda n, p: self._convert_note_using_field(n, p, "title", keep_newline=True),
         }
 
         # Current Reality Tree Node Converters
         self.crt_node_converters = {
             NodeType.AND: lambda n, p: f'usecase "AND{n[1]["unique_id"]}" as {n[1]["unique_id"]}',
-            NodeType.ENTITY: lambda n, p: self._convert_simple_card_node(n, p, "id"),
-            NodeType.NOTE: lambda n, p: self._convert_note_using_field(n, p, "id", keep_newline=True),
+            NodeType.ENTITY: lambda n, p: self._convert_simple_card_node(n, p, "text"),
+            NodeType.NOTE: lambda n, p: self._convert_note_using_field(n, p, "text", keep_newline=True),
         }
 
         # Evaporating Cloud Node Converters
         self.ec_node_converters = {
-            NodeType.NOTE: lambda n, p: self._convert_note_using_field(n, p, "title", keep_newline=True),
-            NodeType.CARD: lambda n, p: self._convert_simple_card_node(n, p, "title"),
+            NodeType.NOTE: lambda n, p: self._convert_note_using_field(n, p, "text", keep_newline=True),
+            NodeType.CARD: lambda n, p: self._convert_simple_card_node(n, p, "text"),
         }
 
 
@@ -373,7 +373,7 @@ class ConvertPumlCode:
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
         return self._convert_dispatch_diagram(
-            graph, parameters_dict, self.ec_node_converters, "card",
+            graph, parameters_dict, self.ec_node_converters, NodeType.CARD,
             extra_parts=[EVAPORATING_CLOUD_LAYOUT],
         )
 
@@ -769,7 +769,7 @@ class ConvertPumlCode:
                 graph,
                 parameters_dict,
                 lambda n, p: self._dispatch_conversion(
-                    n, p, self.crt_node_converters, self.crt_node_converters["note"]
+                    n, p, self.crt_node_converters, self.crt_node_converters[NodeType.NOTE]
                 ),
             )
         )
@@ -807,7 +807,7 @@ class ConvertPumlCode:
     ) -> str:
         """Convert graph to Process Flow Diagram as PlantUML code string."""
         return self._convert_dispatch_diagram(
-            graph, parameters_dict, self.pfd_node_converters, "note",
+            graph, parameters_dict, self.pfd_node_converters, NodeType.NOTE,
             edge_kwargs={"use_src_arrow_dst_style": True},
         )
 
@@ -820,7 +820,7 @@ class ConvertPumlCode:
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
         
-        id_val = node_attrs.get("id", "")
+        id_val = node_attrs.get("title", "")
         # エスケープ処理 (usecaseなどは\nに変換)
         escaped_id_val = self._escape_puml(id_val, keep_newline=False)
         

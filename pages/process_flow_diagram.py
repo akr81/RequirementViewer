@@ -82,7 +82,7 @@ edge_params = {
         "condition": "source",
         "selectbox_label": "接続先",
         "selectbox_index": "destination",
-        "selectbox_key": "ancestors",
+        "selectbox_key": "successors",
         "connection_column": None,
         "description_column": None,
     },
@@ -105,12 +105,8 @@ id_title_dict = page_elements["id_title_dict"]
 unique_id_dict = page_elements["unique_id_dict"]
 id_title_list = page_elements["id_title_list"]
 # add_list は Process Flow Diagram では使われない
-scale = page_elements["scale"]
 selected_unique_id = page_elements["selected_unique_id"]
-upstream_distance = page_elements["upstream_distance"]
-downstream_distance = page_elements["downstream_distance"]
 selected_entity = page_elements["selected_entity"]
-landscape = page_elements["landscape"]
 
 # 編集用カラムとPlantUMLコードを page_elements から取得
 edit_column = page_elements["edit_column"]
@@ -127,8 +123,8 @@ def render_edit_panel():
     st.session_state.clearable_new_connection_keys["Process Flow Diagram Viewer"] = [
         f"{edge_params['to_selected']['selectbox_key']}_new",  # e.g., "predecessors_new"
         f"comment_{edge_params['to_selected']['selectbox_key']}_new",  # e.g., "comment_predecessors_new"
-        f"{edge_params['from_selected']['selectbox_key']}_new",  # e.g., "ancestors_new"
-        f"comment_{edge_params['from_selected']['selectbox_key']}_new",  # e.g., "comment_ancestors_new"
+        f"{edge_params['from_selected']['selectbox_key']}_new",  # e.g., "successors_new"
+        f"comment_{edge_params['from_selected']['selectbox_key']}_new",  # e.g., "comment_successors_new"
     ]
 
     title_column, file_selector_column = st.columns([4, 4])
@@ -165,11 +161,11 @@ def render_edit_panel():
     tmp_entity["type"] = st.selectbox(
         "タイプ", pfd_type_list, index=pfd_type_list.index(tmp_entity["type"])
     )
-    tmp_entity["id"] = st.text_area(
-        "課題・状況",
-        unescape_newline(tmp_entity["id"]),
-        height=calculate_text_area_height(unescape_newline(tmp_entity["id"])),
-        key=f"pfd_text_{selected_unique_id}",
+    tmp_entity["title"] = st.text_area(
+        "プロセス名 / タイトル",
+        unescape_newline(tmp_entity.get("title", "")),
+        height=calculate_text_area_height(unescape_newline(tmp_entity.get("title", ""))),
+        key=f"pfd_title_{selected_unique_id}",
     )
 
     tmp_entity["color"] = st.selectbox(
@@ -218,7 +214,7 @@ def render_edit_panel():
         )
 
     # 関係追加の操作があるため、1つは常に表示
-    temp_ancestor = {
+    temp_successor = {
         "source": tmp_entity["unique_id"],
         "destination": "None",  # selectboxの選択肢に合わせる
         "comment": "",  # text_inputのデフォルトに合わせる
@@ -227,10 +223,10 @@ def render_edit_panel():
 
     visibility = "visible"
     render_edge_connection_new(
-        temp_ancestor, 0, visibility, edge_params["from_selected"]
+        temp_successor, 0, visibility, edge_params["from_selected"]
     )
 
-    new_edges = [temp_predecessor, temp_ancestor]
+    new_edges = [temp_predecessor, temp_successor]
 
     # 上部のボタンを配置
     with top_button_container:
@@ -243,7 +239,8 @@ def render_edit_panel():
             unique_id_dict,
             tmp_edges=tmp_edges,
             new_edges=new_edges,
-            key_suffix="top"  # 重複エラー回避用
+            key_suffix="top",  # 重複エラー回避用
+            display_key="title",
         )
 
     # 下部のボタンを配置
@@ -256,7 +253,8 @@ def render_edit_panel():
         unique_id_dict,
         tmp_edges=tmp_edges,
         new_edges=new_edges,
-        key_suffix="bottom"  # 重複エラー回避用
+        key_suffix="bottom",  # 重複エラー回避用
+        display_key="title",
     )
 
 

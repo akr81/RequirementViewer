@@ -33,6 +33,7 @@ def add_operate_buttons(
     tmp_edges=None,
     new_edges=None,
     key_suffix="",
+    display_key="id",
 ):
     (
         new_button_column,
@@ -53,8 +54,9 @@ def add_operate_buttons(
         if not no_add:
             # 追加ボタンを表示
             if st.button("追加", key=f"add_button_{key_suffix}"):
-                if (tmp_entity["id"]) in id_title_dict:
-                    st.error("IDが既存のエンティティと重複しています。")
+                entity_title = tmp_entity.get(display_key, "")
+                if entity_title in id_title_dict:
+                    st.error("入力内容が既存のエンティティと重複しています。")
                 else:
                     # 追加の場合、既存のedgeを変更する必要はない
                     added_id = requirement_manager.add(tmp_entity, tmp_edges, new_edges)
@@ -82,7 +84,8 @@ def add_operate_buttons(
         if not no_remove:
             # 削除ボタンを表示
             if st.button("削除", key=f"remove_button_{key_suffix}"):
-                if not (tmp_entity["id"]) in id_title_dict:
+                entity_title = tmp_entity.get(display_key, "")
+                if entity_title not in id_title_dict:
                     st.error("削除すべきエンティティがありません。")
                 else:
                     requirement_manager.remove(selected_unique_id)

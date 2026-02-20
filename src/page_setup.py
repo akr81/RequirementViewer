@@ -93,11 +93,39 @@ def load_graph_data(file_path: str, mtime: float, app_name: str) -> GraphData:
     requirement_data = load_source_data(file_path)
     nodes = requirement_data["nodes"]
     edges = requirement_data["edges"]
+
+    # アプリごとの表示対象キーと後方互換性の設定
+    if app_name in (AppName.CURRENT_REALITY, AppName.EVAPORATING_CLOUD):
+        display_key = "text"
+    elif app_name == AppName.PROCESS_FLOW:
+        display_key = "title"
+    else:
+        display_key = "id"
+
+    # [重要] Graph構築の前にキーのコピー（後方互換性対応）を行う
+    for node in nodes:
+        # 後方互換性: 古いキーの内容を新しいキーへコピーする
+        if app_name == AppName.CURRENT_REALITY:
+            if "id" in node and not node.get("text"):
+                node["text"] = node["id"]
+        elif app_name == AppName.EVAPORATING_CLOUD:
+            if "title" in node and not node.get("text"):
+                node["text"] = node["title"]
+        elif app_name == AppName.PROCESS_FLOW:
+            if "id" in node and not node.get("title"):
+                node["title"] = node["id"]
+                
+        # 表示対象キーが未定義の場合は空文字にする
+        if display_key not in node:
+            node[display_key] = ""
+
     requirement_manager = RequirementManager(requirement_data)
     graph_data = RequirementGraph(requirement_data, app_name)
-    id_title_dict = build_mapping(nodes, "id", "unique_id", add_empty=True)
-    unique_id_dict = build_mapping(nodes, "unique_id", "id", add_empty=True)
-    id_title_list = build_sorted_list(nodes, "id", prepend=["None"])
+    
+    # 変数名は既存との互換性のため id_title_dict としているが、実際は display_key を用いている
+    id_title_dict = build_mapping(nodes, display_key, "unique_id", add_empty=True)
+    unique_id_dict = build_mapping(nodes, "unique_id", display_key, add_empty=True)
+    id_title_list = build_sorted_list(nodes, display_key, prepend=["None"])
     add_list = build_and_list(edges, prepend=["None", "New"])
 
     return GraphData(
