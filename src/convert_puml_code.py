@@ -175,7 +175,6 @@ class ConvertPumlCode:
         ]
         
         # 冗長な改行を削除・圧縮
-        import re
         final_puml = "\n".join(puml_parts)
         final_puml = re.sub(r'\n{3,}', '\n\n', final_puml)  # 3連続以上の改行を2連続（空行1つ）に圧縮
         final_puml = final_puml.strip() + "\n"              # 先頭と末尾の不要な空行を削除
@@ -206,7 +205,6 @@ class ConvertPumlCode:
             else ""
         )
 
-        import re
         possible_shapes = ["usecase", "card", "class", "cloud", "note"]
         used_shapes = [
             s for s in possible_shapes 

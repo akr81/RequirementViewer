@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 import copy
 import os
 import datetime
+import tempfile
 import hjson
 import shutil
 
@@ -354,7 +355,6 @@ def _render_file_operations(
             if st.button("インポート実行", key=f"{context.app_name}_do_import_png"):
                 try:
                     # アップロードされたPNGを一時ファイルに保存
-                    import tempfile
                     with tempfile.NamedTemporaryFile(
                         suffix=".png", delete=False
                     ) as tmp:
