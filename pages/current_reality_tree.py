@@ -185,68 +185,56 @@ def render_edit_panel():
     # 保存するまで表示が変わらないよう、edge本体は更新しない
     tmp_edges = copy.deepcopy(edges)
 
-    params_to = edge_params["to_selected"]
-    params_to["connection_column"], params_to["and_column"] = st.columns([7, 2])
-    visibility = "visible"
-    for i, edge in enumerate(tmp_edges):
-        visibility = render_edge_connection(edge, i, visibility, params_to, tmp_entity["type"])
+    # 接続関係の描画をループ化
+    new_edges = []
+    connection_configs = [
+        (edge_params["to_selected"], "destination", "source"),
+        (edge_params["from_selected"], "source", "destination"),
+    ]
+    
+    for idx, (params, dest_key, src_key) in enumerate(connection_configs):
+        if idx > 0:
+            st.write("---")  # to と from の区切り線
+            
+        params["connection_column"], params["and_column"] = st.columns([7, 2])
+        visibility = "visible"
+        for i, edge in enumerate(tmp_edges):
+            visibility = render_edge_connection(edge, i, visibility, params, tmp_entity["type"])
 
-    # 関係追加の操作があるため、1つは常に表示
-    temp_predecessor = {
-        "source": "None",
-        "destination": tmp_entity["unique_id"],
-        "and": "None",
-        "type": "arrow",
+        # 関係追加の操作があるため、1つは常に表示
+        temp_edge = {
+            dest_key: tmp_entity["unique_id"] if dest_key == "source" else "None",
+            src_key: "None" if dest_key == "source" else tmp_entity["unique_id"],
+            "and": "None",
+            "type": "arrow",
+        }
+        # dest_key == "source" なら connection_configs[1] (from_selected) 相当
+        # dest_key == "destination" なら connection_configs[0] (to_selected) 相当
+        # 上記の辞書キーは、temp_predecessorとtemp_ancestorの生成ロジックを統合しています
+        
+        visibility = "visible"
+        render_edge_connection_new(temp_edge, 0, visibility, params)
+        new_edges.append(temp_edge)
+
+    # 操作ボタンの共通引数辞書を作成
+    btn_kwargs = {
+        "selected_unique_id": selected_unique_id,
+        "tmp_entity": tmp_entity,
+        "requirement_manager": requirement_manager,
+        "file_path": file_path,
+        "id_title_dict": id_title_dict,
+        "unique_id_dict": unique_id_dict,
+        "tmp_edges": tmp_edges,
+        "new_edges": new_edges,
     }
-    visibility = "visible"
-    render_edge_connection_new(temp_predecessor, 0, visibility, params_to)
-
-    st.write("---")
-
-    params_from = edge_params["from_selected"]
-    params_from["connection_column"], params_from["and_column"] = st.columns([7, 2])
-    visibility = "visible"
-    for i, edge in enumerate(tmp_edges):
-        visibility = render_edge_connection(edge, i, visibility, params_from, tmp_entity["type"])
-
-    # 関係追加の操作があるため、1つは常に表示
-    temp_ancestor = {
-        "source": tmp_entity["unique_id"],
-        "destination": "None",
-        "and": "None",
-        "type": "arrow",
-    }
-    visibility = "visible"
-    render_edge_connection_new(temp_ancestor, 0, visibility, params_from)
-
-    new_edges = [temp_predecessor, temp_ancestor]
 
     # 上部のボタンを配置
     with top_button_container:
-        add_operate_buttons(
-            selected_unique_id,
-            tmp_entity,
-            requirement_manager,
-            file_path,
-            id_title_dict,
-            unique_id_dict,
-            tmp_edges=tmp_edges,
-            new_edges=new_edges,
-            key_suffix="top"  # 重複エラー回避用
-        )
+        add_operate_buttons(**btn_kwargs, key_suffix="top")
 
     # 下部のボタンを配置
-    add_operate_buttons(
-        selected_unique_id,
-        tmp_entity,
-        requirement_manager,
-        file_path,
-        id_title_dict,
-        unique_id_dict,
-        tmp_edges=tmp_edges,
-        new_edges=new_edges,
-        key_suffix="bottom"  # 重複エラー回避用
-    )
+    add_operate_buttons(**btn_kwargs, key_suffix="bottom")
+
 
 
 with edit_column:
