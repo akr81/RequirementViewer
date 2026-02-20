@@ -743,17 +743,9 @@ class ConvertPumlCode:
     def _convert_current_reality(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
-        """Convert graph to strategy and tactics tree diagram as PlantUML code string.
-
-        Args:
-            graph (nx.DiGraph): Graph of requirements.
-            parameters_dict (Dict): Parameters for link.
-
-        Returns:
-            str: PlantUML code
-        """
+        """Convert graph to Current Reality tree diagram as PlantUML code string."""
         puml_parts = list(
-            self._convert_nodes_to_puml(  # Ensure it's a list for extend
+            self._convert_nodes_to_puml(
                 graph,
                 parameters_dict,
                 lambda n, p: self._dispatch_conversion(
@@ -762,47 +754,30 @@ class ConvertPumlCode:
             )
         )
 
-        # Convert edges for Current Reality Tree
-        seen_and_nodes = set()
-        seen_edges_from_and = set()
+        seen_and_nodes, seen_edges_from_and = set(), set()
 
-        for edge_data_tuple in graph.edges(data=True):
-            src_node_id = edge_data_tuple[0]
-            dst_node_id = edge_data_tuple[1]
-            edge_attributes = edge_data_tuple[2]
+        for src, dst, attrs in graph.edges(data=True):
+            and_id = attrs.get("and")
 
-            and_node_id = edge_attributes.get("and")
+            if not and_id or and_id == "None":
+                puml_parts.append(self._convert_card_edge((src, dst, attrs)))
+                continue
 
-            if and_node_id and and_node_id != "None":
-                # ANDノードを経由するエッジ: src -> AND -> dst
-                
-                # ANDノードをここで追加 (重複回避)
-                if and_node_id not in seen_and_nodes:
-                    puml_parts.append(f'usecase "AND{and_node_id}" as {and_node_id}')
-                    seen_and_nodes.add(and_node_id)
+            # ANDノードを経由するエッジ: src -> AND -> dst
+            if and_id not in seen_and_nodes:
+                puml_parts.append(f'usecase "AND{and_id}" as {and_id}')
+                seen_and_nodes.add(and_id)
 
-                # src -> AND エッジ (これは常にユニークはず)
-                attrs_to_and = copy.deepcopy(edge_attributes)
-                attrs_to_and.pop("and", None)  # このエッジ自体はANDを経由しない
-                edge_to_and_representation = (src_node_id, and_node_id, attrs_to_and)
-                puml_parts.append(self._convert_card_edge(edge_to_and_representation))
+            # "and"キーを除いた属性をコピー
+            clean_attrs = {k: v for k, v in attrs.items() if k != "and"}
 
-                # AND -> dst エッジ (重複回避)
-                # ANDノードと宛先が同じなら、既に生成されている可能性がある
-                edge_key = (and_node_id, dst_node_id)
-                if edge_key not in seen_edges_from_and:
-                    attrs_from_and = copy.deepcopy(edge_attributes)
-                    attrs_from_and.pop("and", None)
-                    edge_from_and_representation = (
-                        and_node_id,
-                        dst_node_id,
-                        attrs_from_and,
-                    )
-                    puml_parts.append(self._convert_card_edge(edge_from_and_representation))
-                    seen_edges_from_and.add(edge_key)
-            else:
-                # 通常のエッジ
-                puml_parts.append(self._convert_card_edge(edge_data_tuple))
+            # src -> AND エッジ
+            puml_parts.append(self._convert_card_edge((src, and_id, clean_attrs)))
+
+            # AND -> dst エッジ (重複回避)
+            if (and_id, dst) not in seen_edges_from_and:
+                puml_parts.append(self._convert_card_edge((and_id, dst, clean_attrs)))
+                seen_edges_from_and.add((and_id, dst))
 
         return "\n".join(puml_parts)
 
