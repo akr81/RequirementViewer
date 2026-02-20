@@ -192,7 +192,7 @@ def _render_diagram(
 
     st.markdown(
         f"""
-        <div style="width:100%; height:{context.config_data['viewer_height']}px; overflow:auto; border:0px solid black;">
+        <div style="width:100%; min-height:{context.config_data['viewer_height']}px; overflow:auto; border:0px solid black;">
             {svg_output}
         </div>
         """,
@@ -325,8 +325,6 @@ def _render_file_operations(
                 else:
                     st.warning("開くファイルを選択してください。")
 
-    st.markdown("---")  # Separator
-
     if st.session_state.get("save_png", False):
         postfix_file = st.session_state.app_data[context.app_name]["postfix"]
         os.makedirs("back", exist_ok=True)
@@ -420,5 +418,9 @@ def draw_diagram_column(
         target = _render_controls(context, options)
         plantuml_code = _render_diagram(context, options, target)
         _render_file_operations(context, options, plantuml_code)
+        
+        st.markdown("---")
+        # テキストエリアで PlantUML コードが確認可能
+        st.text_area("PlantUML コード", value=plantuml_code, height=250)
 
     return plantuml_code

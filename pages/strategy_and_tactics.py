@@ -167,7 +167,5 @@ def render_edit_panel():
 
 with edit_column:
     render_edit_panel()
+    
 st.session_state.graph_data = graph_data
-
-# テキストエリアで PlantUML コードが確認可能
-st.text_area("PlantUML コード", value=plantuml_code, height=250)
