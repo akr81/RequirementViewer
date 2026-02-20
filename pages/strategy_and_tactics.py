@@ -66,6 +66,9 @@ def render_edit_panel():
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
 
+    # 後でボタンを配置する
+    top_button_container = st.container()
+
     tmp_entity["id"] = st.text_input(
         "ID",
         tmp_entity["id"],
@@ -135,6 +138,20 @@ def render_edit_panel():
         "type": "arrow",
     }
 
+    # 上部のボタンを配置
+    with top_button_container:
+        add_operate_buttons(
+            selected_unique_id,
+            tmp_entity,
+            requirement_manager,
+            file_path,
+            id_title_dict,
+            unique_id_dict,
+            tmp_edges=tmp_edges,
+            new_edges=[new_edge],
+            key_suffix="top"  # 重複エラー回避用
+        )
+
     add_operate_buttons(
         selected_unique_id,
         tmp_entity,
@@ -144,6 +161,7 @@ def render_edit_panel():
         unique_id_dict,
         tmp_edges=tmp_edges,
         new_edges=[new_edge],
+        key_suffix="bottom"  # 重複エラー回避用
     )
 
 
