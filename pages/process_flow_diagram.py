@@ -30,12 +30,11 @@ def render_edge_connection(
                 )
             ]
         with params["description_column"]:
-            edge["comment"] = st.text_area(
+            edge["comment"] = st.text_input(
                 "説明",
                 unescape_newline(edge["comment"]),
                 key=f"comment_{params['selectbox_key']}_{selected_unique_id}_{index}",
                 label_visibility=visibility,
-                height=calculate_text_area_height(unescape_newline(edge["comment"])),
             )
         return "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
     return visibility
@@ -60,12 +59,11 @@ def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict
         edge[params["selectbox_index"]] = id_title_dict[selected_value_from_widget]
     with params["description_column"]:
         comment_key = f"comment_{params['selectbox_key']}_new"
-        edge["comment"] = st.text_area(
+        edge["comment"] = st.text_input(
             "説明(新規)",
             value="",  # 明示的にデフォルト値を設定
             key=comment_key,
             label_visibility=visibility,
-            height=calculate_text_area_height(""),
         )
 
 
