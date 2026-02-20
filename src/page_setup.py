@@ -273,8 +273,8 @@ def setup_page_layout_and_data(
         else:
             selected_entity = getter_func()
 
-    # Requirement Diagram Viewer の場合、selected_unique_idが"default"の時に実際のIDを割り当てる
-    if app_name == AppName.REQUIREMENT and selected_unique_id == "default":
+    # selected_unique_idが"default"の時に実際のIDを割り当てる（全アプリ共通）
+    if selected_unique_id == "default":
         if selected_entity:  # selected_entityがNoneでないことを確認
             selected_unique_id = selected_entity["unique_id"]
 
