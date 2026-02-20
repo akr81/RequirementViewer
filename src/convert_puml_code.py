@@ -49,12 +49,7 @@ class ConvertPumlCode:
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
-        # コンテンツをエスケープ（keep_newline=True 相当の処理を直接記述）
-        # _escape_puml を呼ばずに直接処理することで、意図しない改行コード変換を防ぐ
-        content = node_attrs.get(field, "")
-        if content:
-            content = content.replace('"', "'")
-            # 改行は置換しない
+        content = self._escape_puml(node_attrs.get(field, ""), keep_newline=True)
 
         return self._create_note_puml(
             node_attrs["unique_id"],
@@ -62,7 +57,7 @@ class ConvertPumlCode:
             parameters_str,
             color_str,
             apply_link_modification=True,
-            keep_newline=True, # _create_note_puml にも渡すが、念のため
+            keep_newline=True,
         )
 
     def __init__(self, config: Dict[str, Any]):
@@ -129,25 +124,7 @@ class ConvertPumlCode:
             NodeType.CARD: lambda n, p: self._convert_simple_card_node(n, p, "title"),
         }
 
-    def _escape_puml(self, text: str, keep_newline: bool = False) -> str:
-        """Escape text for PlantUML.
-        
-        Args:
-            text (str): Input text
-            keep_newline (bool): If True, keeps newline characters as is. 
-                                 If False (default), replaces newline with \\n.
-        """
-        if not text:
-            return ""
-        # PlantUMLで特別扱いされる文字をエスケープまたは置換
-        # ダブルクォートをシングルクォートに置換して文字列リテラル脱出を防ぐ
-        text = text.replace('"', "'")
-        
-        if not keep_newline:
-            # 改行を \n に置換
-            text = text.replace("\n", "\\n")
-            
-        return text
+
 
     def convert_to_puml(
         self,
@@ -228,13 +205,7 @@ class ConvertPumlCode:
             diagram_title_str=diagram_title_str,
         )
 
-    def _get_puml_color(self, node_attributes: Dict) -> str:
-        """ノード属性からPlantUML用の色指定文字列を取得する。"""
-        color_name = node_attributes.get("color")
-        if color_name and color_name != "None":
-            # color_to_archimate に存在しないキーの場合は空文字を返す
-            return self._color_to_archimate.get(color_name, "")
-        return ""
+
 
     def _convert_nodes_to_puml(
         self, graph: nx.DiGraph, parameters_dict: Dict, node_converter_method
@@ -360,26 +331,31 @@ class ConvertPumlCode:
         )
 
 
-
-
+    def _convert_dispatch_diagram(
+        self, graph: nx.DiGraph, parameters_dict: Dict,
+        node_converters: Dict, default_converter_key: str,
+        edge_converter=None, edge_kwargs=None, extra_parts=None,
+    ) -> str:
+        """ディスパッチベースのダイアグラム変換の共通処理。"""
+        puml_parts = list(self._convert_nodes_to_puml(
+            graph, parameters_dict,
+            lambda n, p: self._dispatch_conversion(
+                n, p, node_converters, node_converters[default_converter_key]
+            ),
+        ))
+        edge_conv = edge_converter or self._convert_card_edge
+        puml_parts.extend(self._convert_edges_to_puml(graph, edge_conv, **(edge_kwargs or {})))
+        if extra_parts:
+            puml_parts.extend(extra_parts)
+        return "\n".join(puml_parts)
 
     def _convert_evaporating_cloud(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
-        puml_parts = list(
-            self._convert_nodes_to_puml(  # Ensure it's a list for extend
-                graph,
-                parameters_dict,
-                lambda n, p: self._dispatch_conversion(
-                    n, p, self.ec_node_converters, self.ec_node_converters["card"]
-                ),
-            )
+        return self._convert_dispatch_diagram(
+            graph, parameters_dict, self.ec_node_converters, "card",
+            extra_parts=[EVAPORATING_CLOUD_LAYOUT],
         )
-        puml_parts.extend(self._convert_edges_to_puml(graph, self._convert_card_edge))
-        # conflict
-        puml_parts.append(EVAPORATING_CLOUD_LAYOUT)
-
-        return "\n".join(puml_parts)
 
     def _create_card_puml(
         self, unique_id: str, content: str, parameters_str: str, color_str: str
@@ -401,13 +377,8 @@ class ConvertPumlCode:
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
-        
-        raw_content = node_attrs.get(content_field, "")
-        
-        # コンテンツをエスケープ (keep_newline=True 相当)
-        # _escape_puml を経由せず直接処理
-        content = raw_content.replace('"', "'")
-        
+        content = self._escape_puml(node_attrs.get(content_field, ""), keep_newline=True)
+
         return self._create_card_puml(
             node_attrs["unique_id"], content, parameters_str, color_str
         )
@@ -701,35 +672,19 @@ class ConvertPumlCode:
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
-
-        # Determine if detail mode is enabled
         detail = parameters_dict.get("detail", False)
 
-        # Ensure all expected keys exist, providing defaults if necessary
-        # コンテンツをエスケープ (keep_newline=True 相当)
-        # _escape_puml を呼ばずに直接処理
+        # 各フィールドをエスケープ
         node_id = node_attrs.get("id", "")
-        # necessary_assumption
-        val = node_attrs.get("necessary_assumption", "")
-        necessary_assumption = val.replace('"', "'") if val else ""
-        # strategy
-        val = node_attrs.get("strategy", "")
-        strategy = val.replace('"', "'") if val else ""
-        # parallel_assumption
-        val = node_attrs.get("parallel_assumption", "")
-        parallel_assumption = val.replace('"', "'") if val else ""
-        # tactics
-        val = node_attrs.get("tactics", "")
-        tactics = val.replace('"', "'") if val else ""
-        # sufficient_assumption
-        val = node_attrs.get("sufficient_assumption", "")
-        sufficient_assumption = val.replace('"', "'") if val else ""
-        
+        necessary_assumption = self._escape_puml(node_attrs.get("necessary_assumption", ""), keep_newline=True)
+        strategy = self._escape_puml(node_attrs.get("strategy", ""), keep_newline=True)
+        parallel_assumption = self._escape_puml(node_attrs.get("parallel_assumption", ""), keep_newline=True)
+        tactics = self._escape_puml(node_attrs.get("tactics", ""), keep_newline=True)
+        sufficient_assumption = self._escape_puml(node_attrs.get("sufficient_assumption", ""), keep_newline=True)
+
         if not detail:
             content = ST_CONTENT_SIMPLE.format(
-                node_id=node_id,
-                strategy=strategy,
-                tactics=tactics,
+                node_id=node_id, strategy=strategy, tactics=tactics,
             )
         else:
             content = ST_CONTENT_DETAIL.format(
@@ -784,8 +739,6 @@ class ConvertPumlCode:
         return self._create_generic_edge_puml(
             puml_node1, puml_node2, line_style, escaped_comment
         )
-
-
 
     def _convert_current_reality(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
@@ -854,42 +807,14 @@ class ConvertPumlCode:
         return "\n".join(puml_parts)
 
 
-
-
-
-
-
     def _convert_process_flow_diagram(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
-        """Convert graph to Process Flow Diagram as PlantUML code string.
-
-        Args:
-            graph (nx.DiGraph): Graph of requirements.
-            parameters_dict (Dict): Parameters for link.
-
-        Returns:
-            str: PlantUML code
-        """
-        puml_parts = list(
-            self._convert_nodes_to_puml(  # Ensure it's a list for extend
-                graph,
-                parameters_dict,
-                lambda n, p: self._dispatch_conversion(
-                    n, p, self.pfd_node_converters, self.pfd_node_converters["note"]
-                ),
-            )
+        """Convert graph to Process Flow Diagram as PlantUML code string."""
+        return self._convert_dispatch_diagram(
+            graph, parameters_dict, self.pfd_node_converters, "note",
+            edge_kwargs={"use_src_arrow_dst_style": True},
         )
-        puml_parts.extend(
-            self._convert_edges_to_puml(
-                graph, self._convert_card_edge, use_src_arrow_dst_style=True
-            )
-        )
-
-        return "\n".join(puml_parts)
-
-
-
 
 
     def _convert_pfd_element(
@@ -901,29 +826,23 @@ class ConvertPumlCode:
         color_str = self._get_puml_color(node_attrs)
         
         id_val = node_attrs.get("id", "")
-        # エスケープ処理 (改行は保持して \n に変換)
-        escaped_id_val = self._escape_puml(id_val, keep_newline=True)
+        # エスケープ処理 (usecaseなどは\nに変換)
+        escaped_id_val = self._escape_puml(id_val, keep_newline=False)
         
         return f'{puml_type} "{escaped_id_val}" as {node_attrs["unique_id"]} {parameters_str} {color_str}\n'
 
     def _get_puml_color(self, node_attrs: Dict) -> str:
+        """ノード属性からPlantUML用の色指定文字列を取得する。"""
         color_key = node_attrs.get("color", Color.NONE)
         if color_key == Color.NONE or color_key is None:
             return ""
-        # アーキメイト色の変換
         return self._color_to_archimate.get(color_key, f"#{color_key}")
 
     def _escape_puml(self, text: str, keep_newline: bool = False) -> str:
+        """PlantUML用にテキストをエスケープする。"""
         if not text:
             return ""
-        # ダブルクォートをエスケープ
-        escaped = text.replace('"', '\\"')
-        if keep_newline:
-            # 改行をPlantUMLの改行コードに置換
+        escaped = text.replace('"', "'")
+        if not keep_newline:
             escaped = escaped.replace('\n', '\\n')
-        else:
-             # 通常も改行は \n に置換するのが安全
-             escaped = escaped.replace('\n', '\\n')
         return escaped
-
-
