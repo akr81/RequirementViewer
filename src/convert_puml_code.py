@@ -154,6 +154,12 @@ class ConvertPumlCode:
         landscape = parameters_dict.get("landscape", False)
         title_flag = parameters_dict.get("title", False)
 
+        converter_method = self.diagram_converters.get(page_title)
+        if not converter_method:
+            raise ValueError(f"Invalid page_title specified: {page_title}")
+            
+        diagram_body = converter_method(graph, title, parameters_dict)
+
         puml_parts = [
             self._add_common_parameter_setting(
                 scale,
@@ -162,17 +168,19 @@ class ConvertPumlCode:
                 landscape=landscape,
                 title_flag=title_flag,
                 diagram_title=diagram_title,
-            )
+                diagram_body=diagram_body,
+            ),
+            diagram_body,
+            "@enduml"
         ]
-
-        converter_method = self.diagram_converters.get(page_title)
-        if converter_method:
-            diagram_body = converter_method(graph, title, parameters_dict)
-            puml_parts.append(diagram_body)
-        else:
-            raise ValueError(f"Invalid page_title specified: {page_title}")
-        puml_parts.append("@enduml")
-        return "\n".join(puml_parts)
+        
+        # 冗長な改行を削除・圧縮
+        import re
+        final_puml = "\n".join(puml_parts)
+        final_puml = re.sub(r'\n{3,}', '\n\n', final_puml)  # 3連続以上の改行を2連続（空行1つ）に圧縮
+        final_puml = final_puml.strip() + "\n"              # 先頭と末尾の不要な空行を削除
+        
+        return final_puml
 
     def _add_common_parameter_setting(
         self,
@@ -183,6 +191,7 @@ class ConvertPumlCode:
         landscape: bool = False,
         title_flag: bool = False,
         diagram_title: str = "",
+        diagram_body: str = "",
     ) -> str:
         ortho_str = ORTHO_SETTINGS if ortho else ""
         sep_str = SEP_SETTINGS.format(sep=sep) if sep != 0 else ""
@@ -197,10 +206,21 @@ class ConvertPumlCode:
             else ""
         )
 
+        import re
+        possible_shapes = ["usecase", "card", "class", "cloud", "note"]
+        used_shapes = [
+            s for s in possible_shapes 
+            if re.search(rf"(?m)^\s*{s}\b", diagram_body) or re.search(rf"(?m)^.*<<{s}>>", diagram_body)
+        ]
+        
+        skinparam_template = "skinparam {shape} {{\nBackgroundColor White\nArrowColor Black\nBorderColor Black\nFontSize 12\n}}"
+        skinparams = "\n".join(skinparam_template.format(shape=s) for s in used_shapes)
+
         return PUML_HEADER_TEMPLATE.format(
             ortho_str=ortho_str,
             sep_str=sep_str,
             landscape=landscape,
+            skinparams=skinparams,
             scale=scale,
             diagram_title_str=diagram_title_str,
         )

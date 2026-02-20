@@ -10,41 +10,13 @@ hide method
 {sep_str}
 {landscape}
 skinparam HyperlinkUnderline false
-skinparam usecase {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam card {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam class {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam cloud {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
-skinparam note {{
-BackgroundColor White
-ArrowColor Black
-BorderColor Black
-FontSize 12
-}}
+{skinparams}
 allowmixing
 
 scale {scale}
 {diagram_title_str}
 """
+
 
 # Specific Layout Settings
 ORTHO_SETTINGS = """
