@@ -20,7 +20,7 @@ from typing import Tuple, List, Dict, Any, Optional
 
 @contextmanager
 def log_time(label: str):
-    """Execution time logging context manager."""
+    """実行時間のロギングを行うコンテキストマネージャ。"""
     start_time = time.time()
     try:
         yield
@@ -56,7 +56,7 @@ def find_available_port(start_port: int, max_attempts: int = 20) -> int:
 
 @st.cache_resource
 def start_plantuml_server(config_data: dict = None) -> str:
-    """Launch PlantUML server as a background process.
+    """PlantUMLサーバーをバックグラウンドプロセスとして起動する。
     
     Args:
         config_data (dict): 設定データ。plantumlのURL設定を含む。指定がない場合はデフォルト(8080)を使用。
@@ -108,13 +108,13 @@ def start_plantuml_server(config_data: dict = None) -> str:
 
 # PlantUMLサーバ向けのエンコード関数
 def encode_plantuml(text: str) -> str:
-    """Encode text to PlantUML server format.
+    """テキストをPlantUMLサーバー用のフォーマットにエンコードする。
 
     Args:
-        text (str): Text to encode
+        text (str): エンコードするテキスト
 
     Returns:
-        str: Encoded text
+        str: エンコードされたテキスト
     """
     # UTF-8にエンコードし、zlibでdeflate圧縮
     data = text.encode("utf-8")
@@ -125,13 +125,13 @@ def encode_plantuml(text: str) -> str:
 
 
 def encode64(data: bytes) -> str:
-    """Encode bytes to PlantUML server format.
+    """バイトデータをPlantUMLサーバー用のフォーマットにエンコードする。
 
     Args:
-        data (bytes): Data to encode
+        data (bytes): エンコードするバイトデータ
 
     Returns:
-        str: Encoded text
+        str: エンコードされたテキスト
     """
     # PlantUML用のカスタム64エンコードテーブル
     char_map = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
@@ -154,14 +154,14 @@ def encode64(data: bytes) -> str:
 # PlantUMLコードからSVG画像を取得する関数
 @st.cache_data(show_spinner=False)
 def get_diagram(plantuml_code: str, plantuml_server: str, *, png_out=False) -> Any:
-    """Get SVG diagram from PlantUML code.
+    """PlantUMLコードからSVG/PNG図を取得する。
 
     Args:
-        plantuml_code (str): PlantUML code
-        plantuml_server (str): PlantUML server URL
+        plantuml_code (str): PlantUMLコード
+        plantuml_server (str): PlantUMLサーバーのURL
 
     Returns:
-        Any: SVG diagram as text or PNG image as bytes
+        Any: SVG図のテキスト、またはPNG画像のバイトデータ
     """
     plantuml_server = plantuml_server + "/svg/"  # デフォルトはSVG出力
     if png_out:
@@ -187,10 +187,10 @@ def get_diagram(plantuml_code: str, plantuml_server: str, *, png_out=False) -> A
 
 
 def load_colors() -> list:
-    """Load colors from JSON file.
+    """JSONファイルから色リストを読み込む。
 
     Returns:
-        list: List of colors
+        list: 色のリスト
     """
     with open("setting/colors.json", "r", encoding="utf-8") as f:
         colors = hjson.load(f)
@@ -198,10 +198,10 @@ def load_colors() -> list:
 
 
 def load_config() -> dict:
-    """Load config from JSON file.
+    """JSONファイルから設定(config)を読み込む。
 
     Returns:
-        dict: Config dictionary
+        dict: 設定項目の辞書
     """
     if os.path.exists("setting/config.hjson"):
         config_file = "setting/config.hjson"
@@ -213,10 +213,10 @@ def load_config() -> dict:
 
 
 def save_config(config_data: dict):
-    """Save config to JSON file.
+    """設定(config)をJSONファイルに保存する。
 
     Args:
-        config_data (dict): Config dictionary
+        config_data (dict): 設定項目の辞書
     """
     config_file_path = "setting/config.hjson"
     try:
@@ -226,18 +226,18 @@ def save_config(config_data: dict):
 
 
 def get_default_data_structure() -> Dict:
-    """Returns the default structure for a new data file."""
+    """新規データファイル用のデフォルト構造を返す。"""
     return {"nodes": [], "edges": []}
 
 
 def list_hjson_files(directory: str) -> List[str]:
-    """Lists .hjson files in the specified directory.
+    """指定されたディレクトリ内の.hjsonファイルをリストアップする。
 
     Args:
-        directory (str): The directory to scan.
+        directory (str): スキャンするディレクトリ
 
     Returns:
-        List[str]: A list of .hjson file names.
+        List[str]: .hjsonファイル名のリスト
     """
     if not os.path.isdir(directory):
         return []
@@ -249,10 +249,10 @@ def list_hjson_files(directory: str) -> List[str]:
 
 
 def load_app_data() -> dict:
-    """Load app_data from JSON file.
+    """JSONファイルからapp_dataを読み込む。
 
     Returns:
-        dict: Config dictionary
+        dict: app_dataの辞書
     """
     with open("setting/app_data.json", "r", encoding="utf-8") as f:
         app_data = hjson.load(f)
@@ -260,13 +260,13 @@ def load_app_data() -> dict:
 
 
 def load_source_data(file_path: str) -> Dict:
-    """Load diagram source data from JSON file.
+    """JSON/HJSONファイルからダイアグラムの元データを読み込む。
 
     Args:
-        file_path (str): Path to JSON file
+        file_path (str): 読み込むファイルのパス
 
     Returns:
-        Dict: Dictionary of source data
+        Dict: 元データの辞書
     """
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
@@ -302,11 +302,11 @@ def load_source_data(file_path: str) -> Dict:
 
 
 def update_source_data(file_path: str, source_data: Dict):
-    """Update source to JSON file.
+    """元データをファイルに更新・保存する。
 
     Args:
-        file_path (str): Path to JSON file
-        source_data (Dict): Source data
+        file_path (str): 保存先ファイルのパス
+        source_data (Dict): 保存する元データ
     """
     # --- 最後に使用したページをconfigに保存 ---
     if "app_name" in st.session_state and "config_data" in st.session_state:
@@ -421,10 +421,10 @@ def get_next_and_number(existing: List[str], candidate: str) -> str:
 
 
 def get_backup_files_for_current_data():
-    """Get backup files for current data.
+    """現在のデータに対するバックアップファイルの一覧を取得する。
 
     Returns:
-        list: List of backup files
+        list: バックアップファイルのリスト
     """
     # copy_fileによるファイルコピー後のページ全体再描画をここで処理する
     # （fragment内の通常レンダリングパスなのでst.rerunが正常動作する）
@@ -445,11 +445,11 @@ def get_backup_files_for_current_data():
 
 
 def copy_file():
-    """Copy file from backup to current data.
+    """バックアップから現在のデータへファイルをコピー（復元）する。
 
     Note:
-        This function assumes that the source file exists in the "back" directory.
-        The destination file is specified in the session state.
+        この関数はコピー元ファイルが "back" ディレクトリに存在することを前提とする。
+        コピー先のファイルパスはst.session_stateから取得される。
     """
 
     src = st.session_state["selected_backup_file"]
@@ -483,11 +483,11 @@ def make_hashable(data):
 
 
 def atomic_write_json(file_path: str, data: Any):
-    """Write data to JSON file atomically.
+    """データをJSONファイルにアトミックに書き込む。
 
     Args:
-        file_path (str): Path to JSON file
-        data (Any): Data to write
+        file_path (str): 保存先ファイルのパス
+        data (Any): 書き込むデータ
     """
     dir_name = os.path.dirname(file_path) or "."
     # 同じディレクトリに一時ファイルを作成
@@ -514,15 +514,15 @@ def atomic_write_json(file_path: str, data: Any):
 
 
 def calculate_text_area_height(text: str, min_height: int = 100, line_height: int = 25) -> int:
-    """Calculate the height of a text area based on the number of lines.
+    """行数に基づいてテキストエリアの高さを計算する。
 
     Args:
-        text (str): Input text
-        min_height (int): Minimum height in pixels
-        line_height (int): Height per line in pixels
+        text (str): 入力テキスト
+        min_height (int): 最小の高さ（ピクセル）
+        line_height (int): 1行あたりの高さ（ピクセル）
 
     Returns:
-        int: Calculated height
+        int: 計算された高さ
     """
     if not text:
         return min_height
@@ -538,13 +538,13 @@ def calculate_text_area_height(text: str, min_height: int = 100, line_height: in
 
 
 def unescape_newline(text: str) -> str:
-    """Unescape newline characters in text.
+    """テキスト内のエスケープされた改行文字を元に戻す。
     
     Args:
-        text (str): Input text
+        text (str): 入力テキスト
         
     Returns:
-        str: Text with unescaped newline characters
+        str: 改行文字がデコードされたテキスト
     """
     if not isinstance(text, str):
         return text
@@ -554,13 +554,13 @@ def unescape_newline(text: str) -> str:
 
 
 def recursive_unescape(data: Any) -> Any:
-    """Recursively unescape newline characters in data.
+    """データ内のエスケープされた改行文字を再帰的に元に戻す。
 
     Args:
-        data (Any): Input data (dict, list, str, etc.)
+        data (Any): 入力データ (dict, list, str など)
 
     Returns:
-        Any: Data with unescaped newline characters
+        Any: 改行文字がデコードされたデータ
     """
     if isinstance(data, str):
         return unescape_newline(data)

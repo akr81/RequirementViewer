@@ -3,7 +3,6 @@ import hjson
 import datetime
 import shutil
 
-# Streamlit のレイアウトをワイドに設定
 st.set_page_config(layout="wide")
 
 st.title("Setting")

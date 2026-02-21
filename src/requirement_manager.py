@@ -7,12 +7,12 @@ class RequirementManager:
         self.requirements = requirement_data
     
     def update_edge(self, source: str, destination: str, defaults: dict = None):
-        """Update (add or remove) edge to requirements(only for link_mode)
+        """(link_mode専用) エッジを更新（追加・削除）する
         
         Args:
-            source (str): Source node unique ID
-            destination (str): Destination node unique ID
-            defaults (dict): Default edge attributes
+            source (str): 接続元ノードのユニークID
+            destination (str): 接続先ノードのユニークID
+            defaults (dict): デフォルトのエッジ属性
         """
         existing_edge = [e for e in self.requirements["edges"] if e["source"] == source and e["destination"] == destination]
         if existing_edge:
@@ -26,14 +26,15 @@ class RequirementManager:
 
 
     def add(self, requirement: Dict, tmp_edges: List, new_edges: List) -> str:
-        """Add new requirement to requirements.
+        """新しい要求を requirements に追加する。
 
         Args:
-            requirement (Dict): New requirement to add
-            tmp_edges (List): List of temporary edges include invalid (removed)
+            requirement (Dict): 追加する新しい要求データ
+            tmp_edges (List): 無効な（削除された）ものを含む一時的なエッジのリスト
+            new_edges (List): 新たに追加するエッジのリスト
 
         Returns:
-            str: Unique ID of added requirement
+            str: 追加された要求のユニークID
         """
         requirement.setdefault("title", "")
         # 新しい要求を追加する
@@ -54,10 +55,11 @@ class RequirementManager:
         return requirement["unique_id"]
 
     def remove(self, unique_id: str, remove_relations=True):
-        """Remove requirement with specified unique_id.
+        """指定された unique_id の要求を削除する。
 
         Args:
-            unique_id (str): Unique ID of requirement to remove
+            unique_id (str): 削除する要求のユニークID
+            remove_relations (bool): 依存する関連も削除するかどうか
         """
         # 指定されたunique_idの要求を削除する
         self.requirements["nodes"].remove(
@@ -79,12 +81,13 @@ class RequirementManager:
         tmp_edges: List,
         new_edges: List,
     ):
-        """Update requirement with specified unique_id.
+        """指定された unique_id の要求を更新する。
 
         Args:
-            selected_unique_id (str): Unique ID of requirement to update
-            requirement (Dict): Requirement to update
-            tmp_edges (List): List of edges include invalid (removed)
+            selected_unique_id (str): 更新対象の要求のユニークID
+            requirement (Dict): 更新する要求データ
+            tmp_edges (List): 無効な（削除された）ものを含む一時的なエッジのリスト
+            new_edges (List): 新規追加エッジのリスト
         """
         requirement.setdefault("title", "")
         # 渡されるrequirementは、暫定的にユニークIDを振り直しているので、元のユニークIDで上書きする

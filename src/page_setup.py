@@ -83,9 +83,9 @@ def load_graph_data(file_path: str, mtime: float, app_name: str) -> GraphData:
     """データの読み込みとグラフ構築をキャッシュ付きで実行する。
 
     Args:
-        file_path: HJSONファイルパス
-        mtime: ファイル更新時刻（キャッシュ無効化用）
-        app_name: アプリケーション名
+        file_path (str): HJSONファイルパス
+        mtime (float): ファイル更新時刻（キャッシュ無効化用）
+        app_name (str): アプリケーション名
 
     Returns:
         GraphData: 構築済みのグラフデータ
@@ -184,8 +184,11 @@ def load_and_prepare_data(file_path, app_name):
     link_mode = True if link_mode == "True" else False
     previous_selected = st.query_params.get("previous_selected", "None")
 
-    # 2回連続で同じノードを選択したら接続モードにする
+    # --- ステート制御: 接続モード（link_mode）の自動切り替え ---
+    # ユーザーが図上の同じノードを2回連続でクリックした場合、直感的な操作として
+    # 「そのノードからのエッジを繋ぐ（接続）モード」のON/OFFをトグルする仕様。
     if (previous_selected == selected_unique_id):
+        # 連続クリックされた場合、現在の接続モード状態を反転させる
         if not link_mode:
             link_mode = True
             st.toast(f"接続モードON: 接続先ノードを選択")
@@ -193,7 +196,10 @@ def load_and_prepare_data(file_path, app_name):
             link_mode = False
             st.toast(f"接続モードOFF")
     else:
+        # 別のノードが選択された場合の処理
         if link_mode:
+            # 接続モードがONの状態で別のノードが選ばれた場合、
+            # previous_selected(接続元) から selected_unique_id(接続先) へエッジを引く。
             # アプリケーションごとに必須の属性を定義
             edge_defaults = {"type": EdgeType.ARROW} # 共通のデフォルト
 

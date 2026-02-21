@@ -15,10 +15,10 @@ import copy
 
 @st.cache_data
 def load_entity_types() -> list[str]:
-    """Load entity types from JSON file.
+    """JSONファイルからエンティティタイプ一覧を読み込む。
 
     Returns:
-        list[str]: List of entity types
+        list[str]: エンティティタイプのリスト
     """
     with open(os.path.join("setting", "entity_types.json"), "r", encoding="utf-8") as f:
         entity_types = hjson.load(f)
@@ -27,10 +27,10 @@ def load_entity_types() -> list[str]:
 
 @st.cache_data
 def load_relation_types() -> list[str]:
-    """Load relation types from JSON file.
+    """JSONファイルから関係タイプ一覧を読み込む。
 
     Returns:
-        list[str]: List of relation types
+        list[str]: 関係タイプのリスト
     """
     with open(
         os.path.join("setting", "relation_types.json"), "r", encoding="utf-8"
@@ -41,10 +41,10 @@ def load_relation_types() -> list[str]:
 
 @st.cache_data
 def load_note_types() -> list[str]:
-    """Load note types from JSON file.
+    """JSONファイルからノートタイプ一覧を読み込む。
 
     Returns:
-        list[str]: List of entity types
+        list[str]: ノートタイプのリスト
     """
     with open(os.path.join("setting", "note_types.json"), "r", encoding="utf-8") as f:
         note_types = hjson.load(f)
@@ -75,7 +75,6 @@ graph_data = page_elements["graph_data"]
 id_title_dict = page_elements["id_title_dict"]
 unique_id_dict = page_elements["unique_id_dict"]
 id_title_list = page_elements["id_title_list"]
-# add_list は Requirement Diagram では使われない
 selected_unique_id = page_elements["selected_unique_id"]
 selected_entity = page_elements["selected_entity"]
 

@@ -20,7 +20,7 @@ class RequirementGraph:
         self._build_graph()
 
     def _build_graph(self):
-        """Build graph from entities."""
+        """エンティティからグラフを構築する。"""
         # ノードの追加
         for node in self.entities["nodes"]:
             # デフォルト値の設定 (必要に応じて)
@@ -71,13 +71,13 @@ class RequirementGraph:
         downstream_distance: int,
         detail: bool = True,
     ):
-        """Extract subgraph from graph with target node.
+        """対象ノードを含むサブグラフを抽出する。
 
         Args:
-            target_node (str): Target node to extract subgraph
-            upstream_distance (int): Distance of upstream nodes
-            downstream_distance (int): Distance of downstream nodes
-
+            target_node (str): サブグラフ抽出の起点となるターゲットノード
+            upstream_distance (int): 遡る上流ノードの距離制限 (-1で無制限)
+            downstream_distance (int): 辿る下流ノードの距離制限 (-1で無制限)
+            detail (bool): 詳細(note等)を含めるかどうか
         """
         # Store graph itself as subgraph if target_node is None
         if target_node is None or target_node == "None":
@@ -100,22 +100,22 @@ class RequirementGraph:
         reachable_lower_nodes = None
         reachable_nodes = None
 
-        # Downstream
+        # 下流（Downstream）の探索
         lengths = nx.single_source_shortest_path_length(self.graph, target_node)
         reachable_lower_nodes = {
             node
             for node, length in lengths.items()
-            if upstream_distance == -1 or length <= upstream_distance
+            if downstream_distance == -1 or length <= downstream_distance
         }
 
-        # Upstream
+        # 上流（Upstream）の探索
         lengths_reverse = nx.single_source_shortest_path_length(
             self.graph.reverse(), target_node
         )
         reachable_upper_nodes = {
             node
             for node, length in lengths_reverse.items()
-            if downstream_distance == -1 or length <= downstream_distance
+            if upstream_distance == -1 or length <= upstream_distance
         }
         reachable_nodes = reachable_upper_nodes.union(reachable_lower_nodes)
 

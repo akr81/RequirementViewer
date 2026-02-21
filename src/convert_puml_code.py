@@ -21,7 +21,7 @@ from src.puml_templates import (
 
 
 class ConvertPumlCode:
-    """Convert graph to PlantUML code."""
+    """グラフデータをPlantUMLコードに変換するクラス。"""
 
     def _dispatch_conversion(
         self,
@@ -30,7 +30,7 @@ class ConvertPumlCode:
         converters: Dict,
         default_converter=None,
     ) -> str:
-        """Generic dispatch for node conversion."""
+        """ノード変換用の汎用ディスパッチャ。"""
         node_attrs = node_data[1]
         node_type = node_attrs.get("type", NodeType.CARD)
         converter = converters.get(node_type, default_converter)
@@ -45,7 +45,7 @@ class ConvertPumlCode:
         field: str,
         keep_newline: bool = False,
     ) -> str:
-        """Generic note converter using a specific field for content."""
+        """コンテンツとして特定フィールドを使用する汎用のNoteコンバータ。"""
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
@@ -61,10 +61,10 @@ class ConvertPumlCode:
         )
 
     def __init__(self, config: Dict[str, Any]):
-        """Initializer
+        """初期化。
 
         Args:
-            config (Dict[str, Any]): Config settings
+            config (Dict[str, Any]): 設定データ
         """
         self.detail = config["detail"]
         self.debug = config["debug"]
@@ -134,16 +134,16 @@ class ConvertPumlCode:
         parameters_dict: Dict,
         diagram_title: str = "",
     ) -> str:
-        """Convert graph to requirement diagram as PlantUML code string.
+        """要求仕様グラフをPlantUMLコード文字列に変換する。
 
         Args:
-            page_title (str): Page title.
-            graph (nx.DiGraph): Graph of requirements.
-            title (str): Title of diagram.
-            parameters_dict (Dict): Parameters for link.
+            page_title (str): アプリケーション名（ページタイトル）
+            graph (nx.DiGraph): 要求のグラフ
+            title (str): 図のタイトル
+            parameters_dict (Dict): リンク処理などのパラメータ
 
         Returns:
-            str: PlantUML code
+            str: PlantUMLコード
         """
         specific_settings = self.diagram_specific_settings.get(
             page_title, {"ortho": True, "sep": 0}
@@ -228,7 +228,7 @@ class ConvertPumlCode:
     def _convert_nodes_to_puml(
         self, graph: nx.DiGraph, parameters_dict: Dict, node_converter_method
     ) -> List[str]:
-        """Helper to convert all nodes in a graph to PUML strings using a specific node converter."""
+        """特定のノードコンバータを使用して、グラフ内のすべてのノードをPUML文字列のリストに変換するヘルパーメソッド。"""
         puml_node_parts = []
         for node_data_tuple in graph.nodes(data=True):
             puml_node_parts.append(
@@ -239,7 +239,7 @@ class ConvertPumlCode:
     def _convert_edges_to_puml(
         self, graph: nx.DiGraph, edge_converter_method, **kwargs
     ) -> List[str]:
-        """Helper to convert all edges in a graph to PUML strings using a specific edge converter."""
+        """特定のエッジコンバータを使用して、グラフ内のすべてのエッジをPUML文字列のリストに変換するヘルパーメソッド。"""
         puml_edge_parts = []
         for edge_data_tuple in graph.edges(data=True):
             puml_edge_parts.append(edge_converter_method(edge_data_tuple, **kwargs))
@@ -248,12 +248,12 @@ class ConvertPumlCode:
     def _convert_requirement_diagram(
         self, graph: nx.DiGraph, title: str, parameters_dict: Dict
     ) -> str:
-        """Convert requirement graph to PlantUML code.
+        """要求図(Requirement Diagram)のグラフをPlantUMLコードに変換する。
+
         Args:
-            target (str): Target node that filters the graph.
-            graph (nx.DiGraph): Graph of requirements.
-            title (str): Title of diagram.
-            parameters_dict (Dict): Parameters for link.
+            graph (nx.DiGraph): 要求のグラフ
+            title (str): 図のタイトル
+            parameters_dict (Dict): リンク処理などのパラメータ
         """
         # Draw package as frame
         target = parameters_dict.get("target", None)
@@ -291,14 +291,14 @@ class ConvertPumlCode:
     def _convert_parameters_dict(
         self, node: Tuple[str, Dict], parameters_dict: Dict
     ) -> str:
-        """Convert parameters dict to PlantUML link string.
+        """パラメータの辞書をPlantUMLリンク文字列に変換する。
 
         Args:
-            node (Tuple[str, Dict]): Node information (unique_id is in node[1]['unique_id']).
-            parameters_dict (Dict): Parameters for the link base.
+            node (Tuple[str, Dict]): ノード情報 (unique_id は node[1]['unique_id'] に含まれる)
+            parameters_dict (Dict): リンクベース用パラメータ
 
         Returns:
-            str: PlantUML link string like "[[?param1=val1&selected=id]]".
+            str: PlantUMLリンク文字列 (例: "[[?param1=val1&selected=id]]")
         """
         query_items = []
         if parameters_dict:  # parameters_dictがNoneや空でないことを確認
@@ -378,7 +378,7 @@ class ConvertPumlCode:
     def _create_card_puml(
         self, unique_id: str, content: str, parameters_str: str, color_str: str
     ) -> str:
-        """Generates the PlantUML string for a card element."""
+        """カード要素のPlantUML文字列を生成する。"""
         # contentは呼び出し元ですでに整形されている場合があるため、ここではエスケープしない
         # 呼び出し元で個別にエスケープを行う
         return CARD_TEMPLATE.format(
@@ -406,14 +406,14 @@ class ConvertPumlCode:
     def _convert_requirement_node(
         self, node: Tuple[str, Dict], parameters_dict: Dict
     ) -> str:
-        """Convert requirement node information to PlantUML code.
+        """要求ノードの情報をPlantUMLコードに変換する。
 
         Args:
-            node (Tuple[str, Dict]): Node information.
-            parameters_dict (Dict): Parameters for link.
+            node (Tuple[str, Dict]): ノード情報
+            parameters_dict (Dict): リンク処理などのパラメータ
 
         Returns:
-            str: PlantUML code.
+            str: PlantUMLコード
         """
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         node_attrs = node[1]
@@ -436,14 +436,16 @@ class ConvertPumlCode:
         parameters_str: str,
         detail: bool = True,
     ) -> str:
-        """Convert usecase node for Requirement Diagram to PlantUML code.
+        """要求図(Requirement Diagram)のユースケースノードをPlantUMLコードに変換する。
 
         Args:
-            data (Dict[str, Any]): Usecase node attributes.
-            parameters_str (str): Parameter string for link.
+            data (Dict[str, Any]): ユースケースノードの属性
+            node_type (str): ノードのタイプ名(未使用、互換性のため)
+            parameters_str (str): リンク用のパラメータ文字列
+            detail (bool): 詳細表示するかどうか
 
         Returns:
-            str: PlantUML code
+            str: PlantUMLコード
         """
         # For PlantUML, the "usecase" entity cannot used on class diagram
         title = data["title"]
@@ -465,15 +467,16 @@ class ConvertPumlCode:
     def _convert_req_diagram_requirement_node(
         self, data: Dict[str, Any], node_type: str, parameters_str: str, detail: bool = True
     ) -> str:
-        """Convert requirement node for Requirement Diagram to PlantUML code.
+        """要求図(Requirement Diagram)の要求ノードをPlantUMLコードに変換する。
 
         Args:
-            data (Dict[str, Any]): Requirement information
-            node_type (str): Type of requirement
-            parameters_str (str): Parameter string for link
+            data (Dict[str, Any]): 要求ノードの情報
+            node_type (str): 要求タイプ
+            parameters_str (str): リンク用のパラメータ文字列
+            detail (bool): 詳細表示するかどうか
 
         Returns:
-            str: PlantUML code
+            str: PlantUMLコード
         """
         title = data["title"]
         text = data["text"]
@@ -513,15 +516,16 @@ class ConvertPumlCode:
         parameters_str: str,
         detail: bool = True,
     ) -> str:
-        """Convert block/testCase node for Requirement Diagram to PlantUML code.
+        """要求図(Requirement Diagram)のブロック/テストケースノードをPlantUMLコードに変換する。
 
         Args:
-            data (Dict[str, Any]): Block information
-            node_type (str): Type information
-            parameters_str (str): Parameter string for link
+            data (Dict[str, Any]): ブロックノードの情報
+            node_type (str): ノードのタイプ
+            parameters_str (str): リンク用のパラメータ文字列
+            detail (bool): 詳細表示するかどうか
 
         Returns:
-            str: PlantUML code
+            str: PlantUMLコード
         """
         title = data["title"]
         escaped_title = self._escape_puml(title)
@@ -537,15 +541,16 @@ class ConvertPumlCode:
         parameters_str: str,
         detail: bool = True,
     ) -> str:
-        """Convert rationale/problem (note-like) node for Requirement Diagram to PlantUML code.
+        """要求図(Requirement Diagram)の理由/問題(note相当)ノードをPlantUMLコードに変換する。
 
         Args:
-            data (Dict[str, Any]): Node attributes for rationale or problem.
-            parameters_str (str): Parameter string for link.
-
+            data (Dict[str, Any]): 理由または問題ノードの属性
+            node_type (str): ノードのタイプ
+            parameters_str (str): リンク用のパラメータ文字列
+            detail (bool): 詳細表示するかどうか
 
         Returns:
-            str: PlantUML string for note
+            str: PlantUML文字列
         """
         # Display longer string from title and text
         if len(data["title"]) >= len(data["text"]):
@@ -567,14 +572,14 @@ class ConvertPumlCode:
         )
 
     def _get_title_string(self, id: str, title: str) -> str:
-        """Return title string (ID + title)
+        """IDとタイトルを結合した文字列を返す。
 
         Args:
-            id (str): ID of requirement
-            title (str): Title of requirement
+            id (str): 要求のID
+            title (str): 要求のタイトル
 
         Returns:
-            str: Title string
+            str: タイトル文字列
         """
         # titleは呼び出し元ですでにエスケープされていることを想定
         if id != "":
@@ -583,13 +588,13 @@ class ConvertPumlCode:
             return f"{title}"
 
     def _create_note_on_link_puml(self, note_data: Dict[str, Any]) -> str:
-        """Creates PlantUML string for a 'note on link'.
+        """エッジ上のノート(note on link)のPlantUML文字列を生成する。
 
         Args:
-            note_data (Dict[str, Any]): Dictionary containing note information (type, text).
+            note_data (Dict[str, Any]): ノート情報(type, text)を含む辞書
 
         Returns:
-            str: PlantUML string for the note on link, or empty string if no text.
+            str: note on link のPlantUML文字列（テキストがない場合は空文字列）
         """
         if not note_data or not note_data.get("text"):
             return ""
@@ -612,7 +617,7 @@ class ConvertPumlCode:
         label_text: str = "",
         note_on_link_puml: str = "",
     ) -> str:
-        """Generates a generic PlantUML string for an edge."""
+        """エッジに対する汎用的なPlantUML文字列を生成する。"""
         # label_textはテンプレートから生成される固定文字列(<<type>>)が多いため、
         # ここではエスケープ対象としないが、動的な内容が含まれる場合は注意が必要。
         # 今回の要件図の仕様では label_text は固定フォーマットのみ。
@@ -620,13 +625,13 @@ class ConvertPumlCode:
         return f"{puml_node1} {line_style} {puml_node2}{label_part}{note_on_link_puml}"
 
     def _convert_requirement_edge(self, data: Dict[str, Any]):
-        """Return relationship string
+        """関係性（エッジ）のPlantUML文字列を返す。
 
         Args:
-            data (Dict[str, Any]): Relationship (node)
+            data (Dict[str, Any]): 関係性データ(src_id, dst_id, attributes)
 
         Returns:
-            str: PlantUML string
+            str: PlantUML文字列
         """
         src = data[0]
         dst = data[1]
@@ -662,14 +667,14 @@ class ConvertPumlCode:
     def _convert_strategy_and_tactics(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
-        """Convert graph to strategy and tactics tree diagram as PlantUML code string.
+        """S&Tツリー(Strategy and Tactics Tree)のグラフをPlantUMLコード文字列に変換する。
 
         Args:
-            graph (nx.DiGraph): Graph of requirements.
-            parameters_dict (Dict): Parameters for link.
+            graph (nx.DiGraph): 要求のグラフ
+            parameters_dict (Dict): リンク処理などのパラメータ
 
         Returns:
-            str: PlantUML code
+            str: PlantUMLコード
         """
         puml_parts = []
 
@@ -686,7 +691,7 @@ class ConvertPumlCode:
     def _convert_st_card_node(
         self, node: Tuple[str, Dict], parameters_dict: Dict
     ) -> str:
-        """Converts a node for Strategy and Tactics Tree into a card."""
+        """戦略・戦術ツリー(S&T)のノードをカードに変換する。"""
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
@@ -720,15 +725,16 @@ class ConvertPumlCode:
     def _convert_card_edge(
         self, data: Dict[str, Any], use_src_arrow_dst_style: bool = False
     ):
-        """
-        Converts a card edge to PlantUML.
+        """カード型エッジをPlantUMLコードに変換する。
+
         Args:
-            data: Edge data (tuple: (src_id, dst_id, attributes_dict)).
+            data: エッジデータ (タプル: (src_id, dst_id, attributes_dict))
             use_src_arrow_dst_style:
-                If True, arrow type defaults to "src --> dst" (e.g., PFD).
-                If False (default), arrow type defaults to "dst <-- src" (e.g., S&T, EC, CRT).
+                True の場合、矢印の向きはデフォルトで "src --> dst" となる (例: PFD)
+                False (デフォルト) の場合、矢印の向きは "dst <-- src" となる (例: S&T, EC, CRT)
+
         Returns:
-            PlantUML string for the edge.
+            str: エッジのPlantUML文字列
         """
         src_id = data[0]
         dst_id = data[1]
@@ -761,7 +767,7 @@ class ConvertPumlCode:
     def _convert_current_reality(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
-        """Convert graph to Current Reality tree diagram as PlantUML code string."""
+        """グラフを現状分析ツリー(CRT)のPlantUMLコード文字列に変換する。"""
         puml_parts = list(
             self._convert_nodes_to_puml(
                 graph,
@@ -803,7 +809,7 @@ class ConvertPumlCode:
     def _convert_process_flow_diagram(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
-        """Convert graph to Process Flow Diagram as PlantUML code string."""
+        """グラフをプロセスフロー図(PFD)のPlantUMLコード文字列に変換する。"""
         return self._convert_dispatch_diagram(
             graph, parameters_dict, self.pfd_node_converters, NodeType.NOTE,
             edge_kwargs={"use_src_arrow_dst_style": True},
@@ -813,7 +819,7 @@ class ConvertPumlCode:
     def _convert_pfd_element(
         self, node: Tuple[str, Dict], parameters_dict: Dict, puml_type: str
     ) -> str:
-        """Convert generic element (usecase, cloud) for PFD."""
+        """PFD用の汎用要素(usecase, cloud等)を変換する。"""
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)

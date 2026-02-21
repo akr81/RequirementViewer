@@ -53,7 +53,7 @@ _converter = ConvertPumlCode(_CONVERTER_CONFIG)
 
 
 def _render_controls(context: DiagramContext, options: DiagramOptions) -> Optional[str]:
-    """Render control widgets and update options."""
+    """画面上のコントロールウィジェットを描画し、オプションを更新する。"""
     (
         title_column,
         filter_column,
@@ -140,7 +140,7 @@ def _render_controls(context: DiagramContext, options: DiagramOptions) -> Option
 def _render_diagram(
     context: DiagramContext, options: DiagramOptions, target: Optional[str]
 ) -> str:
-    """Render the diagram and return plantuml code."""
+    """図（ダイアグラム）を描画し、PlantUMLコードを返す。"""
     options.graph_data.extract_subgraph(
         target,
         upstream_distance=options.upstream_distance,
@@ -206,9 +206,9 @@ def _render_diagram(
 def _render_file_operations(
     context: DiagramContext, options: DiagramOptions, plantuml_code: str
 ):
-    """Render file operations section."""
-    DATA_DIR = "data"  # Define data directory
-    os.makedirs(DATA_DIR, exist_ok=True)  # Ensure data directory exists
+    """ファイル操作セクションのUIを描画する。"""
+    DATA_DIR = "data"  # データ保存先ディレクトリの定義
+    os.makedirs(DATA_DIR, exist_ok=True)  # データディレクトリの存在を確保
 
     st.markdown("---")  # Separator
     st.subheader("ファイル操作")
@@ -217,7 +217,7 @@ def _render_file_operations(
     with file_op_cols[0]:
         st.write("現在のファイル:", st.session_state.get("file_path", "未設定"))
 
-    # New File Section
+    # 新規ファイル作成セクション
     with st.expander("新しいファイルを作成"):
         new_file_name_key = f"{context.app_name}_new_file_name"
         postfix = st.session_state.app_data[context.app_name].get("postfix", "data")
@@ -243,7 +243,7 @@ def _render_file_operations(
                                 default_content, f, ensure_ascii=False, indent=4
                             )
                         if postfix == "ec":
-                            # For Evaporating Cloud Viewer, copy default template
+                            # EC (Evaporating Cloud) リーダー用はデフォルトテンプレートをコピー
                             shutil.copyfile("template/ec.hjson", new_file_path)
 
                         data_file_key = st.session_state.app_data[context.app_name][
@@ -266,7 +266,7 @@ def _render_file_operations(
             else:
                 st.error("有効なファイル名（.hjsonで終わる）を入力してください。")
 
-    # Open File Section
+    # 既存ファイル読み込みセクション
     with st.expander("既存のファイルを開く"):
         available_files_in_data_dir = list_hjson_files(DATA_DIR)
 

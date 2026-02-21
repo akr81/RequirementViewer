@@ -27,7 +27,6 @@ graph_data = page_elements["graph_data"]
 id_title_dict = page_elements["id_title_dict"]
 unique_id_dict = page_elements["unique_id_dict"]
 id_title_list = page_elements["id_title_list"]
-# add_list は Strategy and Tactics Tree では使われない
 selected_unique_id = page_elements["selected_unique_id"]
 selected_entity = page_elements["selected_entity"]
 
