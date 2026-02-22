@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import copy
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
@@ -114,6 +115,13 @@ def load_graph_data(file_path: str, mtime: float, app_name: str) -> GraphData:
         elif app_name == AppName.PROCESS_FLOW:
             if "id" in node and not node.get("title"):
                 node["title"] = node["id"]
+        elif app_name == AppName.REQUIREMENT:
+            # PlantUMLコンバーターは title を class 名として使用するため、
+            # title が空の場合は id からフォールバックする
+            if not node.get("title") and node.get("id"):
+                node["title"] = node["id"]
+            if not node.get("id") and node.get("title"):
+                node["id"] = node["title"]
                 
         # 表示対象キーが未定義の場合は空文字にする
         if display_key not in node:
@@ -149,7 +157,9 @@ def load_and_prepare_data(file_path, app_name):
         mtime = 0.0
 
     # キャッシュされたデータをロード
-    gd = load_graph_data(file_path, mtime, app_name)
+    # キャッシュ済みオブジェクトを直接変更すると他のレンダリングに影響するため、
+    # ディープコピーしてから使用する
+    gd = copy.deepcopy(load_graph_data(file_path, mtime, app_name))
 
     # キャッシュから展開
     requirement_data = gd.requirement_data

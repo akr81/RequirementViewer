@@ -35,6 +35,11 @@ class RequirementGraph:
 
         # エッジの追加
         for edge in self.entities["edges"]:
+            # source/destination がグラフのノードに存在しないエッジはスキップ
+            # （過去に混入した "default" 等の不正エッジへの耐性）
+            if edge["source"] not in self.graph or edge["destination"] not in self.graph:
+                continue
+
             # デフォルト値の設定
             if self.page_title in [
                 AppName.EVAPORATING_CLOUD,
