@@ -76,16 +76,12 @@ edge_params = {
         "selectbox_label": "接続元",
         "selectbox_index": "source",
         "selectbox_key": "predecessors",
-        "connection_column": None,
-        "description_column": None,
     },
     "from_selected": {
         "condition": "source",
         "selectbox_label": "接続先",
         "selectbox_index": "destination",
         "selectbox_key": "successors",
-        "connection_column": None,
-        "description_column": None,
     },
 }
 
