@@ -448,13 +448,13 @@ class ConvertPumlCode:
             str: PlantUMLコード
         """
         # For PlantUML, the "usecase" entity cannot used on class diagram
-        title = data["title"]
+        title = data.get("title", "")
         # タイトルをエスケープ
         escaped_title = self._escape_puml(title)
         
         # ID+タイトル文字列の生成もエスケープ済みタイトルを使用するよう _get_title_string を調整するか、
         # ここで組み立てる
-        full_title = self._get_title_string(data['id'], escaped_title)
+        full_title = self._get_title_string(data.get('id', ''), escaped_title)
         
         color_str = self._get_puml_color(data)
         return REQ_USECASE_TEMPLATE.format(
@@ -478,8 +478,8 @@ class ConvertPumlCode:
         Returns:
             str: PlantUMLコード
         """
-        title = data["title"]
-        text = data["text"]
+        title = data.get("title", "")
+        text = data.get("text", "")
         
         # エスケープ
         escaped_title = self._escape_puml(title)
@@ -496,7 +496,7 @@ class ConvertPumlCode:
                 parameters=parameters_str,
                 color_str=color_str,
                 field="{field}",
-                id=data['id'],
+                id=data.get('id', ''),
                 text=escaped_text,
             )
         else:
@@ -527,9 +527,9 @@ class ConvertPumlCode:
         Returns:
             str: PlantUMLコード
         """
-        title = data["title"]
+        title = data.get("title", "")
         escaped_title = self._escape_puml(title)
-        full_title = self._get_title_string(data['id'], escaped_title)
+        full_title = self._get_title_string(data.get('id', ''), escaped_title)
         
         color_str = self._get_puml_color(data)
         return f"class \"{full_title}\" as {data['unique_id']} <<{node_type}>> {parameters_str} {color_str}"
@@ -553,10 +553,12 @@ class ConvertPumlCode:
             str: PlantUML文字列
         """
         # Display longer string from title and text
-        if len(data["title"]) >= len(data["text"]):
-            display_text = data["title"]
+        title = data.get("title", "")
+        text = data.get("text", "")
+        if len(title) >= len(text):
+            display_text = title
         else:
-            display_text = data["text"]
+            display_text = text
 
         color_str = self._get_puml_color(data)
         # Requirement Diagramのノートはリンク形式の変更が不要

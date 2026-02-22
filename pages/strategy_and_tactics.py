@@ -63,7 +63,10 @@ def render_edit_panel():
     # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
-    tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
+    tmp_entity.setdefault("color", "None")
+    # 古いデータにフィールドが欠けている場合のフォールバック
+    for field in ("id", "necessary_assumption", "strategy", "parallel_assumption", "tactics", "sufficient_assumption"):
+        tmp_entity.setdefault(field, "")
 
     # 後でボタンを配置する
     top_button_container = st.container()
@@ -117,11 +120,13 @@ def render_edit_panel():
     for i, edge in enumerate(tmp_edges):
         if edge["source"] != selected_unique_id:
             continue
+        # unique_id_dict に存在しない ID の場合は "None" にフォールバック
+        current_label = unique_id_dict.get(edge["destination"], "None")
         edge["destination"] = id_title_dict[
             st.selectbox(
                 "接続先",
                 id_title_list,
-                id_title_list.index(unique_id_dict[edge["destination"]]),
+                id_title_list.index(current_label),
                 key=f"destination{i}",
             )
         ]
