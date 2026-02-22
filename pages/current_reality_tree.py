@@ -15,15 +15,16 @@ import copy
 def render_edge_connection(
     edge: dict, index: int, visibility: str, params: dict, entity_type: str = "entity"
 ) -> str:
-    if edge[params["condition"]] == selected_unique_id:
+    if edge[params["condition"]] == params["selected_unique_id"]:
         with params["connection_column"]:
-            edge[params["selectbox_index"]] = id_title_dict[
+            # unique_id_dict に存在しないIDが入っていた場合は "None" にフォールバック
+            current_id = edge[params["selectbox_index"]]
+            current_label = params["unique_id_dict"].get(current_id, "None")
+            edge[params["selectbox_index"]] = params["id_title_dict"][
                 st.selectbox(
                     params["selectbox_label"],
-                    id_title_list,
-                    index=id_title_list.index(
-                        unique_id_dict[edge[params["selectbox_index"]]]
-                    ),
+                    params["id_title_list"],
+                    index=params["id_title_list"].index(current_label),
                     key=f"{params['selectbox_key']}{index}",
                     label_visibility=visibility,
                 )
@@ -31,12 +32,12 @@ def render_edge_connection(
         with params["and_column"]:
             edge["and"] = st.selectbox(
                 "and",
-                add_list,
-                index=add_list.index(edge["and"]),
+                params["add_list"],
+                index=params["add_list"].index(edge["and"]),
                 key=f"and_{params['selectbox_key']}{index}",
                 label_visibility=visibility,
             )
-            edge["and"] = get_next_and_number(add_list, edge["and"])
+            edge["and"] = get_next_and_number(params["add_list"], edge["and"])
             if not edge["and"]:
                 edge["and"] = "None"
         if entity_type == "note":
@@ -48,11 +49,11 @@ def render_edge_connection(
 
 def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict):
     with params["connection_column"]:
-        edge[params["selectbox_index"]] = id_title_dict[
+        edge[params["selectbox_index"]] = params["id_title_dict"][
             st.selectbox(
                 f"{params['selectbox_label']}(新規)",
-                id_title_list,
-                index=id_title_list.index("None"),
+                params["id_title_list"],
+                index=params["id_title_list"].index("None"),
                 key=f"{params['selectbox_key']}_new",
                 label_visibility=visibility,
             )
@@ -60,12 +61,12 @@ def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict
     with params["and_column"]:
         edge["and"] = st.selectbox(
             "and",
-            add_list,
-            index=add_list.index("None"),
+            params["add_list"],
+            index=params["add_list"].index("None"),
             key=f"and_{params['selectbox_key']}_new",
             label_visibility=visibility,
         )
-        edge["and"] = get_next_and_number(add_list, edge["and"])
+        edge["and"] = get_next_and_number(params["add_list"], edge["and"])
         if not edge["and"]:
             edge["and"] = "None"
 
@@ -191,7 +192,13 @@ def render_edit_panel():
     for idx, (params, dest_key, src_key) in enumerate(connection_configs):
         if idx > 0:
             st.write("---")  # to と from の区切り線
-            
+
+        # データ参照を params に追加（関数シグネチャを変えずにグローバル依存を除去）
+        params["selected_unique_id"] = selected_unique_id
+        params["id_title_dict"] = id_title_dict
+        params["unique_id_dict"] = unique_id_dict
+        params["id_title_list"] = id_title_list
+        params["add_list"] = add_list
         params["connection_column"], params["and_column"] = st.columns([7, 2])
         visibility = "visible"
         for i, edge in enumerate(tmp_edges):

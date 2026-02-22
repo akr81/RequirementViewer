@@ -15,16 +15,17 @@ def render_edge_connection(
     edge: dict, index: int, visibility: str, params: dict
 ) -> str:
     # 接続元が選択エンティティ
-    if edge[params["condition"]] == selected_unique_id:
+    if edge[params["condition"]] == params["selected_unique_id"]:
         edge.setdefault("comment", "")
         with params["connection_column"]:
-            edge[params["selectbox_index"]] = id_title_dict[
+            # unique_id_dict に存在しないIDが入っていた場合は "None" にフォールバック
+            current_id = edge[params["selectbox_index"]]
+            current_label = params["unique_id_dict"].get(current_id, "None")
+            edge[params["selectbox_index"]] = params["id_title_dict"][
                 st.selectbox(
                     params["selectbox_label"],
-                    id_title_list,
-                    index=id_title_list.index(
-                        unique_id_dict[edge[params["selectbox_index"]]]
-                    ),
+                    params["id_title_list"],
+                    index=params["id_title_list"].index(current_label),
                     key=f"{params['selectbox_key']}{index}",
                     label_visibility=visibility,
                 )
@@ -33,7 +34,7 @@ def render_edge_connection(
             edge["comment"] = st.text_input(
                 "説明",
                 unescape_newline(edge["comment"]),
-                key=f"comment_{params['selectbox_key']}_{selected_unique_id}_{index}",
+                key=f"comment_{params['selectbox_key']}_{params['selected_unique_id']}_{index}",
                 label_visibility=visibility,
             )
         return "collapsed"  # 1つ目の要素は表示し、以降は非表示にする
@@ -42,13 +43,13 @@ def render_edge_connection(
 
 def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict):
     expected_index = -1
-    if "None" in id_title_list:
-        expected_index = id_title_list.index("None")
+    if "None" in params["id_title_list"]:
+        expected_index = params["id_title_list"].index("None")
     with params["connection_column"]:
         connection_key = f"{params['selectbox_key']}_new"
         selected_value_from_widget = st.selectbox(
             f"{params['selectbox_label']}(新規)",
-            id_title_list,
+            params["id_title_list"],
             index=(
                 expected_index if expected_index != -1 else 0
             ),  # 'None' がなければ先頭を選択
@@ -56,7 +57,7 @@ def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict
             label_visibility=visibility,
         )
 
-        edge[params["selectbox_index"]] = id_title_dict[selected_value_from_widget]
+        edge[params["selectbox_index"]] = params["id_title_dict"][selected_value_from_widget]
     with params["description_column"]:
         comment_key = f"comment_{params['selectbox_key']}_new"
         edge["comment"] = st.text_input(
@@ -179,6 +180,11 @@ def render_edit_panel():
     tmp_edges = copy.deepcopy(requirement_data["edges"])
 
     params_to = edge_params["to_selected"]
+    # データ参照を params に追加（関数シグネチャを変えずにグローバル依存を除去）
+    params_to["selected_unique_id"] = selected_unique_id
+    params_to["id_title_dict"] = id_title_dict
+    params_to["unique_id_dict"] = unique_id_dict
+    params_to["id_title_list"] = id_title_list
     params_to["connection_column"], params_to["description_column"] = st.columns([1, 1])
     visibility = "visible"
     for i, edge in enumerate(tmp_edges):
@@ -203,6 +209,11 @@ def render_edit_panel():
 
     # 接続先の関係を取得
     params_from = edge_params["from_selected"]
+    # データ参照を params に追加
+    params_from["selected_unique_id"] = selected_unique_id
+    params_from["id_title_dict"] = id_title_dict
+    params_from["unique_id_dict"] = unique_id_dict
+    params_from["id_title_list"] = id_title_list
     params_from["connection_column"], params_from["description_column"] = st.columns(
         [1, 1]
     )
