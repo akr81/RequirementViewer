@@ -57,6 +57,161 @@ def calculate_critical_path(
 
 
 # ---------------------------------------------------------------------------
+# クリティカルチェーン算出（リソース競合考慮）
+# ---------------------------------------------------------------------------
+
+def _compute_earliest_schedule(graph: nx.DiGraph) -> Dict[str, Tuple[float, float]]:
+    """ASAP スケジューリングで各ノードの最早開始・最早終了時刻を計算する。
+
+    Returns:
+        {node_id: (earliest_start, earliest_finish)}
+    """
+    schedule: Dict[str, Tuple[float, float]] = {}
+    # トポロジカル順序で処理（DAG前提）
+    try:
+        topo_order = list(nx.topological_sort(graph))
+    except nx.NetworkXUnfeasible:
+        return schedule
+
+    for node in topo_order:
+        days = graph.nodes[node].get("days", 0)
+        predecessors = list(graph.predecessors(node))
+        if not predecessors:
+            es = 0.0
+        else:
+            es = max(schedule[p][1] for p in predecessors if p in schedule)
+        schedule[node] = (es, es + days)
+
+    return schedule
+
+
+def _compute_remaining_path_length(
+    graph: nx.DiGraph, node: str, memo: Dict[str, float]
+) -> float:
+    """ノードから終端までの最長残パス長を計算する（メモ化再帰）。"""
+    if node in memo:
+        return memo[node]
+    days = graph.nodes[node].get("days", 0)
+    successors = list(graph.successors(node))
+    if not successors:
+        memo[node] = days
+        return days
+    max_child = max(_compute_remaining_path_length(graph, s, memo) for s in successors)
+    result = days + max_child
+    memo[node] = result
+    return result
+
+
+def _detect_resource_conflicts(
+    graph: nx.DiGraph,
+    schedule: Dict[str, Tuple[float, float]],
+) -> List[Tuple[str, str, str]]:
+    """同一リソースで時間帯が重なるタスクペアを検出する。
+
+    Returns:
+        [(task_a, task_b, resource), ...] task_a は開始が早い方
+    """
+    # リソースごとにタスクをグルーピング
+    resource_tasks: Dict[str, List[str]] = {}
+    for node in graph.nodes:
+        res = graph.nodes[node].get("resource", "")
+        days = graph.nodes[node].get("days", 0)
+        if not res or days <= 0:
+            continue
+        resource_tasks.setdefault(res, []).append(node)
+
+    conflicts: List[Tuple[str, str, str]] = []
+    for resource, tasks in resource_tasks.items():
+        if len(tasks) < 2:
+            continue
+        # 全ペアで重なりをチェック
+        for i in range(len(tasks)):
+            for j in range(i + 1, len(tasks)):
+                a, b = tasks[i], tasks[j]
+                if a not in schedule or b not in schedule:
+                    continue
+                a_start, a_end = schedule[a]
+                b_start, b_end = schedule[b]
+                # 時間帯が重なるか判定 (days > 0 のタスクのみ)
+                if a_start < b_end and b_start < a_end:
+                    # 既に依存関係があるペアはスキップ
+                    if nx.has_path(graph, a, b) or nx.has_path(graph, b, a):
+                        continue
+                    # 開始が早い方を先にする
+                    if a_start <= b_start:
+                        conflicts.append((a, b, resource))
+                    else:
+                        conflicts.append((b, a, resource))
+
+    return conflicts
+
+
+def calculate_critical_chain(
+    graph: nx.DiGraph,
+) -> Tuple[float, List[str], List[Tuple[str, str, str]]]:
+    """リソース競合を考慮したクリティカルチェーンを算出する。
+
+    ゴールドラット流ヒューリスティック:
+    1. ASAP スケジューリングで最早開始時刻を算出
+    2. リソース競合を検出
+    3. 残路長が長い方を優先し、短い方を遅らせる仮想エッジを追加
+    4. 競合がなくなるまで繰り返し
+
+    Args:
+        graph: ノード属性に "days", "resource" を持つ有向グラフ
+
+    Returns:
+        (チェーン長, チェーンのノードリスト, 追加された仮想エッジ[(src, dst, resource)])
+    """
+    # 作業用にグラフをコピー（仮想エッジを追加するため）
+    work_graph = graph.copy()
+    virtual_edges: List[Tuple[str, str, str]] = []
+
+    max_iterations = 50  # 無限ループ防止
+    for _ in range(max_iterations):
+        schedule = _compute_earliest_schedule(work_graph)
+        if not schedule:
+            break
+
+        conflicts = _detect_resource_conflicts(work_graph, schedule)
+        if not conflicts:
+            break  # 競合がなくなったら終了
+
+        # 最も影響の大きい競合を1つ解消
+        # （残パス長が長い方を優先、短い方を遅らせる）
+        memo: Dict[str, float] = {}
+        best_conflict = None
+        best_priority_diff = -1
+
+        for task_a, task_b, resource in conflicts:
+            rem_a = _compute_remaining_path_length(work_graph, task_a, memo)
+            rem_b = _compute_remaining_path_length(work_graph, task_b, memo)
+            diff = abs(rem_a - rem_b)
+            if diff > best_priority_diff:
+                best_priority_diff = diff
+                # 残パス長が長い方を先に実行、短い方を遅らせる
+                if rem_a >= rem_b:
+                    best_conflict = (task_a, task_b, resource)
+                else:
+                    best_conflict = (task_b, task_a, resource)
+
+        if best_conflict is None:
+            break
+
+        first, second, resource = best_conflict
+        # 仮想エッジを追加（first が先に実行 → second は first 完了後に開始）
+        if not work_graph.has_edge(first, second):
+            work_graph.add_edge(first, second, virtual=True)
+            virtual_edges.append((first, second, resource))
+
+    # 最終的なクリティカルチェーンを算出
+    inputs, outputs = get_in_out_edge_list(work_graph)
+    cc_length, cc_path = calculate_critical_path(work_graph, inputs, outputs)
+
+    return cc_length, cc_path, virtual_edges
+
+
+# ---------------------------------------------------------------------------
 # ガントチャート PlantUML 生成
 # ---------------------------------------------------------------------------
 

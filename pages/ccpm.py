@@ -11,6 +11,7 @@ from src.utility import (
 from src.ccpm_engine import (
     get_in_out_edge_list,
     calculate_critical_path,
+    calculate_critical_chain,
     make_gantt_puml,
     calculate_fever_data,
     calculate_priority_table,
@@ -313,25 +314,62 @@ def render_edit_panel():
     st.write("---")
     st.write("### 📊 CCPM 分析")
 
-    # グラフからクリティカルパスを算出
+    # グラフからクリティカルパスとクリティカルチェーンを算出
     nx_graph = graph_data.graph
     inputs, outputs = get_in_out_edge_list(nx_graph)
     cp_length, cp = calculate_critical_path(nx_graph, inputs, outputs)
+    cc_length, cc, virtual_edges = calculate_critical_chain(nx_graph)
+
+    def _format_chain(graph, chain):
+        """チェーンのタスク名リストを作成する（days>0のみ）。"""
+        return [graph.nodes[n].get("title", n) for n in chain if graph.nodes[n].get("days", 0) > 0]
 
     if cp:
-        # クリティカルパスのタイトル表示
-        cp_titles = [nx_graph.nodes[n].get("title", n) for n in cp if nx_graph.nodes[n].get("days", 0) > 0]
-        st.info(f"**クリティカルチェーン** ({cp_length}日): {' → '.join(cp_titles)}")
+        cp_titles = _format_chain(nx_graph, cp)
+        cc_titles = _format_chain(nx_graph, cc) if cc else []
+
+        # CP と CC が異なるか判定
+        cp_changed = (cp != cc)
+
+        if cp_changed and cc:
+            st.warning(
+                f"**クリティカルパス** (依存関係のみ, {cp_length}日): {' → '.join(cp_titles)}"
+            )
+            st.error(
+                f"**クリティカルチェーン** (リソース競合考慮, {cc_length}日): {' → '.join(cc_titles)}"
+            )
+        elif cc:
+            st.info(
+                f"**クリティカルチェーン** ({cc_length}日): {' → '.join(cc_titles)}\n\n"
+                f"リソース競合なし — クリティカルパスと一致"
+            )
+        else:
+            st.info(f"**クリティカルパス** ({cp_length}日): {' → '.join(cp_titles)}")
+
+        # リソース競合（仮想エッジ）情報
+        if virtual_edges:
+            with st.expander(f"⚠️ リソース競合: {len(virtual_edges)}件の直列化が必要", expanded=True):
+                for src, dst, resource in virtual_edges:
+                    src_title = nx_graph.nodes[src].get("title", src)
+                    dst_title = nx_graph.nodes[dst].get("title", dst)
+                    st.write(
+                        f"- **{resource}**: "
+                        f"「{src_title}」→「{dst_title}」（{resource} が並行不可のため直列化）"
+                    )
     else:
         st.warning("クリティカルパスが計算できません。タスクと依存関係を確認してください。")
+
+    # 分析で使うチェーン（CC があればそちらを優先）
+    active_chain = cc if cc else cp
+    active_length = cc_length if cc else cp_length
 
     # タブ表示
     tab_gantt, tab_fever, tab_priority = st.tabs(["📅 ガントチャート", "🌡️ フィーバーチャート", "📋 優先度"])
 
     with tab_gantt:
         project = requirement_data.get("project", {})
-        if project.get("start") and cp:
-            gantt_puml = make_gantt_puml(nx_graph, project, cp)
+        if project.get("start") and active_chain:
+            gantt_puml = make_gantt_puml(nx_graph, project, active_chain)
             plantuml_server = config_data.get("plantuml", "")
             if "runtime_plantuml_url" in st.session_state:
                 plantuml_server = st.session_state["runtime_plantuml_url"]
@@ -349,8 +387,10 @@ def render_edit_panel():
     with tab_fever:
         if go is None:
             st.warning("plotly がインストールされていません。")
-        elif cp:
-            fever = calculate_fever_data(nx_graph, requirement_data.get("project", {}), cp, cp_length)
+        elif active_chain:
+            fever = calculate_fever_data(
+                nx_graph, requirement_data.get("project", {}), active_chain, active_length
+            )
 
             # 過去の進捗データ
             progress_data = requirement_data.get("progress", {})
@@ -373,15 +413,14 @@ def render_edit_panel():
                 xaxis=dict(range=[0, 100]), yaxis=dict(range=[0, 100]),
                 height=400,
             )
-            # 背景色 (shapes)
             fig.add_shape(type="rect", x0=0, x1=100, y0=0, y1=0, line_width=0)
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("クリティカルパスが計算できません。")
 
     with tab_priority:
-        if cp:
-            priority = calculate_priority_table(nx_graph, cp)
+        if active_chain:
+            priority = calculate_priority_table(nx_graph, active_chain)
             if priority:
                 st.dataframe(priority, use_container_width=True)
             else:
