@@ -83,7 +83,7 @@
             start: ""
             end: ""
             finished: true
-            color: None
+            color: Gray
         }
         {
             unique_id: t05
@@ -118,7 +118,7 @@
             resource: 鈴木
             start: ""
             end: ""
-            finished: false
+            finished: true
             color: None
         }
         {
@@ -130,7 +130,7 @@
             resource: 高橋
             start: ""
             end: ""
-            finished: false
+            finished: true
             color: None
         }
         {
@@ -142,7 +142,7 @@
             resource: 高橋
             start: ""
             end: ""
-            finished: false
+            finished: true
             color: None
         }
         {
@@ -226,7 +226,7 @@
             resource: 高橋
             start: ""
             end: ""
-            finished: false
+            finished: true
             color: None
         }
         {
@@ -449,6 +449,12 @@
             comment: ""
         }
         {
+            type: arrow
+            source: t04
+            destination: t07
+            comment: ""
+        }
+        {
             source: t05
             destination: t06
             type: arrow
@@ -481,12 +487,6 @@
         {
             source: t09
             destination: d02
-            type: arrow
-            comment: ""
-        }
-        {
-            source: t09
-            destination: t16
             type: arrow
             comment: ""
         }
@@ -683,13 +683,13 @@
             2025/09/23
             2025/10/13
         ]
-        today: 2025/08/15
+        today: 2025/08/19
     }
     progress:
     {
         2025/07/10:
         [
-            0
+            0.0
             26.92
         ]
         2025/08/10:
@@ -701,6 +701,11 @@
         [
             16.07
             78.57
+        ]
+        2025/08/19:
+        [
+            16.36
+            82.76
         ]
     }
 }

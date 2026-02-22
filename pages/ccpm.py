@@ -407,44 +407,94 @@ def render_ccpm_analysis():
             progress_hist.append(fever["progress"])
             buffer_hist.append(fever["buffer_used"])
 
-            fig = go.Figure()
-            # ゾーン境界線
-            x = list(range(0, 110))
-            y1 = [0.6 * xi + 15 for xi in x]
-            y2 = [0.6 * xi + 30 for xi in x]
-            fig.add_trace(go.Scatter(x=x, y=y1, mode="lines", line=dict(color="green", width=1), showlegend=False))
-            fig.add_trace(go.Scatter(x=x, y=y2, mode="lines", line=dict(color="orange", width=1), showlegend=False))
-            # 進捗プロット（日付ラベル付き）
-            fig.add_trace(go.Scatter(
-                x=progress_hist, y=buffer_hist,
-                mode="lines+markers+text",
-                text=dates,
-                textposition="top center",
-                textfont=dict(size=9),
-                name="進捗",
-            ))
-            fig.update_layout(
-                xaxis_title="クリティカルチェーン完了率 (%)", yaxis_title="バッファ消費率 (%)",
-                xaxis=dict(range=[0, 100]), yaxis=dict(range=[0, 100]),
-                height=400,
-            )
-            fig.add_shape(type="rect", x0=0, x1=100, y0=0, y1=0, line_width=0)
-            st.plotly_chart(fig, use_container_width=True)
+            # チャートとデータテーブルを横並び
+            chart_col, data_col = st.columns([3, 1])
 
-            # 記録ボタン
-            st.caption(
-                f"📊 CC完了率: **{fever['progress']:.1f}%** / バッファ消費率: **{fever['buffer_used']:.1f}%**"
-            )
-            if st.button("📝 現在の値を記録", key="ccpm_record_fever"):
-                if "progress" not in requirement_data:
-                    requirement_data["progress"] = {}
-                requirement_data["progress"][today_str] = [
-                    round(fever["progress"], 2),
-                    round(fever["buffer_used"], 2),
-                ]
-                update_source_data(file_path, requirement_manager.requirements)
-                st.success(f"{today_str} の値を記録しました。")
-                st.rerun()
+            with chart_col:
+                fig = go.Figure()
+                # ゾーン塗りつぶし（緑→黄→赤の3段階）
+                x = list(range(0, 101))
+                y1 = [0.6 * xi + 15 for xi in x]  # 緑/黄 境界
+                y2 = [0.6 * xi + 30 for xi in x]  # 黄/赤 境界
+                y_zero = [0] * len(x)
+                y_max = [100] * len(x)
+                # 緑ゾーン（下）
+                fig.add_trace(go.Scatter(
+                    x=x, y=y1, fill="tozeroy", fillcolor="rgba(144,238,144,0.3)",
+                    line=dict(color="green", width=1), showlegend=False,
+                ))
+                # 黄ゾーン（中）
+                fig.add_trace(go.Scatter(
+                    x=x, y=y2, fill="tonexty", fillcolor="rgba(255,255,150,0.3)",
+                    line=dict(color="orange", width=1), showlegend=False,
+                ))
+                # 赤ゾーン（上）
+                fig.add_trace(go.Scatter(
+                    x=x, y=y_max, fill="tonexty", fillcolor="rgba(255,160,160,0.3)",
+                    line=dict(width=0), showlegend=False,
+                ))
+                # 進捗プロット（日付ラベル付き）
+                fig.add_trace(go.Scatter(
+                    x=progress_hist, y=buffer_hist,
+                    mode="lines+markers+text",
+                    text=dates,
+                    textposition="top center",
+                    textfont=dict(size=14),
+                    marker=dict(size=10),
+                    line=dict(width=3),
+                    name="進捗",
+                ))
+                fig.update_layout(
+                    xaxis_title="クリティカルチェーン完了率 (%)", yaxis_title="バッファ消費率 (%)",
+                    xaxis=dict(range=[0, 100], tickfont=dict(size=14)),
+                    yaxis=dict(range=[0, 100], tickfont=dict(size=14)),
+                    font=dict(size=16),
+                    width=1200, height=900,
+                )
+                st.plotly_chart(fig, use_container_width=False)
+
+            with data_col:
+                st.caption(
+                    f"📊 CC完了率: **{fever['progress']:.1f}%** / バッファ消費率: **{fever['buffer_used']:.1f}%**"
+                )
+                if st.button("📝 現在の値を記録", key="ccpm_record_fever"):
+                    if "progress" not in requirement_data:
+                        requirement_data["progress"] = {}
+                    requirement_data["progress"][today_str] = [
+                        round(fever["progress"], 2),
+                        round(fever["buffer_used"], 2),
+                    ]
+                    update_source_data(file_path, requirement_manager.requirements)
+                    st.success(f"{today_str} の値を記録しました。")
+                    st.rerun()
+
+                # 過去データの編集テーブル
+                st.write("##### 📋 記録データ")
+                import pandas as pd
+                if progress_data:
+                    df = pd.DataFrame([
+                        {"日付": k, "CC完了率(%)": v[0] if isinstance(v, list) else v, "バッファ消費率(%)": v[1] if isinstance(v, list) else 0}
+                        for k, v in progress_data.items()
+                    ])
+                    edited_df = st.data_editor(
+                        df, num_rows="dynamic", use_container_width=True,
+                        key="ccpm_progress_editor",
+                    )
+                    if st.button("💾 データを保存", key="ccpm_save_progress"):
+                        new_progress = {}
+                        for _, row in edited_df.iterrows():
+                            date_key = str(row["日付"])
+                            if date_key and date_key != "nan":
+                                new_progress[date_key] = [
+                                    round(float(row["CC完了率(%)"]), 2),
+                                    round(float(row["バッファ消費率(%)"]), 2),
+                                ]
+                        requirement_data["progress"] = new_progress
+                        update_source_data(file_path, requirement_manager.requirements)
+                        st.success("データを保存しました。")
+                        st.rerun()
+                else:
+                    st.info("まだ記録がありません。")
         else:
             st.info("クリティカルパスが計算できません。")
 
