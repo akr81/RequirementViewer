@@ -77,6 +77,7 @@ class ConvertPumlCode:
             AppName.CURRENT_REALITY: self._convert_current_reality,
             AppName.PROCESS_FLOW: self._convert_process_flow_diagram,
             AppName.EVAPORATING_CLOUD: self._convert_evaporating_cloud,
+            AppName.CCPM: self._convert_ccpm_network,
         }
         self.diagram_specific_settings = {
             AppName.REQUIREMENT: {"ortho": True, "sep": 0},
@@ -84,6 +85,7 @@ class ConvertPumlCode:
             AppName.CURRENT_REALITY: {"ortho": False, "sep": 20},
             AppName.PROCESS_FLOW: {"ortho": False, "sep": 20},
             AppName.EVAPORATING_CLOUD: {"ortho": False, "sep": 0},
+            AppName.CCPM: {"ortho": False, "sep": 20},
         }
 
         # Requirement Diagram Node Converters
@@ -817,6 +819,14 @@ class ConvertPumlCode:
             edge_kwargs={"use_src_arrow_dst_style": True},
         )
 
+    def _convert_ccpm_network(
+        self, graph: nx.DiGraph, _: str, parameters_dict: Dict
+    ) -> str:
+        """CCPM ネットワーク図を PFD と同じ形式で変換する。"""
+        return self._convert_dispatch_diagram(
+            graph, parameters_dict, self.pfd_node_converters, NodeType.NOTE,
+            edge_kwargs={"use_src_arrow_dst_style": True},
+        )
 
     def _convert_pfd_element(
         self, node: Tuple[str, Dict], parameters_dict: Dict, puml_type: str

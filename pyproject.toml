@@ -9,7 +9,9 @@ dependencies = [
     "networkx==3.4.2",
     "numpy==1.26.4",
     "pandas==2.2.3",
+    "plotly>=6.5.2",
     "streamlit>=1.53.1",
+    "workdays>=1.4",
 ]
 
 [dependency-groups]

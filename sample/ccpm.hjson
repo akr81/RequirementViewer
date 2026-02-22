@@ -1,0 +1,144 @@
+{
+    nodes: [
+        // ===== フェーズ1: 要件定義 =====
+        {unique_id: "t01", title: "要件ヒアリング", type: "process", days: 3, remains: 0, resource: "田中", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t02", title: "業務フロー分析", type: "process", days: 2, remains: 0, resource: "鈴木", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t03", title: "要件定義書作成", type: "process", days: 4, remains: 0, resource: "田中", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "d01", title: "要件定義書", type: "deliverable", days: 0, remains: 0, resource: "", start: "", end: "", finished: false, color: "None"}
+
+        // ===== フェーズ2: 設計（3並行ストリーム） =====
+        // --- UI設計ストリーム ---
+        {unique_id: "t04", title: "画面設計", type: "process", days: 5, remains: 0, resource: "佐藤", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t05", title: "UIプロトタイプ作成", type: "process", days: 3, remains: 0, resource: "佐藤", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t06", title: "ユーザビリティレビュー", type: "process", days: 2, remains: 0, resource: "田中", start: "", end: "", finished: false, color: "None"}
+
+        // --- DB設計ストリーム ---
+        {unique_id: "t07", title: "データモデル設計", type: "process", days: 4, remains: 0, resource: "高橋", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t08", title: "ER図作成", type: "process", days: 2, remains: 0, resource: "高橋", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t09", title: "DB性能設計", type: "process", days: 3, remains: 0, resource: "高橋", start: "", end: "", finished: false, color: "None"}
+
+        // --- API設計ストリーム ---
+        {unique_id: "t10", title: "API仕様設計", type: "process", days: 3, remains: 0, resource: "鈴木", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t11", title: "認証設計", type: "process", days: 2, remains: 0, resource: "鈴木", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "d02", title: "設計書一式", type: "deliverable", days: 0, remains: 0, resource: "", start: "", end: "", finished: false, color: "None"}
+
+        // ===== フェーズ3: 実装（4並行ストリーム） =====
+        // --- フロントエンド ---
+        {unique_id: "t12", title: "共通コンポーネント実装", type: "process", days: 5, remains: 0, resource: "佐藤", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t13", title: "画面A実装", type: "process", days: 4, remains: 0, resource: "佐藤", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t14", title: "画面B実装", type: "process", days: 3, remains: 0, resource: "山田", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t15", title: "画面C実装", type: "process", days: 4, remains: 0, resource: "山田", start: "", end: "", finished: false, color: "None"}
+
+        // --- バックエンド ---
+        {unique_id: "t16", title: "DB構築・マイグレーション", type: "process", days: 3, remains: 0, resource: "高橋", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t17", title: "API実装(認証)", type: "process", days: 4, remains: 0, resource: "鈴木", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t18", title: "API実装(業務ロジック)", type: "process", days: 6, remains: 0, resource: "鈴木", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t19", title: "バッチ処理実装", type: "process", days: 3, remains: 0, resource: "高橋", start: "", end: "", finished: false, color: "None"}
+
+        // --- インフラ ---
+        {unique_id: "t20", title: "CI/CDパイプライン構築", type: "process", days: 3, remains: 0, resource: "伊藤", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t21", title: "ステージング環境構築", type: "process", days: 2, remains: 0, resource: "伊藤", start: "", end: "", finished: false, color: "None"}
+
+        // ===== フェーズ4: テスト =====
+        {unique_id: "t22", title: "単体テスト(FE)", type: "process", days: 3, remains: 0, resource: "佐藤", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t23", title: "単体テスト(BE)", type: "process", days: 3, remains: 0, resource: "鈴木", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t24", title: "結合テスト", type: "process", days: 5, remains: 0, resource: "田中", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t25", title: "性能テスト", type: "process", days: 3, remains: 0, resource: "高橋", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t26", title: "セキュリティテスト", type: "process", days: 2, remains: 0, resource: "伊藤", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t27", title: "UAT(ユーザ受入テスト)", type: "process", days: 4, remains: 0, resource: "田中", start: "", end: "", finished: false, color: "None"}
+
+        // ===== フェーズ5: リリース =====
+        {unique_id: "t28", title: "本番環境構築", type: "process", days: 2, remains: 0, resource: "伊藤", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t29", title: "データ移行", type: "process", days: 3, remains: 0, resource: "高橋", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "t30", title: "リリース作業", type: "process", days: 1, remains: 0, resource: "伊藤", start: "", end: "", finished: false, color: "None"}
+        {unique_id: "d03", title: "本番リリース完了", type: "deliverable", days: 0, remains: 0, resource: "", start: "", end: "", finished: false, color: "None"}
+    ]
+
+    edges: [
+        // フェーズ1: 要件定義
+        {source: "t01", destination: "t02", type: "arrow", comment: ""}
+        {source: "t01", destination: "t03", type: "arrow", comment: ""}
+        {source: "t02", destination: "t03", type: "arrow", comment: ""}
+        {source: "t03", destination: "d01", type: "arrow", comment: "成果物"}
+
+        // フェーズ1 → フェーズ2（要件定義書から3ストリームに分岐）
+        {source: "d01", destination: "t04", type: "arrow", comment: ""}
+        {source: "d01", destination: "t07", type: "arrow", comment: ""}
+        {source: "d01", destination: "t10", type: "arrow", comment: ""}
+
+        // UI設計ストリーム
+        {source: "t04", destination: "t05", type: "arrow", comment: ""}
+        {source: "t05", destination: "t06", type: "arrow", comment: ""}
+        {source: "t06", destination: "d02", type: "arrow", comment: ""}
+
+        // DB設計ストリーム
+        {source: "t07", destination: "t08", type: "arrow", comment: ""}
+        {source: "t08", destination: "t09", type: "arrow", comment: ""}
+        {source: "t09", destination: "d02", type: "arrow", comment: ""}
+
+        // API設計ストリーム
+        {source: "t10", destination: "t11", type: "arrow", comment: ""}
+        {source: "t11", destination: "d02", type: "arrow", comment: ""}
+
+        // フェーズ2 → フェーズ3（設計書から実装ストリームに分岐）
+        // UI設計 → フロントエンド
+        {source: "t06", destination: "t12", type: "arrow", comment: ""}
+        // DB設計 → DB構築 / バッチ
+        {source: "t09", destination: "t16", type: "arrow", comment: ""}
+        {source: "t09", destination: "t19", type: "arrow", comment: ""}
+        // API設計 → API実装
+        {source: "t11", destination: "t17", type: "arrow", comment: ""}
+        {source: "t11", destination: "t18", type: "arrow", comment: ""}
+        // インフラは設計書完了後
+        {source: "d02", destination: "t20", type: "arrow", comment: ""}
+
+        // フロントエンド内の依存
+        {source: "t12", destination: "t13", type: "arrow", comment: ""}
+        {source: "t12", destination: "t14", type: "arrow", comment: ""}
+        {source: "t12", destination: "t15", type: "arrow", comment: ""}
+
+        // バックエンド内の依存
+        {source: "t16", destination: "t18", type: "arrow", comment: "DBが必要"}
+        {source: "t17", destination: "t18", type: "arrow", comment: "認証が必要"}
+        {source: "t16", destination: "t19", type: "arrow", comment: "DBが必要"}
+
+        // インフラ内の依存
+        {source: "t20", destination: "t21", type: "arrow", comment: ""}
+
+        // フェーズ3 → フェーズ4（実装完了 → テスト）
+        // FEテスト
+        {source: "t13", destination: "t22", type: "arrow", comment: ""}
+        {source: "t14", destination: "t22", type: "arrow", comment: ""}
+        {source: "t15", destination: "t22", type: "arrow", comment: ""}
+        // BEテスト
+        {source: "t18", destination: "t23", type: "arrow", comment: ""}
+        {source: "t19", destination: "t23", type: "arrow", comment: ""}
+        // 結合テスト（FE+BEテスト完了 + ステージング環境）
+        {source: "t22", destination: "t24", type: "arrow", comment: ""}
+        {source: "t23", destination: "t24", type: "arrow", comment: ""}
+        {source: "t21", destination: "t24", type: "arrow", comment: "環境が必要"}
+        // 性能テスト・セキュリティテスト（結合テスト後）
+        {source: "t24", destination: "t25", type: "arrow", comment: ""}
+        {source: "t24", destination: "t26", type: "arrow", comment: ""}
+        // UAT
+        {source: "t25", destination: "t27", type: "arrow", comment: ""}
+        {source: "t26", destination: "t27", type: "arrow", comment: ""}
+
+        // フェーズ4 → フェーズ5
+        {source: "t21", destination: "t28", type: "arrow", comment: "ステージング参考"}
+        {source: "t27", destination: "t28", type: "arrow", comment: ""}
+        {source: "t27", destination: "t29", type: "arrow", comment: ""}
+        {source: "t28", destination: "t30", type: "arrow", comment: ""}
+        {source: "t29", destination: "t30", type: "arrow", comment: ""}
+        {source: "t30", destination: "d03", type: "arrow", comment: "完了"}
+    ]
+
+    project: {
+        start: "2025/07/01"
+        end: "2025/10/31"
+        holidays: ["2025/07/21", "2025/08/11", "2025/09/15", "2025/09/23", "2025/10/13"]
+        today: "2025/07/01"
+    }
+
+    progress: {}
+}

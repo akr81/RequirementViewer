@@ -79,10 +79,27 @@ def get_st_default_entity() -> Dict:
     }
 
 
+def get_ccpm_default_entity() -> Dict:
+    """CCPM 用のデフォルトエンティティデータを返す。"""
+    return {
+        "type": NodeType.PROCESS,
+        "title": "",
+        "days": 1,
+        "remains": 0,
+        "resource": "",
+        "start": "",
+        "end": "",
+        "finished": False,
+        "color": Color.NONE,
+        "unique_id": f"{uuid.uuid4()}".replace("-", ""),
+    }
+
+
 DEFAULT_ENTITY_GETTERS = {
     AppName.CURRENT_REALITY: get_crt_default_entity,
     AppName.EVAPORATING_CLOUD: get_ec_default_entity,
     AppName.PROCESS_FLOW: get_pfd_default_entity,
     AppName.REQUIREMENT: get_req_default_entity,
     AppName.STRATEGY_TACTICS: get_st_default_entity,
+    AppName.CCPM: get_ccpm_default_entity,
 }

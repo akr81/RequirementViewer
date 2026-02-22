@@ -18,5 +18,9 @@
     "Evaporating Cloud Viewer": {
         "data": "evaporating_cloud_data",
         "postfix": "ec"
+    },
+    "CCPM Viewer": {
+        "data": "ccpm_data",
+        "postfix": "ccpm"
     }
 }

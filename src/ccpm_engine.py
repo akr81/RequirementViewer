@@ -1,0 +1,316 @@
+"""CCPM (Critical Chain Project Management) エンジン。
+
+CCPMPlanner_light.py のロジックを RequirementViewer 向けに整理したもの。
+クリティカルパス算出、ガントチャート PlantUML 生成、フィーバーチャートデータ計算を提供する。
+"""
+import networkx as nx
+from datetime import datetime
+from typing import List, Dict, Tuple, Any, Optional
+
+try:
+    import workdays
+except ImportError:
+    workdays = None
+
+
+# ---------------------------------------------------------------------------
+# グラフ解析
+# ---------------------------------------------------------------------------
+
+def get_in_out_edge_list(graph: nx.DiGraph) -> Tuple[List[str], List[str]]:
+    """入力端（in_degree==0）と終端（out_degree==0）のノードリストを返す。"""
+    inputs = [n for n, d in graph.in_degree() if d == 0]
+    outputs = [n for n, d in graph.out_degree() if d == 0]
+    return inputs, outputs
+
+
+def calculate_critical_path(
+    graph: nx.DiGraph, inputs: List[str], outputs: List[str]
+) -> Tuple[float, List[str]]:
+    """全パスを探索し、最長パス（クリティカルパス）を返す。
+
+    Args:
+        graph: ノード属性に "days" を持つ有向グラフ
+        inputs: 入力端ノードリスト
+        outputs: 終端ノードリスト
+
+    Returns:
+        (クリティカルパス長, クリティカルパスのノードリスト)
+    """
+    critical_path: List[str] = []
+    critical_path_length: float = 0
+
+    for output in outputs:
+        for inp in inputs:
+            try:
+                for path in nx.all_simple_paths(graph, inp, output):
+                    length = sum(
+                        graph.nodes[task].get("days", 0) for task in path
+                    )
+                    if length > critical_path_length:
+                        critical_path_length = length
+                        critical_path = path
+            except nx.NetworkXError:
+                continue
+
+    return critical_path_length, critical_path
+
+
+# ---------------------------------------------------------------------------
+# ガントチャート PlantUML 生成
+# ---------------------------------------------------------------------------
+
+def _make_project_header(project: Dict[str, str]) -> List[str]:
+    """PlantUML ガントチャートのプロジェクト設定部を作成する。"""
+    lines: List[str] = []
+    today = project.get("today", "")
+    if today:
+        lines.append(f"today is {today} and is colored in #AAF")
+    start = project.get("start", "")
+    if start:
+        lines.append(f"Project starts {start}")
+    lines.append("saturday are closed")
+    lines.append("sunday are closed")
+    for holiday in project.get("holidays", []):
+        lines.append(f"{holiday} are closed")
+    end = project.get("end", "")
+    if end:
+        lines.append(f"[Deadline] happens at {end}")
+    return lines
+
+
+def _make_story_bars(
+    graph: nx.DiGraph,
+    critical_path: List[str],
+    project: Optional[Dict[str, Any]] = None,
+) -> List[str]:
+    """各ノードのバー文字列を作成する。"""
+    lines: List[str] = []
+    for node_id in graph.nodes:
+        attrs = graph.nodes[node_id]
+        days = attrs.get("days", 0)
+        if days <= 0:
+            continue  # 成果物など日数0のノードはスキップ
+
+        start = attrs.get("start", "")
+        finished = attrs.get("finished", False)
+
+        if start and project:
+            # 着手済み: 残日数ベースで終了日を推定
+            remains = attrs.get("remains", 0)
+            if remains > 0 and workdays and not finished:
+                end_date = _estimate_end_date(project, start, remains)
+                bar = f"[{node_id}] starts {start} and ends {end_date}"
+            elif finished and attrs.get("end", ""):
+                bar = f"[{node_id}] starts {start} and ends {attrs['end']}"
+            else:
+                bar = f"[{node_id}] lasts {days} days"
+        else:
+            bar = f"[{node_id}] lasts {days} days"
+
+        # 完了タスクの色
+        if finished:
+            bar += " and is colored in lightgray"
+        elif node_id in critical_path:
+            bar += " and is colored in pink"
+
+        lines.append(bar)
+    return lines
+
+
+def _make_dependency_arrows(
+    graph: nx.DiGraph, critical_path: List[str]
+) -> List[str]:
+    """エッジの依存関係文字列を作成する（クリティカルパス優先）。"""
+    arrows: List[str] = []
+
+    # クリティカルパスの依存を先に定義
+    for i in range(len(critical_path) - 1):
+        src_days = graph.nodes[critical_path[i]].get("days", 0)
+        dst_days = graph.nodes[critical_path[i + 1]].get("days", 0)
+        if src_days > 0 and dst_days > 0:
+            arrows.append(f"[{critical_path[i]}] -> [{critical_path[i + 1]}]")
+
+    # その他の依存
+    for src, dst in graph.edges:
+        src_days = graph.nodes[src].get("days", 0)
+        dst_days = graph.nodes[dst].get("days", 0)
+        if src_days > 0 and dst_days > 0:
+            arrow = f"[{src}] -> [{dst}]"
+            if arrow not in arrows:
+                arrows.append(arrow)
+
+    return arrows
+
+
+def _estimate_end_date(
+    project: Dict[str, Any], start_date: str, remain_day: int
+) -> str:
+    """稼働日ベースで完了予定日を計算する。"""
+    if not workdays:
+        return ""
+    holidays_str = project.get("holidays", [])
+    dt_holidays = [datetime.strptime(h, "%Y/%m/%d") for h in holidays_str]
+    today_str = project.get("today", "")
+    if not today_str:
+        return ""
+    dt_today = datetime.strptime(today_str, "%Y/%m/%d")
+    dt_start = datetime.strptime(start_date, "%Y/%m/%d")
+
+    elapsed = workdays.networkdays(dt_start, dt_today, holidays=dt_holidays) - 1
+    estimated = elapsed + remain_day
+    dt_end = workdays.workday(dt_start, days=estimated, holidays=dt_holidays)
+    return dt_end.date().strftime("%Y/%m/%d")
+
+
+def make_gantt_puml(
+    graph: nx.DiGraph,
+    project: Dict[str, Any],
+    critical_path: List[str],
+) -> str:
+    """グラフとプロジェクト設定からPlantUMLガントチャートコードを生成する。
+
+    Returns:
+        PlantUML ガントチャートコード文字列
+    """
+    lines: List[str] = ["@startgantt", ""]
+    lines.extend(_make_project_header(project))
+    lines.append("")
+    lines.extend(_make_story_bars(graph, critical_path, project))
+    lines.append("")
+    lines.extend(_make_dependency_arrows(graph, critical_path))
+    lines.append("")
+    lines.append("@endgantt")
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# フィーバーチャート計算
+# ---------------------------------------------------------------------------
+
+def calculate_fever_data(
+    graph: nx.DiGraph,
+    project: Dict[str, Any],
+    critical_path: List[str],
+    critical_path_length: float,
+) -> Dict[str, float]:
+    """フィーバーチャート用のデータを計算する。
+
+    Returns:
+        {"progress": float, "buffer_used": float} (0-100%)
+    """
+    if not workdays or not critical_path or critical_path_length <= 0:
+        return {"progress": 0.0, "buffer_used": 0.0}
+
+    # クリティカルパスの完了状況
+    finished_days = 0.0
+    remain_days = 0.0
+    for task_id in critical_path:
+        attrs = graph.nodes[task_id]
+        if attrs.get("finished", False):
+            finished_days += attrs.get("days", 0)
+        else:
+            r = attrs.get("remains", 0)
+            if r > 0:
+                remain_days += r
+            else:
+                remain_days += attrs.get("days", 0)
+
+    progress = (finished_days / critical_path_length) * 100 if critical_path_length > 0 else 0
+
+    # バッファ消費率
+    holidays_str = project.get("holidays", [])
+    dt_holidays = [datetime.strptime(h, "%Y/%m/%d") for h in holidays_str]
+    buffer_start = project.get("buffer_start", project.get("end", ""))
+    end_str = project.get("end", "")
+    today_str = project.get("today", "")
+
+    if not buffer_start or not end_str or not today_str:
+        return {"progress": progress, "buffer_used": 0.0}
+
+    try:
+        dt_buffer_start = datetime.strptime(buffer_start, "%Y/%m/%d")
+        dt_end = datetime.strptime(end_str, "%Y/%m/%d")
+        buffer_days = workdays.networkdays(
+            dt_buffer_start, dt_end, holidays=dt_holidays
+        )
+        if buffer_days <= 0:
+            return {"progress": progress, "buffer_used": 0.0}
+
+        # 今日時点の完了予定日
+        estimated_finish = _estimate_end_date(project, today_str, int(remain_days))
+        if estimated_finish:
+            dt_finish = datetime.strptime(estimated_finish, "%Y/%m/%d")
+            remain_buffer = (
+                workdays.networkdays(dt_finish, dt_end, holidays=dt_holidays) - 1
+            )
+            buffer_used = (1 - (remain_buffer / buffer_days)) * 100
+        else:
+            buffer_used = 0.0
+    except Exception:
+        buffer_used = 0.0
+
+    return {"progress": progress, "buffer_used": buffer_used}
+
+
+# ---------------------------------------------------------------------------
+# 優先度テーブル
+# ---------------------------------------------------------------------------
+
+def calculate_priority_table(
+    graph: nx.DiGraph,
+    critical_path: List[str],
+) -> List[Dict[str, Any]]:
+    """タスクのバッファ消費に基づく優先度テーブルを計算する。
+
+    Returns:
+        タスク情報の辞書リスト (バッファ昇順)
+    """
+    if not critical_path:
+        return []
+
+    inputs, _ = get_in_out_edge_list(graph)
+    final_task = critical_path[-1]
+
+    # 未完了のCPタスクから残りのCP長を算出
+    first_unfinished = None
+    for t in critical_path:
+        if not graph.nodes[t].get("finished", False):
+            first_unfinished = t
+            break
+    if not first_unfinished:
+        return []
+
+    unfinished_cp_length = sum(
+        graph.nodes[t].get("days", 0)
+        for t in critical_path[critical_path.index(first_unfinished):]
+    )
+
+    # 全パスのタスク情報を収集
+    all_info: Dict[str, Dict[str, Any]] = {}
+    for inp in inputs:
+        try:
+            for path in nx.all_simple_paths(graph, inp, final_task):
+                for task in path:
+                    if graph.nodes[task].get("finished", False):
+                        continue
+                    remain_length = sum(
+                        graph.nodes[t].get("days", 0)
+                        for t in path[path.index(task):]
+                    )
+                    buffer = unfinished_cp_length - remain_length
+                    # 最小バッファを保持
+                    if task not in all_info or buffer < all_info[task]["buffer"]:
+                        all_info[task] = {
+                            "task": task,
+                            "title": graph.nodes[task].get("title", task),
+                            "days": graph.nodes[task].get("days", 0),
+                            "resource": graph.nodes[task].get("resource", ""),
+                            "total_remains": remain_length,
+                            "cp_remains": unfinished_cp_length,
+                            "buffer": buffer,
+                        }
+        except nx.NetworkXError:
+            continue
+
+    return sorted(all_info.values(), key=lambda x: x["buffer"])

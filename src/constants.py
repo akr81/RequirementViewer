@@ -4,6 +4,7 @@ class AppName:
     CURRENT_REALITY = "Current Reality Tree Viewer"
     EVAPORATING_CLOUD = "Evaporating Cloud Viewer"
     STRATEGY_TACTICS = "Strategy and Tactics Tree Viewer"
+    CCPM = "CCPM Viewer"
 
 
 class NodeType:

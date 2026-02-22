@@ -9,4 +9,5 @@
     current_reality_tree_data: sample/crt.hjson
     process_flow_diagram_data: sample/pfd.hjson
     evaporating_cloud_data: sample/ec.hjson
+    ccpm_data: sample/ccpm.hjson
 }

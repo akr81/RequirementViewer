@@ -98,7 +98,7 @@ def load_graph_data(file_path: str, mtime: float, app_name: str) -> GraphData:
     # アプリごとの表示対象キーと後方互換性の設定
     if app_name in (AppName.CURRENT_REALITY, AppName.EVAPORATING_CLOUD):
         display_key = "text"
-    elif app_name == AppName.PROCESS_FLOW:
+    elif app_name in (AppName.PROCESS_FLOW, AppName.CCPM):
         display_key = "title"
     else:
         display_key = "id"
