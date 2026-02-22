@@ -1,6 +1,7 @@
 import streamlit as st
 from src.operate_buttons import add_operate_buttons
 from src.page_setup import setup_page_layout_and_data
+from src.diagram_column import draw_diagram_column
 from src.utility import (
     get_backup_files_for_current_data,
     copy_file,
@@ -100,8 +101,8 @@ def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict
         )
 
 
-# ページ全体のデータ読み込みと基本設定
-page_elements = setup_page_layout_and_data("CCPM Viewer")
+# ページ全体のデータ読み込みと基本設定（ダイアグラム描画はスキップしタブ内で行う）
+page_elements = setup_page_layout_and_data("CCPM Viewer", skip_diagram=True)
 
 # setup_page_layout_and_data から返された要素を変数に展開
 color_list = page_elements["color_list"]
@@ -119,10 +120,11 @@ id_title_list = page_elements["id_title_list"]
 selected_unique_id = page_elements["selected_unique_id"]
 selected_entity = page_elements["selected_entity"]
 
-# 編集用カラムと図表示カラム、PlantUMLコードを page_elements から取得
+# 編集用カラムと図表示カラム、ダイアグラム描画用のコンテキストを取得
 edit_column = page_elements["edit_column"]
 diagram_column = page_elements["diagram_column"]
-plantuml_code = page_elements["plantuml_code"]
+diagram_context = page_elements["diagram_context"]
+diagram_options = page_elements["diagram_options"]
 
 
 @st.fragment
@@ -512,7 +514,14 @@ def render_ccpm_analysis():
 with edit_column:
     render_edit_panel()
 
+# 左カラムに「ネットワーク図」と「CCPM分析」のタブを配置
 with diagram_column:
-    render_ccpm_analysis()
+    tab_diagram, tab_analysis = st.tabs(["🗗️ ネットワーク図", "📊 CCPM 分析"])
+    with tab_diagram:
+        plantuml_code = draw_diagram_column(
+            tab_diagram, context=diagram_context, options=diagram_options,
+        )
+    with tab_analysis:
+        render_ccpm_analysis()
 
 st.session_state.graph_data = graph_data

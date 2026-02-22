@@ -302,7 +302,8 @@ def load_and_prepare_data(file_path, app_name):
 
 
 def setup_page_layout_and_data(
-    app_name: str, default_entity_creation_args: dict = None
+    app_name: str, default_entity_creation_args: dict = None,
+    skip_diagram: bool = False,
 ) -> dict:
     """
     ページの基本的なデータ読み込み、レイアウト設定、図の初期描画を行う共通関数。
@@ -358,11 +359,15 @@ def setup_page_layout_and_data(
     
     # options is already created in load_and_prepare_data
 
-    plantuml_code = draw_diagram_column(
-        diagram_column,
-        context=context,
-        options=options,
-    )
+    if skip_diagram:
+        # ダイアグラム描画をスキップ（呼び出し側でタブ内に描画する）
+        plantuml_code = ""
+    else:
+        plantuml_code = draw_diagram_column(
+            diagram_column,
+            context=context,
+            options=options,
+        )
 
     return {
         "color_list": color_list,
@@ -387,5 +392,7 @@ def setup_page_layout_and_data(
         "title": options.title,
         "edit_column": edit_column,  # データ編集UIを配置するカラム
         "diagram_column": diagram_column,  # 図表示カラム（CCPM分析等で再利用）
+        "diagram_context": context,  # DiagramContext（タブ内描画用）
+        "diagram_options": options,  # DiagramOptions（タブ内描画用）
         "plantuml_code": plantuml_code,
     }
