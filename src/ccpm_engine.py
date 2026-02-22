@@ -351,57 +351,62 @@ def calculate_fever_data(
 ) -> Dict[str, float]:
     """フィーバーチャート用のデータを計算する。
 
+    CCPM 標準のフィーバーチャート:
+    - X軸: CC 完了率 (%) = 完了した CC タスクの見積り日数 / CC 全体の日数
+    - Y軸: バッファ消費率 (%) = 消費バッファ / 全バッファ
+      - 全バッファ = プロジェクト稼働日数 - CC 長
+      - 消費バッファ = 経過稼働日 - 完了した CC タスクの見積り日数
+
     Returns:
         {"progress": float, "buffer_used": float} (0-100%)
     """
-    if not workdays or not critical_path or critical_path_length <= 0:
+    if not critical_path or critical_path_length <= 0:
         return {"progress": 0.0, "buffer_used": 0.0}
 
-    # クリティカルパスの完了状況
+    # CC 完了状況
     finished_days = 0.0
-    remain_days = 0.0
     for task_id in critical_path:
         attrs = graph.nodes[task_id]
         if attrs.get("finished", False):
             finished_days += attrs.get("days", 0)
-        else:
-            r = attrs.get("remains", 0)
-            if r > 0:
-                remain_days += r
-            else:
-                remain_days += attrs.get("days", 0)
 
-    progress = (finished_days / critical_path_length) * 100 if critical_path_length > 0 else 0
+    progress = (finished_days / critical_path_length) * 100
 
     # バッファ消費率
-    holidays_str = project.get("holidays", [])
-    dt_holidays = [datetime.strptime(h, "%Y/%m/%d") for h in holidays_str]
-    buffer_start = project.get("buffer_start", project.get("end", ""))
+    start_str = project.get("start", "")
     end_str = project.get("end", "")
     today_str = project.get("today", "")
-
-    if not buffer_start or not end_str or not today_str:
+    if not start_str or not end_str or not today_str:
         return {"progress": progress, "buffer_used": 0.0}
 
     try:
-        dt_buffer_start = datetime.strptime(buffer_start, "%Y/%m/%d")
+        holidays_str = project.get("holidays", [])
+        dt_holidays = [datetime.strptime(h, "%Y/%m/%d") for h in holidays_str]
+        dt_start = datetime.strptime(start_str, "%Y/%m/%d")
         dt_end = datetime.strptime(end_str, "%Y/%m/%d")
-        buffer_days = workdays.networkdays(
-            dt_buffer_start, dt_end, holidays=dt_holidays
-        )
-        if buffer_days <= 0:
-            return {"progress": progress, "buffer_used": 0.0}
+        dt_today = datetime.strptime(today_str, "%Y/%m/%d")
 
-        # 今日時点の完了予定日
-        estimated_finish = _estimate_end_date(project, today_str, int(remain_days))
-        if estimated_finish:
-            dt_finish = datetime.strptime(estimated_finish, "%Y/%m/%d")
-            remain_buffer = (
-                workdays.networkdays(dt_finish, dt_end, holidays=dt_holidays) - 1
-            )
-            buffer_used = (1 - (remain_buffer / buffer_days)) * 100
-        else:
-            buffer_used = 0.0
+        # プロジェクト全体の稼働日数
+        total_workdays = workdays.networkdays(
+            dt_start, dt_end, holidays=dt_holidays
+        ) if workdays else (dt_end - dt_start).days
+
+        # 全バッファ = プロジェクト稼働日数 - CC 長
+        total_buffer = total_workdays - critical_path_length
+        if total_buffer <= 0:
+            # バッファなし（CC がプロジェクト期間以上）
+            return {"progress": progress, "buffer_used": 100.0 if finished_days < critical_path_length else 0.0}
+
+        # 経過稼働日
+        elapsed = workdays.networkdays(
+            dt_start, dt_today, holidays=dt_holidays
+        ) - 1 if workdays else (dt_today - dt_start).days
+
+        # 消費バッファ = 経過稼働日 - 完了した CC 日数
+        # （予定通りなら 0、遅れていればプラス）
+        consumed_buffer = max(0, elapsed - finished_days)
+
+        buffer_used = (consumed_buffer / total_buffer) * 100
     except Exception:
         buffer_used = 0.0
 

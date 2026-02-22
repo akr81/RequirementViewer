@@ -386,5 +386,6 @@ def setup_page_layout_and_data(
         "landscape": options.landscape,
         "title": options.title,
         "edit_column": edit_column,  # データ編集UIを配置するカラム
+        "diagram_column": diagram_column,  # 図表示カラム（CCPM分析等で再利用）
         "plantuml_code": plantuml_code,
     }

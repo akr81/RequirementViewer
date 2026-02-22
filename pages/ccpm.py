@@ -119,8 +119,9 @@ id_title_list = page_elements["id_title_list"]
 selected_unique_id = page_elements["selected_unique_id"]
 selected_entity = page_elements["selected_entity"]
 
-# 編集用カラムとPlantUMLコードを page_elements から取得
+# 編集用カラムと図表示カラム、PlantUMLコードを page_elements から取得
 edit_column = page_elements["edit_column"]
+diagram_column = page_elements["diagram_column"]
 plantuml_code = page_elements["plantuml_code"]
 
 
@@ -310,7 +311,9 @@ def render_edit_panel():
         key_suffix="bottom", display_key="title",
     )
 
-    # --- CCPM 分析セクション ---
+
+def render_ccpm_analysis():
+    """左カラムに CCPM 分析セクションを描画する。"""
     st.write("---")
     st.write("### 📊 CCPM 分析")
 
@@ -394,8 +397,13 @@ def render_edit_panel():
 
             # 過去の進捗データ
             progress_data = requirement_data.get("progress", {})
+            dates = list(progress_data.keys())
             progress_hist = [v[0] if isinstance(v, list) else v for v in progress_data.values()]
             buffer_hist = [v[1] if isinstance(v, list) else 0 for v in progress_data.values()]
+
+            # 現在値を追加
+            today_str = requirement_data.get("project", {}).get("today", "now")
+            dates.append(today_str)
             progress_hist.append(fever["progress"])
             buffer_hist.append(fever["buffer_used"])
 
@@ -406,8 +414,15 @@ def render_edit_panel():
             y2 = [0.6 * xi + 30 for xi in x]
             fig.add_trace(go.Scatter(x=x, y=y1, mode="lines", line=dict(color="green", width=1), showlegend=False))
             fig.add_trace(go.Scatter(x=x, y=y2, mode="lines", line=dict(color="orange", width=1), showlegend=False))
-            # 進捗プロット
-            fig.add_trace(go.Scatter(x=progress_hist, y=buffer_hist, mode="lines+markers", name="進捗"))
+            # 進捗プロット（日付ラベル付き）
+            fig.add_trace(go.Scatter(
+                x=progress_hist, y=buffer_hist,
+                mode="lines+markers+text",
+                text=dates,
+                textposition="top center",
+                textfont=dict(size=9),
+                name="進捗",
+            ))
             fig.update_layout(
                 xaxis_title="クリティカルチェーン完了率 (%)", yaxis_title="バッファ消費率 (%)",
                 xaxis=dict(range=[0, 100]), yaxis=dict(range=[0, 100]),
@@ -415,6 +430,21 @@ def render_edit_panel():
             )
             fig.add_shape(type="rect", x0=0, x1=100, y0=0, y1=0, line_width=0)
             st.plotly_chart(fig, use_container_width=True)
+
+            # 記録ボタン
+            st.caption(
+                f"📊 CC完了率: **{fever['progress']:.1f}%** / バッファ消費率: **{fever['buffer_used']:.1f}%**"
+            )
+            if st.button("📝 現在の値を記録", key="ccpm_record_fever"):
+                if "progress" not in requirement_data:
+                    requirement_data["progress"] = {}
+                requirement_data["progress"][today_str] = [
+                    round(fever["progress"], 2),
+                    round(fever["buffer_used"], 2),
+                ]
+                update_source_data(file_path, requirement_manager.requirements)
+                st.success(f"{today_str} の値を記録しました。")
+                st.rerun()
         else:
             st.info("クリティカルパスが計算できません。")
 
@@ -431,5 +461,8 @@ def render_edit_panel():
 
 with edit_column:
     render_edit_panel()
+
+with diagram_column:
+    render_ccpm_analysis()
 
 st.session_state.graph_data = graph_data
