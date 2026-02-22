@@ -822,11 +822,77 @@ class ConvertPumlCode:
     def _convert_ccpm_network(
         self, graph: nx.DiGraph, _: str, parameters_dict: Dict
     ) -> str:
-        """CCPM ネットワーク図を PFD と同じ形式で変換する。"""
-        return self._convert_dispatch_diagram(
-            graph, parameters_dict, self.pfd_node_converters, NodeType.NOTE,
-            edge_kwargs={"use_src_arrow_dst_style": True},
+        """CCPM ネットワーク図を PFD と同じ形式で変換する。
+
+        CP の矢印を黄色、CC の矢印を赤で着色する。
+        CP==CC の場合はすべて赤で表示する。
+        """
+        from src.ccpm_engine import (
+            get_in_out_edge_list,
+            calculate_critical_path,
+            calculate_critical_chain,
         )
+
+        # ノード変換（PFD と同じ）
+        puml_parts = list(self._convert_nodes_to_puml(
+            graph, parameters_dict,
+            lambda n, p: self._dispatch_conversion(
+                n, p, self.pfd_node_converters,
+                self.pfd_node_converters[NodeType.NOTE],
+            ),
+        ))
+
+        # CP / CC 算出
+        inputs, outputs = get_in_out_edge_list(graph)
+        cp_length, cp = calculate_critical_path(graph, inputs, outputs)
+        cc_length, cc, virtual_edges = calculate_critical_chain(graph)
+
+        # CP / CC のエッジペアセットを構築
+        cp_edges = set()
+        for i in range(len(cp) - 1):
+            cp_edges.add((cp[i], cp[i + 1]))
+        cc_edges = set()
+        for i in range(len(cc) - 1):
+            cc_edges.add((cc[i], cc[i + 1]))
+
+        cp_changed = (cp != cc)
+
+        # エッジ変換（色付き）
+        # 仮想エッジのセットを作成（通常エッジとの区別用）
+        virtual_edge_set = set((src, dst) for src, dst, _ in virtual_edges)
+
+        for edge_data_tuple in graph.edges(data=True):
+            src_id = edge_data_tuple[0]
+            dst_id = edge_data_tuple[1]
+            edge_attrs = edge_data_tuple[2]
+            comment_text = edge_attrs.get("comment", "")
+            escaped_comment = self._escape_puml(comment_text)
+
+            edge_pair = (src_id, dst_id)
+            if edge_pair in cc_edges:
+                # CC 上のエッジは赤
+                line_style = "-[#FF3333,bold]->"
+            elif cp_changed and edge_pair in cp_edges:
+                # CP と CC が異なる場合のみ、CP 固有のエッジを黄色表示
+                line_style = "-[#FFB300,bold]->"
+            else:
+                line_style = "-->"
+
+            puml_parts.append(
+                self._create_generic_edge_puml(
+                    src_id, dst_id, line_style, escaped_comment
+                )
+            )
+
+        # 仮想エッジ（リソース競合による直列化）を点線赤矢印で表示
+        for src, dst, resource in virtual_edges:
+            line_style = "-[#FF3333,dashed]->"
+            label = f"リソース競合: {resource}"
+            puml_parts.append(
+                self._create_generic_edge_puml(src, dst, line_style, label)
+            )
+
+        return "\n".join(puml_parts)
 
     def _convert_pfd_element(
         self, node: Tuple[str, Dict], parameters_dict: Dict, puml_type: str
