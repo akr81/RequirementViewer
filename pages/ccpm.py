@@ -316,7 +316,6 @@ def render_edit_panel():
 
 def render_ccpm_analysis():
     """左カラムに CCPM 分析セクションを描画する。"""
-    st.write("---")
     st.write("### 📊 CCPM 分析")
 
     # グラフからクリティカルパスとクリティカルチェーンを算出
@@ -368,8 +367,8 @@ def render_ccpm_analysis():
     active_chain = cc if cc else cp
     active_length = cc_length if cc else cp_length
 
-    # タブ表示
-    tab_gantt, tab_fever, tab_priority = st.tabs(["📅 ガントチャート", "🌡️ フィーバーチャート", "📋 優先度"])
+    # タブ表示（フィーバーチャートを優先）
+    tab_fever, tab_gantt, tab_priority = st.tabs(["🌡️ フィーバーチャート", "📅 ガントチャート", "📋 優先度"])
 
     with tab_gantt:
         project = requirement_data.get("project", {})
@@ -441,17 +440,19 @@ def render_ccpm_analysis():
                     mode="lines+markers+text",
                     text=dates,
                     textposition="top center",
-                    textfont=dict(size=14),
-                    marker=dict(size=10),
-                    line=dict(width=3),
+                    textfont=dict(size=20),
+                    marker=dict(size=14),
+                    line=dict(width=4),
                     name="進捗",
                 ))
                 fig.update_layout(
                     xaxis_title="クリティカルチェーン完了率 (%)", yaxis_title="バッファ消費率 (%)",
-                    xaxis=dict(range=[0, 100], tickfont=dict(size=14)),
-                    yaxis=dict(range=[0, 100], tickfont=dict(size=14)),
-                    font=dict(size=16),
+                    xaxis=dict(range=[0, 100], tickfont=dict(size=20)),
+                    yaxis=dict(range=[0, 100], tickfont=dict(size=20)),
+                    font=dict(size=24),
+                    hoverlabel=dict(font_size=24),
                     width=1200, height=900,
+                    margin=dict(t=30, b=50, l=50, r=30),
                 )
                 st.plotly_chart(fig, use_container_width=False)
 
