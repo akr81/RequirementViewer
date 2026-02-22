@@ -44,7 +44,7 @@ class LoadedData:
     unique_id_dict: Dict[str, str]
     id_title_list: List[str]
     add_list: List[str]
-    selected_unique_id: Union[str, List[None], None]
+    selected_unique_id: Optional[str]
     selected_entity: Optional[Dict[str, Any]]
     options: DiagramOptions
 
@@ -164,7 +164,8 @@ def load_and_prepare_data(file_path, app_name):
 
     # URL のクエリからパラメタを取得
     scale = float(st.query_params.get("scale", 1.0))
-    selected_unique_id = st.query_params.get("selected", [None])
+    # 未選択時は None に統一。st.query_params.get は未設定時に None を返す
+    selected_unique_id = st.query_params.get("selected") or None
     upstream_distance = int(st.query_params.get("upstream_distance", -1))
     downstream_distance = int(st.query_params.get("downstream_distance", -1))
     landscape = st.query_params.get("landscape", False)
@@ -245,7 +246,7 @@ def load_and_prepare_data(file_path, app_name):
 
     # 選択されたエンティティを取得
     selected_entity = None
-    if selected_unique_id == [None]:
+    if selected_unique_id is None:
         # エンティティが選択されていない場合はデフォルトのエンティティを選択してリロード
         st.query_params.setdefault("selected", "default")
         st.query_params.setdefault("detail", "True")
