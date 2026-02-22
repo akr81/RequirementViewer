@@ -10,7 +10,7 @@
             resource: ""
             start: ""
             end: ""
-            finished: false
+            finished: true
             color: None
         }
         {
@@ -46,8 +46,8 @@
             resource: 田中
             start: ""
             end: ""
-            finished: false
-            color: Gray
+            finished: true
+            color: None
         }
         {
             unique_id: t02
@@ -58,8 +58,8 @@
             resource: 鈴木
             start: ""
             end: ""
-            finished: false
-            color: Gray
+            finished: true
+            color: None
         }
         {
             unique_id: t03
@@ -71,7 +71,7 @@
             start: ""
             end: ""
             finished: true
-            color: Gray
+            color: None
         }
         {
             unique_id: t04
@@ -83,7 +83,7 @@
             start: ""
             end: ""
             finished: true
-            color: Gray
+            color: None
         }
         {
             unique_id: t05
@@ -94,19 +94,19 @@
             resource: 佐藤
             start: ""
             end: ""
-            finished: false
+            finished: true
             color: None
         }
         {
             unique_id: t06
             title: ユーザビリティレビュー
             type: process
-            days: 2
-            remains: 0
+            days: 2.0
+            remains: 0.0
             resource: 田中
             start: ""
             end: ""
-            finished: false
+            finished: true
             color: None
         }
         {
@@ -426,6 +426,12 @@
         }
         {
             source: t01
+            destination: t02
+            type: arrow
+            comment: ""
+        }
+        {
+            source: t01
             destination: t03
             type: arrow
             comment: ""
@@ -487,6 +493,12 @@
         {
             source: t09
             destination: d02
+            type: arrow
+            comment: ""
+        }
+        {
+            source: t09
+            destination: t16
             type: arrow
             comment: ""
         }
@@ -689,7 +701,7 @@
     {
         2025/07/10:
         [
-            0.0
+            0
             26.92
         ]
         2025/08/10:

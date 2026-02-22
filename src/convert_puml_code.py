@@ -833,9 +833,16 @@ class ConvertPumlCode:
             calculate_critical_chain,
         )
 
-        # ノード変換（PFD と同じ）
+        # ノード変換（完了タスクに ☑ プレフィックスを付ける）
+        import copy
+        render_graph = graph.copy()
+        for node_id in render_graph.nodes:
+            attrs = render_graph.nodes[node_id]
+            if attrs.get("finished", False):
+                attrs["title"] = "☑ " + attrs.get("title", "")
+
         puml_parts = list(self._convert_nodes_to_puml(
-            graph, parameters_dict,
+            render_graph, parameters_dict,
             lambda n, p: self._dispatch_conversion(
                 n, p, self.pfd_node_converters,
                 self.pfd_node_converters[NodeType.NOTE],
