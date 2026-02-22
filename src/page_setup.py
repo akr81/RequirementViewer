@@ -210,17 +210,38 @@ def load_and_prepare_data(file_path, app_name):
             elif app_name == AppName.REQUIREMENT:
                 edge_defaults["type"] = EdgeType.DERIVE_KEY
                 # 必要に応じて 'note': {} なども追加
- 
-            # エッジを更新
-            requirement_manager.update_edge(previous_selected, selected_unique_id, edge_defaults)
-            update_source_data(file_path, requirement_manager.requirements)
-            print("update file")
+
+            # 両端が実在するノードIDである場合のみエッジを生成する
+            # "default" や "None" 等のセンチネル値がIDとして混入するのを防ぐ
+            _SENTINEL = ("None", "default", "")
+            _can_create_edge = (
+                isinstance(previous_selected, str)
+                and isinstance(selected_unique_id, str)
+                and previous_selected not in _SENTINEL
+                and selected_unique_id not in _SENTINEL
+                and previous_selected in unique_id_dict
+                and selected_unique_id in unique_id_dict
+            )
+            if _can_create_edge:
+                requirement_manager.update_edge(previous_selected, selected_unique_id, edge_defaults)
+                update_source_data(file_path, requirement_manager.requirements)
+                print("update file")
             st.query_params["link_mode"] = "False"
             st.rerun()
         link_mode = False
     st.query_params["link_mode"] = str(link_mode)
 
-    previous_selected = selected_unique_id
+    # "default" 等の無効なIDは "None" に正規化して次フレームへ引き渡す
+    # これにより接続モード中に不正なIDがエッジのsource/destinationに混入するのを防ぐ
+    _SENTINEL = ("None", "default", "")
+    if (
+        isinstance(selected_unique_id, str)
+        and selected_unique_id not in _SENTINEL
+        and selected_unique_id in unique_id_dict
+    ):
+        previous_selected = selected_unique_id
+    else:
+        previous_selected = "None"
 
     # 選択されたエンティティを取得
     selected_entity = None
