@@ -388,7 +388,15 @@ def calculate_fever_data(
     if not critical_path or critical_path_length <= 0:
         return {"progress": 0.0, "buffer_used": 0.0}
 
-    # CC 残日数の計算
+    # ベースライン情報の取得
+    baseline = project.get("baseline", {})
+    baseline_cc_length = baseline.get("cc_length", critical_path_length)
+    baseline_total_buffer = baseline.get("total_buffer", None)
+
+    if baseline_cc_length <= 0:
+        return {"progress": 0.0, "buffer_used": 0.0}
+
+    # CC 残日数の計算 (remainsの合計)
     remaining_cc_length = 0.0
     for task_id in critical_path:
         attrs = graph.nodes[task_id]
@@ -402,9 +410,10 @@ def calculate_fever_data(
             # 未着手のタスクは初期の見積り日数(days)をそのまま使う
             remaining_cc_length += float(attrs.get("days", 0.0))
 
-    # CC完了率 = (初期CC長 - 現在の残CC長) / 初期CC長
-    finished_days_equivalent = max(0.0, critical_path_length - remaining_cc_length)
-    progress = (finished_days_equivalent / critical_path_length) * 100
+    # CC完了率 = (ベースラインCC長 - 現在の残CC長) / ベースラインCC長
+    # ※遅延によってremainsが増えても、完了率がマイナス（左へ逆走）にならないよう0でクリップ
+    finished_days_equivalent = max(0.0, baseline_cc_length - remaining_cc_length)
+    progress = (finished_days_equivalent / baseline_cc_length) * 100
 
     # バッファ消費率
     start_str = project.get("start", "")
@@ -425,9 +434,11 @@ def calculate_fever_data(
             dt_start, dt_end, holidays=dt_holidays
         ) if workdays else (dt_end - dt_start).days
 
-        # 全バッファ = プロジェクト稼働日数 - 初期CC長 (分母を固定)
-        total_buffer = total_workdays - critical_path_length
-        if total_buffer <= 0:
+        # ベースラインが未登録の場合は稼働日数から逆算
+        if baseline_total_buffer is None:
+            baseline_total_buffer = total_workdays - baseline_cc_length
+
+        if baseline_total_buffer <= 0:
             # バッファなし（CC がプロジェクト期間以上）
             return {"progress": progress, "buffer_used": 100.0 if remaining_cc_length > 0 else 0.0}
 
@@ -437,14 +448,12 @@ def calculate_fever_data(
         ) - 1 if workdays else (dt_today - dt_start).days
         elapsed = max(0, elapsed)
 
-        # 現在の予想総所要稼働日数 = 経過日数 + 残日数の合計
-        expected_total_duration = elapsed + remaining_cc_length
+        # 消費バッファ = (今日までの経過稼働総日数) - (CCとして消化できたとみなせる日数)
+        # 本来予定通りなら elapsed と finished_days_equivalent は一致するが、
+        # 進捗が遅れている（elapsed > finished_days）ほど、その差分だけバッファを食いつぶしたと判定する
+        consumed_buffer = max(0.0, elapsed - finished_days_equivalent)
 
-        # 消費バッファ = 予想総所要日数 - 初期CC長
-        # (予定より時間を使っていればプラス、早く進んでいればマイナス)
-        consumed_buffer = max(0.0, expected_total_duration - critical_path_length)
-
-        buffer_used = (consumed_buffer / total_buffer) * 100
+        buffer_used = (consumed_buffer / baseline_total_buffer) * 100
     except Exception:
         buffer_used = 0.0
 

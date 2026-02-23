@@ -197,6 +197,18 @@ def render_edit_panel():
         ]
         requirement_data["project"] = project
 
+        # クリティカルチェーン長の事前計算
+        nx_graph = graph_data.graph
+        try:
+            inputs, outputs = get_in_out_edge_list(nx_graph)
+            cp_length, cp = calculate_critical_path(nx_graph, inputs, outputs)
+            cc_length, cc, _ = calculate_critical_chain(nx_graph)
+            active_chain = cc if cc else cp
+            active_length = cc_length if cc else cp_length
+        except Exception:
+            active_chain = []
+            active_length = 0
+
         # 日数計算と表示
         try:
             import workdays as wd
@@ -229,6 +241,18 @@ def render_edit_panel():
                 else:
                     remain_text = "(終了済み)"
                 
+                # 現在のCC情報の計算
+                cc_info_text = "<b>🚨 クリティカルチェーン情報</b><br>・<i>(ネットワーク図が計算されていません)</i>"
+                if active_chain and active_length > 0:
+                    current_buffer = actual_workdays - active_length
+                    buffer_color = "red" if current_buffer < 0 else "green"
+                    
+                    cc_info_text = f"""
+                    <b>🚨 クリティカルチェーン情報</b><br>
+                    ・現在のCC長 (予想総所要日数): <b>{active_length}</b> 日<br>
+                    ・現在の全バッファ (稼働日 - CC長): <span style='color: {buffer_color}; font-weight: bold;'>{current_buffer}</span> 日
+                    """
+
                 st.markdown(
                     f"""
                     <div style='background-color: #f0f2f6; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
@@ -236,6 +260,10 @@ def render_edit_panel():
                         ・総日数 (土日祝込): <b>{total_days}</b> 日<br>
                         ・土日抜き日数: <b>{weekdays_only}</b> 日<br>
                         ・実稼働日数 (土日祝抜): <span style='color: blue; font-weight: bold;'>{actual_workdays}</span> 日 <span style='color: red; font-weight: bold;'>{remain_text}</span>
+                    </div>
+                    
+                    <div style='background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
+                        {cc_info_text}
                     </div>
                     """,
                     unsafe_allow_html=True
@@ -245,11 +273,36 @@ def render_edit_panel():
         except Exception as e:
             st.warning("日付計算でエラーが発生しました。")
 
-        if st.button("プロジェクト設定を保存", key="ccpm_save_project"):
-            update_source_data(file_path, requirement_manager.requirements)
-            st.success("プロジェクト設定を保存しました。")
-            st.rerun()
-
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if st.button("🚩 現在のCCをベースラインに登録", key="ccpm_save_baseline"):
+                if active_length > 0:
+                    try:
+                        import workdays as wd
+                        s_date = datetime.strptime(project["start"], "%Y/%m/%d")
+                        e_date = datetime.strptime(project["end"], "%Y/%m/%d")
+                        holidays_list = [datetime.strptime(h, "%Y/%m/%d") for h in project.get("holidays", []) if h]
+                        
+                        total_workdays = wd.networkdays(s_date, e_date, holidays_list)
+                        total_buffer = total_workdays - active_length
+                        
+                        project["baseline"] = {
+                            "cc_length": active_length,
+                            "total_buffer": total_buffer,
+                            "registered_at": datetime.today().strftime("%Y/%m/%d %H:%M:%S")
+                        }
+                        update_source_data(file_path, requirement_manager.requirements)
+                        st.success(f"CC長: {active_length}日, 全バッファ: {total_buffer}日 でベースラインを登録しました。")
+                    except Exception as e:
+                        st.error(f"ベースライン登録エラー: {e}")
+                else:
+                    st.warning("クリティカルチェーンが計算されていません。")
+        with col_btn2:
+            if st.button("💾 プロジェクト設定を保存", key="ccpm_save_project"):
+                update_source_data(file_path, requirement_manager.requirements)
+                st.success("プロジェクト設定を保存しました。")
+                st.rerun()
+                    
     st.write("---")
 
     # --- エンティティ編集 (PFD と同じ操作感) ---
@@ -499,9 +552,20 @@ def render_ccpm_analysis():
 
             # 過去の進捗データ
             progress_data = requirement_data.get("progress", {})
-            dates = list(progress_data.keys())
-            progress_hist = [v[0] if isinstance(v, list) else v for v in progress_data.values()]
-            buffer_hist = [v[1] if isinstance(v, list) else 0 for v in progress_data.values()]
+            dates = []
+            progress_hist = []
+            buffer_hist = []
+            memos = []
+            for k, v in progress_data.items():
+                dates.append(k)
+                if isinstance(v, list):
+                    progress_hist.append(v[0] if len(v) > 0 else 0)
+                    buffer_hist.append(v[1] if len(v) > 1 else 0)
+                    memos.append(str(v[2]) if len(v) > 2 else "")
+                else:
+                    progress_hist.append(v)
+                    buffer_hist.append(0)
+                    memos.append("")
 
             # 現在値を追加（もし今日の記録が既にある場合は、チャート上では現在の計算値で置き換える）
             today_str = requirement_data.get("project", {}).get("today", "now")
@@ -510,13 +574,23 @@ def render_ccpm_analysis():
                 dates.pop(idx)
                 progress_hist.pop(idx)
                 buffer_hist.pop(idx)
+                memos.pop(idx)
             
             dates.append(today_str + " (現在)")
             progress_hist.append(fever["progress"])
             buffer_hist.append(fever["buffer_used"])
+            memos.append("")
+            
+            # メモ付きのチャートラベルを生成
+            plot_texts = []
+            for d, m in zip(dates, memos):
+                if m:
+                    plot_texts.append(f"{d}<br>🗣 {m}")
+                else:
+                    plot_texts.append(d)
 
-            # チャートとデータテーブルを横並び
-            chart_col, data_col = st.columns([3, 1])
+            # チャート（75%縮小に伴いカラム比率を拡大）とデータテーブルを横並び
+            chart_col, data_col = st.columns([2, 1])
 
             with chart_col:
                 fig = go.Figure()
@@ -556,24 +630,24 @@ def render_ccpm_analysis():
                         line=dict(width=0), showlegend=False,
                     ))
 
-                # 進捗プロット（日付ラベル付き）
+                # 進捗プロット（日付・メモラベル付き）
                 fig.add_trace(go.Scatter(
                     x=progress_hist, y=buffer_hist,
                     mode="lines+markers+text",
-                    text=dates,
+                    text=plot_texts,
                     textposition="top center",
-                    textfont=dict(size=20),
+                    textfont=dict(size=18),
                     marker=dict(size=14),
                     line=dict(width=4),
                     name="進捗",
                 ))
                 fig.update_layout(
                     xaxis_title="クリティカルチェーン完了率 (%)", yaxis_title="バッファ消費率 (%)",
-                    xaxis=dict(range=[0, 100], tickfont=dict(size=20)),
-                    yaxis=dict(range=[0, y_range_max], tickfont=dict(size=20)),
-                    font=dict(size=24),
-                    hoverlabel=dict(font_size=24),
-                    width=1200, height=900,
+                    xaxis=dict(range=[0, 100], tickfont=dict(size=18)),
+                    yaxis=dict(range=[0, y_range_max], tickfont=dict(size=18)),
+                    font=dict(size=20),
+                    hoverlabel=dict(font_size=20),
+                    width=900, height=675, # 75%縮小
                     margin=dict(t=30, b=50, l=50, r=30),
                 )
                 st.plotly_chart(fig, use_container_width=False)
@@ -588,6 +662,7 @@ def render_ccpm_analysis():
                     requirement_data["progress"][today_str] = [
                         round(fever["progress"], 2),
                         round(fever["buffer_used"], 2),
+                        ""
                     ]
                     update_source_data(file_path, requirement_manager.requirements)
                     st.success(f"{today_str} の値を記録しました。")
@@ -599,7 +674,12 @@ def render_ccpm_analysis():
                 import pandas as pd
                 if progress_data:
                     df = pd.DataFrame([
-                        {"日付": k, "CC完了率(%)": v[0] if isinstance(v, list) else v, "バッファ消費率(%)": v[1] if isinstance(v, list) else 0}
+                        {
+                            "日付": k, 
+                            "CC完了率(%)": v[0] if isinstance(v, list) and len(v) > 0 else v, 
+                            "バッファ消費率(%)": v[1] if isinstance(v, list) and len(v) > 1 else 0,
+                            "メモ": str(v[2]) if isinstance(v, list) and len(v) > 2 else ""
+                        }
                         for k, v in progress_data.items()
                     ])
                     edited_df = st.data_editor(
@@ -614,8 +694,12 @@ def render_ccpm_analysis():
                                 new_progress[date_key] = [
                                     round(float(row["CC完了率(%)"]), 2),
                                     round(float(row["バッファ消費率(%)"]), 2),
+                                    str(row.get("メモ", ""))
                                 ]
-                        requirement_data["progress"] = new_progress
+                        
+                        # 日付キー辞書の昇順（文字列順）でソート
+                        sorted_progress = dict(sorted(new_progress.items(), key=lambda item: item[0]))
+                        requirement_data["progress"] = sorted_progress
                         update_source_data(file_path, requirement_manager.requirements)
                         st.success("データを保存しました。")
                         st.query_params.view = "fever"
