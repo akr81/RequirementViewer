@@ -732,9 +732,25 @@ def render_ccpm_analysis():
         if active_chain:
             priority = calculate_priority_table(nx_graph, active_chain)
             if priority:
-                st.dataframe(priority, use_container_width=True)
+                import pandas as pd
+                df = pd.DataFrame(priority)
+                
+                # 表示の整理と日本語ヘッダーへのリネーム
+                df = df[["status", "title", "resource", "days", "total_remains", "buffer", "task"]]
+                df = df.rename(columns={
+                    "status": "状態",
+                    "title": "タスク名",
+                    "resource": "担当",
+                    "days": "工数(日)",
+                    "total_remains": "後続パス長",
+                    "buffer": "余裕(バッファ)",
+                    "task": "ID"
+                })
+                
+                # ID列などを見やすく調整しつつ出力
+                st.dataframe(df, use_container_width=True, hide_index=True)
             else:
-                st.info("全タスクが完了しているか、優先度を計算できません。")
+                st.info("優先度を計算できるタスクがありません。")
         else:
             st.info("クリティカルパスが計算できません。")
 

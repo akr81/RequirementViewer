@@ -624,8 +624,11 @@ def calculate_priority_table(
     all_info: Dict[str, Dict[str, Any]] = {}
     
     for task in graph.nodes:
-        if graph.nodes[task].get("finished", False):
+        # メモやクラウドなどの図形はスキップ
+        if graph.nodes[task].get("type", "") in ["note", "cloud"]:
             continue
+
+        is_finished = graph.nodes[task].get("finished", False)
             
         # 該当タスク以降の最長パス(自身のdaysを含まない)
         following_length = _compute_remaining_path_length(graph, task, memo)
@@ -635,14 +638,27 @@ def calculate_priority_table(
         remain_length = days + following_length
         buffer = unfinished_cp_length - remain_length
         
+        # 状態（信号色）の判定
+        if is_finished:
+            status = "⚫ 完了"
+        elif buffer <= 0:
+            status = "🔴 警告"
+        elif buffer <= (unfinished_cp_length * 0.2):
+            status = "🟡 注意"
+        else:
+            status = "🟢 順調"
+        
         all_info[task] = {
             "task": task,
+            "status": status,
             "title": graph.nodes[task].get("title", task),
             "days": days,
             "resource": graph.nodes[task].get("resource", ""),
             "total_remains": remain_length,
             "cp_remains": unfinished_cp_length,
             "buffer": buffer,
+            "is_finished": is_finished,
         }
 
-    return sorted(all_info.values(), key=lambda x: x["buffer"])
+    # 未完了が先、その中でバッファが少ない順 にソート
+    return sorted(all_info.values(), key=lambda x: (x["is_finished"], x["buffer"]))
