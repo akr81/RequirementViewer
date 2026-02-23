@@ -402,9 +402,15 @@ def render_ccpm_analysis():
             progress_hist = [v[0] if isinstance(v, list) else v for v in progress_data.values()]
             buffer_hist = [v[1] if isinstance(v, list) else 0 for v in progress_data.values()]
 
-            # 現在値を追加
+            # 現在値を追加（もし今日の記録が既にある場合は、チャート上では現在の計算値で置き換える）
             today_str = requirement_data.get("project", {}).get("today", "now")
-            dates.append(today_str)
+            if today_str in dates:
+                idx = dates.index(today_str)
+                dates.pop(idx)
+                progress_hist.pop(idx)
+                buffer_hist.pop(idx)
+            
+            dates.append(today_str + " (現在)")
             progress_hist.append(fever["progress"])
             buffer_hist.append(fever["buffer_used"])
 
@@ -413,12 +419,18 @@ def render_ccpm_analysis():
 
             with chart_col:
                 fig = go.Figure()
-                # ゾーン塗りつぶし（緑→黄→赤の3段階）
+                
+                # Y軸の最大値を計算（100を超える場合は自動拡張）
+                max_buf = max(buffer_hist) if buffer_hist else 0
+                y_range_max = 100
+                if max_buf > 100:
+                    y_range_max = int(max_buf + 9) // 10 * 10 + 10
+
+                # ゾーン塗りつぶし（緑→黄→赤→グレー）
                 x = list(range(0, 101))
                 y1 = [0.6 * xi + 15 for xi in x]  # 緑/黄 境界
                 y2 = [0.6 * xi + 30 for xi in x]  # 黄/赤 境界
-                y_zero = [0] * len(x)
-                y_max = [100] * len(x)
+                
                 # 緑ゾーン（下）
                 fig.add_trace(go.Scatter(
                     x=x, y=y1, fill="tozeroy", fillcolor="rgba(144,238,144,0.3)",
@@ -429,11 +441,20 @@ def render_ccpm_analysis():
                     x=x, y=y2, fill="tonexty", fillcolor="rgba(255,255,150,0.3)",
                     line=dict(color="orange", width=1), showlegend=False,
                 ))
-                # 赤ゾーン（上）
+                # 赤ゾーン（100%まで）
+                y_100 = [100] * len(x)
                 fig.add_trace(go.Scatter(
-                    x=x, y=y_max, fill="tonexty", fillcolor="rgba(255,160,160,0.3)",
+                    x=x, y=y_100, fill="tonexty", fillcolor="rgba(255,160,160,0.3)",
                     line=dict(width=0), showlegend=False,
                 ))
+                # 100%超え グレーゾーン
+                if y_range_max > 100:
+                    y_top = [y_range_max] * len(x)
+                    fig.add_trace(go.Scatter(
+                        x=x, y=y_top, fill="tonexty", fillcolor="rgba(200,200,200,0.3)",
+                        line=dict(width=0), showlegend=False,
+                    ))
+
                 # 進捗プロット（日付ラベル付き）
                 fig.add_trace(go.Scatter(
                     x=progress_hist, y=buffer_hist,
@@ -448,7 +469,7 @@ def render_ccpm_analysis():
                 fig.update_layout(
                     xaxis_title="クリティカルチェーン完了率 (%)", yaxis_title="バッファ消費率 (%)",
                     xaxis=dict(range=[0, 100], tickfont=dict(size=20)),
-                    yaxis=dict(range=[0, 100], tickfont=dict(size=20)),
+                    yaxis=dict(range=[0, y_range_max], tickfont=dict(size=20)),
                     font=dict(size=24),
                     hoverlabel=dict(font_size=24),
                     width=1200, height=900,

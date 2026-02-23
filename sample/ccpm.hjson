@@ -161,7 +161,7 @@
             unique_id: t11
             title: 認証設計
             type: process
-            days: 32.0
+            days: 2.0
             remains: 0.0
             resource: 伊藤
             start: ""
@@ -716,8 +716,8 @@
         ]
         2025/08/19:
         [
-            16.36
-            82.76
+            20
+            425
         ]
     }
 }

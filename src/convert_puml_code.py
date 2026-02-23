@@ -397,6 +397,7 @@ class ConvertPumlCode:
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
+        # カード要素は文字列の途中で改行が有効になるように \n を許可しておく
         content = self._escape_puml(node_attrs.get(content_field, ""), keep_newline=True)
 
         return self._create_card_puml(
@@ -833,13 +834,33 @@ class ConvertPumlCode:
             calculate_critical_chain,
         )
 
-        # ノード変換（完了タスクに ☑ プレフィックスを付ける）
+        # ノード変換（完了タスクに ☑ プレフィックス、詳細なら日数と担当者を追加）
         import copy
         render_graph = graph.copy()
+        
+        # parameters_dict から詳細表示フラグを取得
+        detail_flag = parameters_dict.get("detail", False)
+        
         for node_id in render_graph.nodes:
             attrs = render_graph.nodes[node_id]
+            title = attrs.get("title", "")
             if attrs.get("finished", False):
-                attrs["title"] = "☑ " + attrs.get("title", "")
+                title = "☑ " + title
+            
+            # 詳細表示がオンで、days や resource が設定されている場合に追加
+            if detail_flag:
+                days = attrs.get("days")
+                resource = attrs.get("resource")
+                info = []
+                if days is not None and str(days).strip():
+                    info.append(f"{days}d")
+                if resource and str(resource).strip():
+                    info.append(str(resource))
+                
+                if info:
+                    title += f"\n({', '.join(info)})"
+            
+            attrs["title"] = title
 
         puml_parts = list(self._convert_nodes_to_puml(
             render_graph, parameters_dict,
