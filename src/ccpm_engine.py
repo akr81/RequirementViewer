@@ -244,12 +244,14 @@ def _make_story_bars(
     for node_id in graph.nodes:
         attrs = graph.nodes[node_id]
         days = attrs.get("days", 0)
-        if days <= 0:
-            continue  # 日数0のノードはスキップ
-
         start = attrs.get("start", "")
         finished = attrs.get("finished", False)
         node_type = attrs.get("type", "")
+        
+        # 描画対象の判定: メモやクラウドなどの図形はスキップする。
+        # process や deliverable は日数が0でもマイルストーンとして描画し、依存関係を繋げる
+        if node_type in ["note", "cloud"]:
+            continue
         title = attrs.get("title", node_id)
         # title内に改行が含まれる可能性を考慮し空白に置換
         title = title.replace("\n", " ").replace("\r", "")
@@ -288,19 +290,29 @@ def _make_dependency_arrows(
     """エッジの依存関係文字列を作成する（クリティカルパス優先）。"""
     arrows: List[str] = []
 
-    # クリティカルパスの依存を先に定義
-    for i in range(len(critical_path) - 1):
-        src_days = graph.nodes[critical_path[i]].get("days", 0)
-        dst_days = graph.nodes[critical_path[i + 1]].get("days", 0)
-        if src_days > 0 and dst_days > 0:
-            arrows.append(f"[{critical_path[i]}] -> [{critical_path[i + 1]}]")
+    # ガントチャートにバーとして描画される対象のノード判定
+    def _is_target(n_id):
+        node_type = graph.nodes[n_id].get("type", "")
+        return node_type not in ["note", "cloud"]
 
-    # その他の依存
-    for src, dst in graph.edges:
-        src_days = graph.nodes[src].get("days", 0)
-        dst_days = graph.nodes[dst].get("days", 0)
-        if src_days > 0 and dst_days > 0:
-            arrow = f"[{src}] -> [{dst}]"
+    # 1. 各ノードの earliest_end を計算 (PlantUMLの複数合流バグ回避のため)
+    # 複数先行タスクがある場合、最も遅く終わるタスクにのみ依存するようにフィルタする
+    try:
+        topo_nodes = list(nx.topological_sort(graph))
+    except nx.NetworkXUnfeasible:
+        # 閉路がある場合は諦めてそのままの順序等にする
+        topo_nodes = list(graph.nodes)
+
+    # トポロジカルソート順に生成してPlantUMLの1パスパースによる波及バグを回避する
+    for node in topo_nodes:
+        if not _is_target(node):
+            continue
+        
+        preds = list(graph.predecessors(node))
+        valid_preds = [p for p in preds if _is_target(p)]
+        
+        for p in valid_preds:
+            arrow = f"[{p}] -> [{node}]"
             if arrow not in arrows:
                 arrows.append(arrow)
 

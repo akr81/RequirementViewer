@@ -2,6 +2,18 @@
     nodes:
     [
         {
+            type: deliverable
+            title: 画面待ちバッファ
+            days: 3
+            remains: 0
+            resource: 共通バッファ
+            start: ""
+            end: ""
+            finished: false
+            color: None
+            unique_id: 31a52e5ce46a414aaea9779d449b54f9
+        }
+        {
             unique_id: d01
             title: 要件定義書
             type: deliverable
@@ -10,15 +22,15 @@
             resource: ""
             start: ""
             end: ""
-            finished: true
+            finished: false
             color: None
         }
         {
             unique_id: d02
             title: 設計書一式
             type: deliverable
-            days: 5.0
-            remains: 5.0
+            days: 5
+            remains: 5
             resource: 共通バッファ
             start: ""
             end: ""
@@ -44,8 +56,8 @@
             days: 10
             remains: 10
             resource: 田中
-            start: ""
-            end: ""
+            start: 2025/07/01
+            end: 2025/07/15
             finished: true
             color: None
         }
@@ -58,7 +70,7 @@
             resource: 鈴木
             start: ""
             end: ""
-            finished: true
+            finished: false
             color: None
         }
         {
@@ -70,7 +82,7 @@
             resource: 田中
             start: ""
             end: ""
-            finished: true
+            finished: false
             color: None
         }
         {
@@ -82,7 +94,7 @@
             resource: 鈴木
             start: ""
             end: ""
-            finished: true
+            finished: false
             color: None
         }
         {
@@ -94,7 +106,7 @@
             resource: 佐藤
             start: ""
             end: ""
-            finished: true
+            finished: false
             color: None
         }
         {
@@ -106,7 +118,7 @@
             resource: 田中
             start: ""
             end: ""
-            finished: true
+            finished: false
             color: None
         }
         {
@@ -118,7 +130,7 @@
             resource: 鈴木
             start: ""
             end: ""
-            finished: true
+            finished: false
             color: None
         }
         {
@@ -130,7 +142,7 @@
             resource: 高橋
             start: ""
             end: ""
-            finished: true
+            finished: false
             color: None
         }
         {
@@ -142,7 +154,7 @@
             resource: 高橋
             start: ""
             end: ""
-            finished: true
+            finished: false
             color: None
         }
         {
@@ -211,7 +223,7 @@
             type: process
             days: 4
             remains: 0
-            resource: 山田
+            resource: 佐藤
             start: ""
             end: ""
             finished: false
@@ -226,7 +238,7 @@
             resource: 高橋
             start: ""
             end: ""
-            finished: true
+            finished: false
             color: None
         }
         {
@@ -401,6 +413,11 @@
     edges:
     [
         {
+            type: arrow
+            source: 31a52e5ce46a414aaea9779d449b54f9
+            destination: t22
+        }
+        {
             source: d01
             destination: t04
             type: arrow
@@ -459,6 +476,11 @@
             source: t04
             destination: t07
             comment: ""
+        }
+        {
+            type: arrow
+            source: t04
+            destination: t13
         }
         {
             source: t05
@@ -551,22 +573,19 @@
             comment: ""
         }
         {
+            type: arrow
             source: t13
-            destination: t22
-            type: arrow
-            comment: ""
+            destination: 31a52e5ce46a414aaea9779d449b54f9
         }
         {
+            type: arrow
             source: t14
-            destination: t22
-            type: arrow
-            comment: ""
+            destination: 31a52e5ce46a414aaea9779d449b54f9
         }
         {
-            source: t15
-            destination: t22
             type: arrow
-            comment: ""
+            source: t15
+            destination: 31a52e5ce46a414aaea9779d449b54f9
         }
         {
             source: t16
@@ -716,8 +735,8 @@
         ]
         2025/08/19:
         [
-            20
-            425
+            56.9
+            0
         ]
     }
 }

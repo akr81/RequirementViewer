@@ -157,15 +157,35 @@ def render_edit_panel():
     # --- プロジェクト設定 (expander) ---
     project = requirement_data.get("project", {})
     with st.expander("📅 プロジェクト設定", expanded=False):
-        project["start"] = st.text_input(
-            "プロジェクト開始日", value=project.get("start", ""), key="ccpm_proj_start"
-        )
-        project["end"] = st.text_input(
-            "プロジェクト終了日", value=project.get("end", ""), key="ccpm_proj_end"
-        )
-        project["today"] = st.text_input(
-            "今日の日付", value=project.get("today", ""), key="ccpm_proj_today"
-        )
+        from datetime import datetime
+        
+        # 既存の文字列をdatetime(date)に変換するヘルパー
+        def _get_date(date_str: str):
+            if not date_str:
+                return datetime.today().date()
+            try:
+                return datetime.strptime(date_str, "%Y/%m/%d").date()
+            except ValueError:
+                return datetime.today().date()
+        
+        col_proj1, col_proj2, col_proj3 = st.columns(3)
+        with col_proj1:
+            raw_start = st.date_input(
+                "開始日", value=_get_date(project.get("start", "")), key="ccpm_proj_start"
+            )
+        with col_proj2:
+            raw_end = st.date_input(
+                "終了日", value=_get_date(project.get("end", "")), key="ccpm_proj_end"
+            )
+        with col_proj3:
+            raw_today = st.date_input(
+                "今日の日付", value=_get_date(project.get("today", "")), key="ccpm_proj_today"
+            )
+            
+        project["start"] = raw_start.strftime("%Y/%m/%d")
+        project["end"] = raw_end.strftime("%Y/%m/%d")
+        project["today"] = raw_today.strftime("%Y/%m/%d")
+
         holidays_str = st.text_area(
             "祝日 (YYYY/MM/DD を1行ずつ)",
             value="\n".join(project.get("holidays", [])),
@@ -176,6 +196,54 @@ def render_edit_panel():
             h.strip() for h in holidays_str.split("\n") if h.strip()
         ]
         requirement_data["project"] = project
+
+        # 日数計算と表示
+        try:
+            import workdays as wd
+            s_date = datetime.strptime(project["start"], "%Y/%m/%d")
+            e_date = datetime.strptime(project["end"], "%Y/%m/%d")
+            t_date = datetime.strptime(project["today"], "%Y/%m/%d")
+            
+            if s_date <= e_date:
+                # 1. 総日数 (両端含む)
+                total_days = (e_date - s_date).days + 1
+                
+                # 2. 土日抜きの日数
+                weekdays_only = wd.networkdays(s_date, e_date)
+                
+                # 3. 土日祝抜きの実稼働日数
+                holidays_list = []
+                for h_str in project.get("holidays", []):
+                    try:
+                        holidays_list.append(datetime.strptime(h_str, "%Y/%m/%d"))
+                    except ValueError:
+                        pass
+                actual_workdays = wd.networkdays(s_date, e_date, holidays_list)
+                
+                # 今日の日付からの残日数（土日祝抜）
+                if t_date <= e_date:
+                    # 今日が開始日より前なら、開始日からの日数と同じにする
+                    calc_start = max(s_date, t_date)
+                    remain_workdays = wd.networkdays(calc_start, e_date, holidays_list)
+                    remain_text = f"(残り {remain_workdays} 日)"
+                else:
+                    remain_text = "(終了済み)"
+                
+                st.markdown(
+                    f"""
+                    <div style='background-color: #f0f2f6; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
+                        <b>📅 プロジェクト期間情報</b><br>
+                        ・総日数 (土日祝込): <b>{total_days}</b> 日<br>
+                        ・土日抜き日数: <b>{weekdays_only}</b> 日<br>
+                        ・実稼働日数 (土日祝抜): <span style='color: blue; font-weight: bold;'>{actual_workdays}</span> 日 <span style='color: red; font-weight: bold;'>{remain_text}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+            else:
+                st.warning("終了日は開始日以降に設定してください。")
+        except Exception as e:
+            st.warning("日付計算でエラーが発生しました。")
 
         if st.button("プロジェクト設定を保存", key="ccpm_save_project"):
             update_source_data(file_path, requirement_manager.requirements)
@@ -229,16 +297,29 @@ def render_edit_panel():
     )
 
     col_start, col_end = st.columns(2)
+    
+    def _get_entity_date(d_str):
+        if not d_str:
+            return None
+        try:
+            from datetime import datetime
+            return datetime.strptime(d_str, "%Y/%m/%d").date()
+        except ValueError:
+            return None
+
     with col_start:
-        tmp_entity["start"] = st.text_input(
-            "開始日", tmp_entity.get("start", ""),
+        raw_estart = st.date_input(
+            "開始日", value=_get_entity_date(tmp_entity.get("start", "")),
             key=f"ccpm_start_{selected_unique_id}",
         )
+        tmp_entity["start"] = raw_estart.strftime("%Y/%m/%d") if raw_estart else ""
+
     with col_end:
-        tmp_entity["end"] = st.text_input(
-            "終了日", tmp_entity.get("end", ""),
+        raw_eend = st.date_input(
+            "終了日", value=_get_entity_date(tmp_entity.get("end", "")),
             key=f"ccpm_end_{selected_unique_id}",
         )
+        tmp_entity["end"] = raw_eend.strftime("%Y/%m/%d") if raw_eend else ""
 
     tmp_entity["finished"] = st.checkbox(
         "完了", value=tmp_entity.get("finished", False),
