@@ -619,31 +619,30 @@ def calculate_priority_table(
         for t in critical_path[critical_path.index(first_unfinished):]
     )
 
-    # 全パスのタスク情報を収集
+    # 全タスクの情報を収集（全経路探索を避けて DP で各ノードからゴールまでの最長距離を求める）
+    memo: Dict[str, float] = {}
     all_info: Dict[str, Dict[str, Any]] = {}
-    for inp in inputs:
-        try:
-            for path in nx.all_simple_paths(graph, inp, final_task):
-                for task in path:
-                    if graph.nodes[task].get("finished", False):
-                        continue
-                    remain_length = sum(
-                        graph.nodes[t].get("days", 0)
-                        for t in path[path.index(task):]
-                    )
-                    buffer = unfinished_cp_length - remain_length
-                    # 最小バッファを保持
-                    if task not in all_info or buffer < all_info[task]["buffer"]:
-                        all_info[task] = {
-                            "task": task,
-                            "title": graph.nodes[task].get("title", task),
-                            "days": graph.nodes[task].get("days", 0),
-                            "resource": graph.nodes[task].get("resource", ""),
-                            "total_remains": remain_length,
-                            "cp_remains": unfinished_cp_length,
-                            "buffer": buffer,
-                        }
-        except nx.NetworkXError:
+    
+    for task in graph.nodes:
+        if graph.nodes[task].get("finished", False):
             continue
+            
+        # 該当タスク以降の最長パス(自身のdaysを含まない)
+        following_length = _compute_remaining_path_length(graph, task, memo)
+        days = graph.nodes[task].get("days", 0)
+        
+        # 自身 + その後の最長パス = そのタスクからの最長残日数
+        remain_length = days + following_length
+        buffer = unfinished_cp_length - remain_length
+        
+        all_info[task] = {
+            "task": task,
+            "title": graph.nodes[task].get("title", task),
+            "days": days,
+            "resource": graph.nodes[task].get("resource", ""),
+            "total_remains": remain_length,
+            "cp_remains": unfinished_cp_length,
+            "buffer": buffer,
+        }
 
     return sorted(all_info.values(), key=lambda x: x["buffer"])
