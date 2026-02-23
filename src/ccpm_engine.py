@@ -250,19 +250,24 @@ def _make_story_bars(
         start = attrs.get("start", "")
         finished = attrs.get("finished", False)
         node_type = attrs.get("type", "")
+        title = attrs.get("title", node_id)
+        # title内に改行が含まれる可能性を考慮し空白に置換
+        title = title.replace("\n", " ").replace("\r", "")
+
+        head = f"[{title}] as [{node_id}]"
 
         if start and project:
             # 着手済み: 残日数ベースで終了日を推定
             remains = attrs.get("remains", 0)
             if remains > 0 and workdays and not finished:
                 end_date = _estimate_end_date(project, start, remains)
-                bar = f"[{node_id}] starts {start} and ends {end_date}"
+                bar = f"{head} starts {start} and ends {end_date}"
             elif finished and attrs.get("end", ""):
-                bar = f"[{node_id}] starts {start} and ends {attrs['end']}"
+                bar = f"{head} starts {start} and ends {attrs['end']}"
             else:
-                bar = f"[{node_id}] lasts {days} days"
+                bar = f"{head} lasts {days} days"
         else:
-            bar = f"[{node_id}] lasts {days} days"
+            bar = f"{head} lasts {days} days"
 
         # 完了タスクの色
         if finished:

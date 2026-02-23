@@ -380,7 +380,14 @@ def render_ccpm_analysis():
             if plantuml_server:
                 gantt_svg = get_diagram(gantt_puml, plantuml_server)
                 if gantt_svg:
-                    st.html(gantt_svg)
+                    st.markdown(
+                        f'''
+                        <div style="width:100%; min-height:{config_data.get('viewer_height', 600)}px; overflow:auto; border:0px solid black;">
+                            {gantt_svg}
+                        </div>
+                        ''',
+                        unsafe_allow_html=True,
+                    )
                 else:
                     st.error("ガントチャートの生成に失敗しました。")
             else:
