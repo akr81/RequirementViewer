@@ -541,6 +541,15 @@ def _render_gantt_tab(
         if plantuml_server:
             gantt_svg = get_diagram(gantt_puml, plantuml_server)
             if gantt_svg:
+                # デバッグ用にファイル出力
+                try:
+                    with open("debug_gantt.svg", "w", encoding="utf-8") as f:
+                        f.write(gantt_svg)
+                    with open("debug_gantt.puml", "w", encoding="utf-8") as f:
+                        f.write(gantt_puml)
+                except Exception as e:
+                    st.error(f"デバッグファイルの出力に失敗しました: {e}")
+
                 # デフォルトで付くリンク下線を隠す
                 gantt_svg = gantt_svg.replace(
                     "<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>"
