@@ -126,35 +126,175 @@ diagram_column = page_elements["diagram_column"]
 diagram_context = page_elements["diagram_context"]
 diagram_options = page_elements["diagram_options"]
 
+def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm_type_list: list, color_list: list) -> dict:
+    """エンティティ編集 (PFD と同じ操作感) の UI を描画し、入力結果の辞書を返す"""
+    tmp_entity = copy.deepcopy(selected_entity)
+    tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
+    tmp_entity.setdefault("color", "None")
+    tmp_entity.setdefault("type", "process")
+    # CCPM 固有フィールドのフォールバック
+    for field, default in [
+        ("days", 1), ("remains", 0), ("resource", ""),
+        ("start", ""), ("end", ""), ("finished", False),
+    ]:
+        tmp_entity.setdefault(field, default)
 
-@st.fragment
-def render_edit_panel():
-    """右側操作パネルの描画（部分再描画対応）"""
-    # リセット対象キーの登録
-    if "clearable_new_connection_keys" not in st.session_state:
-        st.session_state.clearable_new_connection_keys = {}
-    st.session_state.clearable_new_connection_keys["CCPM Viewer"] = [
-        f"{edge_params['to_selected']['selectbox_key']}_new",
-        f"comment_{edge_params['to_selected']['selectbox_key']}_new",
-        f"{edge_params['from_selected']['selectbox_key']}_new",
-        f"comment_{edge_params['from_selected']['selectbox_key']}_new",
-    ]
+    tmp_entity["type"] = st.selectbox(
+        "タイプ", ccpm_type_list, index=ccpm_type_list.index(tmp_entity["type"]),
+        key=f"ccpm_type_{selected_unique_id}",
+    )
+    tmp_entity["title"] = st.text_area(
+        "タスク名",
+        unescape_newline(tmp_entity.get("title", "")),
+        height=calculate_text_area_height(unescape_newline(tmp_entity.get("title", ""))),
+        key=f"ccpm_title_{selected_unique_id}",
+    )
 
-    title_column, file_selector_column = st.columns([4, 4])
-    with title_column:
-        st.write("### データ編集")
-    with file_selector_column:
-        backup_files = get_backup_files_for_current_data()
-        st.selectbox(
-            "ファイルを選択",
-            backup_files,
-            0,
-            label_visibility="collapsed",
-            on_change=copy_file,
-            key="selected_backup_file",
+    # CCPM 固有フィールド
+    col_days, col_remains = st.columns(2)
+    with col_days:
+        tmp_entity["days"] = st.number_input(
+            "見積り日数", min_value=0.0, value=float(tmp_entity.get("days", 1)),
+            step=0.5, key=f"ccpm_days_{selected_unique_id}",
+        )
+    with col_remains:
+        tmp_entity["remains"] = st.number_input(
+            "残日数", min_value=0.0, value=float(tmp_entity.get("remains", 0)),
+            step=0.5, key=f"ccpm_remains_{selected_unique_id}",
         )
 
-    # --- プロジェクト設定 (expander) ---
+    tmp_entity["resource"] = st.text_input(
+        "担当者", tmp_entity.get("resource", ""),
+        key=f"ccpm_resource_{selected_unique_id}",
+    )
+
+    col_start, col_end = st.columns(2)
+    
+    def _get_entity_date(d_str):
+        if not d_str:
+            return None
+        try:
+            from datetime import datetime
+            return datetime.strptime(d_str, "%Y/%m/%d").date()
+        except ValueError:
+            return None
+
+    def _get_val_node(key: str, default_val):
+        if key in st.session_state:
+            return st.session_state[key]
+        return default_val
+
+    with col_start:
+        start_key = f"ccpm_start_{selected_unique_id}"
+        raw_estart = st.date_input(
+            "開始日", value=_get_val_node(start_key, _get_entity_date(tmp_entity.get("start", ""))),
+            key=start_key,
+        )
+        tmp_entity["start"] = raw_estart.strftime("%Y/%m/%d") if raw_estart else ""
+
+    with col_end:
+        end_key = f"ccpm_end_{selected_unique_id}"
+        raw_eend = st.date_input(
+            "終了日", value=_get_val_node(end_key, _get_entity_date(tmp_entity.get("end", ""))),
+            key=end_key,
+        )
+        tmp_entity["end"] = raw_eend.strftime("%Y/%m/%d") if raw_eend else ""
+
+    tmp_entity["finished"] = st.checkbox(
+        "完了", value=tmp_entity.get("finished", False),
+        key=f"ccpm_finished_{selected_unique_id}",
+    )
+
+    tmp_entity["color"] = st.selectbox(
+        "色", color_list,
+        index=color_list.index(tmp_entity["color"]),
+        key=f"ccpm_color_{selected_unique_id}",
+    )
+    
+    return tmp_entity
+
+
+def _render_edge_settings_and_buttons(
+    requirement_data: dict,
+    selected_unique_id: str,
+    id_title_dict: dict,
+    unique_id_dict: dict,
+    id_title_list: list,
+    tmp_entity: dict,
+    top_button_container,
+    requirement_manager,
+    file_path: str,
+):
+    """エッジ編集 (依存関係) および保存/削除などの操作ボタン UI を描画する"""
+    tmp_edges = copy.deepcopy(requirement_data["edges"])
+
+    # 接続元
+    params_to = edge_params["to_selected"]
+    params_to["selected_unique_id"] = selected_unique_id
+    params_to["id_title_dict"] = id_title_dict
+    params_to["unique_id_dict"] = unique_id_dict
+    params_to["id_title_list"] = id_title_list
+    params_to["connection_column"], params_to["description_column"] = st.columns([1, 1])
+    visibility = "visible"
+    for i, edge in enumerate(tmp_edges):
+        visibility = render_edge_connection(edge, i, visibility, edge_params["to_selected"])
+
+    temp_predecessor = {
+        "source": "None",
+        "destination": tmp_entity["unique_id"],
+        "comment": "",
+        "type": "arrow",
+    }
+    visibility = "visible"
+    render_edge_connection_new(temp_predecessor, 0, visibility, edge_params["to_selected"])
+
+    st.write("---")
+
+    # 接続先
+    params_from = edge_params["from_selected"]
+    params_from["selected_unique_id"] = selected_unique_id
+    params_from["id_title_dict"] = id_title_dict
+    params_from["unique_id_dict"] = unique_id_dict
+    params_from["id_title_list"] = id_title_list
+    params_from["connection_column"], params_from["description_column"] = st.columns([1, 1])
+    visibility = "visible"
+    for i, edge in enumerate(tmp_edges):
+        visibility = render_edge_connection(edge, i, visibility, edge_params["from_selected"])
+
+    temp_successor = {
+        "source": tmp_entity["unique_id"],
+        "destination": "None",
+        "comment": "",
+        "type": "arrow",
+    }
+    visibility = "visible"
+    render_edge_connection_new(temp_successor, 0, visibility, edge_params["from_selected"])
+
+    # --- ボタン ---
+    new_edges = [temp_predecessor, temp_successor]
+    with top_button_container:
+        add_operate_buttons(
+            selected_unique_id, tmp_entity, requirement_manager,
+            file_path, id_title_dict, unique_id_dict,
+            tmp_edges=tmp_edges, new_edges=new_edges,
+            key_suffix="top", display_key="title",
+        )
+
+    add_operate_buttons(
+        selected_unique_id, tmp_entity, requirement_manager,
+        file_path, id_title_dict, unique_id_dict,
+        tmp_edges=tmp_edges, new_edges=new_edges,
+        key_suffix="bottom", display_key="title",
+    )
+
+
+def _render_project_settings(
+    requirement_data: dict,
+    graph_data,
+    requirement_manager,
+    file_path: str,
+):
+    """プロジェクトの基本設定 (開始日, 終了日, 祝日, リソースなど) UI を描画する"""
     project = requirement_data.get("project", {})
     with st.expander("📅 プロジェクト設定", expanded=False):
         from datetime import datetime
@@ -331,154 +471,298 @@ def render_edit_panel():
                     
     st.write("---")
 
-    # --- エンティティ編集 (PFD と同じ操作感) ---
-    tmp_entity = copy.deepcopy(selected_entity)
-    tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
-    tmp_entity.setdefault("color", "None")
-    tmp_entity.setdefault("type", "process")
-    # CCPM 固有フィールドのフォールバック
-    for field, default in [
-        ("days", 1), ("remains", 0), ("resource", ""),
-        ("start", ""), ("end", ""), ("finished", False),
-    ]:
-        tmp_entity.setdefault(field, default)
 
+@st.fragment
+def render_edit_panel():
+    """右側操作パネルの描画（部分再描画対応）"""
+    # リセット対象キーの登録
+    if "clearable_new_connection_keys" not in st.session_state:
+        st.session_state.clearable_new_connection_keys = {}
+    st.session_state.clearable_new_connection_keys["CCPM Viewer"] = [
+        f"{edge_params['to_selected']['selectbox_key']}_new",
+        f"comment_{edge_params['to_selected']['selectbox_key']}_new",
+        f"{edge_params['from_selected']['selectbox_key']}_new",
+        f"comment_{edge_params['from_selected']['selectbox_key']}_new",
+    ]
+
+    title_column, file_selector_column = st.columns([4, 4])
+    with title_column:
+        st.write("### データ編集")
+    with file_selector_column:
+        backup_files = get_backup_files_for_current_data()
+        st.selectbox(
+            "ファイルを選択",
+            backup_files,
+            0,
+            label_visibility="collapsed",
+            on_change=copy_file,
+            key="selected_backup_file",
+        )
+
+    _render_project_settings(
+        requirement_data=requirement_data,
+        graph_data=graph_data,
+        requirement_manager=requirement_manager,
+        file_path=file_path,
+    )
+
+    # --- エンティティ編集 (PFD と同じ操作感) ---
     # 後でボタンを配置する
     top_button_container = st.container()
 
-    tmp_entity["type"] = st.selectbox(
-        "タイプ", ccpm_type_list, index=ccpm_type_list.index(tmp_entity["type"]),
-        key=f"ccpm_type_{selected_unique_id}",
-    )
-    tmp_entity["title"] = st.text_area(
-        "タスク名",
-        unescape_newline(tmp_entity.get("title", "")),
-        height=calculate_text_area_height(unescape_newline(tmp_entity.get("title", ""))),
-        key=f"ccpm_title_{selected_unique_id}",
-    )
+    tmp_entity = _render_entity_settings(selected_entity, selected_unique_id, ccpm_type_list, color_list)
 
-    # CCPM 固有フィールド
-    col_days, col_remains = st.columns(2)
-    with col_days:
-        tmp_entity["days"] = st.number_input(
-            "見積り日数", min_value=0.0, value=float(tmp_entity.get("days", 1)),
-            step=0.5, key=f"ccpm_days_{selected_unique_id}",
-        )
-    with col_remains:
-        tmp_entity["remains"] = st.number_input(
-            "残日数", min_value=0.0, value=float(tmp_entity.get("remains", 0)),
-            step=0.5, key=f"ccpm_remains_{selected_unique_id}",
-        )
-
-    tmp_entity["resource"] = st.text_input(
-        "担当者", tmp_entity.get("resource", ""),
-        key=f"ccpm_resource_{selected_unique_id}",
+    _render_edge_settings_and_buttons(
+        requirement_data=requirement_data,
+        selected_unique_id=selected_unique_id,
+        id_title_dict=id_title_dict,
+        unique_id_dict=unique_id_dict,
+        id_title_list=id_title_list,
+        tmp_entity=tmp_entity,
+        top_button_container=top_button_container,
+        requirement_manager=requirement_manager,
+        file_path=file_path,
     )
 
-    col_start, col_end = st.columns(2)
-    
-    def _get_entity_date(d_str):
-        if not d_str:
-            return None
-        try:
-            from datetime import datetime
-            return datetime.strptime(d_str, "%Y/%m/%d").date()
-        except ValueError:
-            return None
 
-    def _get_val_node(key: str, default_val):
-        if key in st.session_state:
-            return st.session_state[key]
-        return default_val
+def _render_gantt_tab(
+    project: dict,
+    active_chain: list,
+    nx_graph,
+    virtual_edges: list,
+    config_data: dict,
+):
+    """ガントチャートタブの UI を描画する"""
+    if project.get("start") and active_chain:
+        gantt_puml = make_gantt_puml(nx_graph, project, active_chain, virtual_edges)
+        plantuml_server = config_data.get("plantuml", "")
+        if "runtime_plantuml_url" in st.session_state:
+            plantuml_server = st.session_state["runtime_plantuml_url"]
+        if plantuml_server:
+            gantt_svg = get_diagram(gantt_puml, plantuml_server)
+            if gantt_svg:
+                # デフォルトで付くリンク下線を隠す
+                gantt_svg = gantt_svg.replace(
+                    "<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>"
+                )
+                st.markdown(
+                    f'''
+                    <div style="width:100%; min-height:{config_data.get('viewer_height', 600)}px; overflow:auto; border:0px solid black;">
+                        {gantt_svg}
+                    </div>
+                    ''',
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.error("ガントチャートの生成に失敗しました。")
+        else:
+            st.warning("PlantUML サーバーが設定されていません。")
+    else:
+        st.info("プロジェクト開始日を設定してください。")
 
-    with col_start:
-        start_key = f"ccpm_start_{selected_unique_id}"
-        raw_estart = st.date_input(
-            "開始日", value=_get_val_node(start_key, _get_entity_date(tmp_entity.get("start", ""))),
-            key=start_key,
-        )
-        tmp_entity["start"] = raw_estart.strftime("%Y/%m/%d") if raw_estart else ""
 
-    with col_end:
-        end_key = f"ccpm_end_{selected_unique_id}"
-        raw_eend = st.date_input(
-            "終了日", value=_get_val_node(end_key, _get_entity_date(tmp_entity.get("end", ""))),
-            key=end_key,
-        )
-        tmp_entity["end"] = raw_eend.strftime("%Y/%m/%d") if raw_eend else ""
-
-    tmp_entity["finished"] = st.checkbox(
-        "完了", value=tmp_entity.get("finished", False),
-        key=f"ccpm_finished_{selected_unique_id}",
-    )
-
-    tmp_entity["color"] = st.selectbox(
-        "色", color_list,
-        index=color_list.index(tmp_entity["color"]),
-        key=f"ccpm_color_{selected_unique_id}",
-    )
-
-    # --- エッジ編集 (PFD と同じ) ---
-    tmp_edges = copy.deepcopy(requirement_data["edges"])
-
-    # 接続元
-    params_to = edge_params["to_selected"]
-    params_to["selected_unique_id"] = selected_unique_id
-    params_to["id_title_dict"] = id_title_dict
-    params_to["unique_id_dict"] = unique_id_dict
-    params_to["id_title_list"] = id_title_list
-    params_to["connection_column"], params_to["description_column"] = st.columns([1, 1])
-    visibility = "visible"
-    for i, edge in enumerate(tmp_edges):
-        visibility = render_edge_connection(edge, i, visibility, edge_params["to_selected"])
-
-    temp_predecessor = {
-        "source": "None",
-        "destination": tmp_entity["unique_id"],
-        "comment": "",
-        "type": "arrow",
-    }
-    visibility = "visible"
-    render_edge_connection_new(temp_predecessor, 0, visibility, edge_params["to_selected"])
-
-    st.write("---")
-
-    # 接続先
-    params_from = edge_params["from_selected"]
-    params_from["selected_unique_id"] = selected_unique_id
-    params_from["id_title_dict"] = id_title_dict
-    params_from["unique_id_dict"] = unique_id_dict
-    params_from["id_title_list"] = id_title_list
-    params_from["connection_column"], params_from["description_column"] = st.columns([1, 1])
-    visibility = "visible"
-    for i, edge in enumerate(tmp_edges):
-        visibility = render_edge_connection(edge, i, visibility, edge_params["from_selected"])
-
-    temp_successor = {
-        "source": tmp_entity["unique_id"],
-        "destination": "None",
-        "comment": "",
-        "type": "arrow",
-    }
-    visibility = "visible"
-    render_edge_connection_new(temp_successor, 0, visibility, edge_params["from_selected"])
-
-    # --- ボタン ---
-    new_edges = [temp_predecessor, temp_successor]
-    with top_button_container:
-        add_operate_buttons(
-            selected_unique_id, tmp_entity, requirement_manager,
-            file_path, id_title_dict, unique_id_dict,
-            tmp_edges=tmp_edges, new_edges=new_edges,
-            key_suffix="top", display_key="title",
+def _render_fever_tab(
+    active_chain: list,
+    nx_graph,
+    requirement_data: dict,
+    active_length: float,
+    requirement_manager,
+    file_path: str,
+):
+    """フィーバーチャートタブの UI を描画する"""
+    if go is None:
+        st.warning("plotly がインストールされていません。")
+    elif active_chain:
+        fever = calculate_fever_data(
+            nx_graph, requirement_data.get("project", {}), active_chain, active_length
         )
 
-    add_operate_buttons(
-        selected_unique_id, tmp_entity, requirement_manager,
-        file_path, id_title_dict, unique_id_dict,
-        tmp_edges=tmp_edges, new_edges=new_edges,
-        key_suffix="bottom", display_key="title",
-    )
+        # 過去の進捗データ
+        progress_data = requirement_data.get("progress", {})
+        dates = []
+        progress_hist = []
+        buffer_hist = []
+        memos = []
+        for k, v in progress_data.items():
+            dates.append(k)
+            if isinstance(v, list):
+                progress_hist.append(v[0] if len(v) > 0 else 0)
+                buffer_hist.append(v[1] if len(v) > 1 else 0)
+                memos.append(str(v[2]) if len(v) > 2 else "")
+            else:
+                progress_hist.append(v)
+                buffer_hist.append(0)
+                memos.append("")
+
+        # 現在値を追加（もし今日の記録が既にある場合は、チャート上では現在の計算値で置き換える）
+        today_str = requirement_data.get("project", {}).get("today", "now")
+        if today_str in dates:
+            idx = dates.index(today_str)
+            dates.pop(idx)
+            progress_hist.pop(idx)
+            buffer_hist.pop(idx)
+            memos.pop(idx)
+        
+        dates.append(today_str + " (現在)")
+        progress_hist.append(fever["progress"])
+        buffer_hist.append(fever["buffer_used"])
+        memos.append("")
+        
+        # メモ付きのチャートラベルを生成
+        plot_texts = []
+        for d, m in zip(dates, memos):
+            if m:
+                plot_texts.append(f"{d}<br>🗣 {m}")
+            else:
+                plot_texts.append(d)
+
+        # チャート（75%縮小に伴いカラム比率を拡大）とデータテーブルを横並び
+        chart_col, data_col = st.columns([2, 1])
+
+        with chart_col:
+            fig = go.Figure()
+            
+            # Y軸の最大値を計算（100を超える場合は自動拡張）
+            max_buf = max(buffer_hist) if buffer_hist else 0
+            y_range_max = 100
+            if max_buf > 100:
+                y_range_max = int(max_buf + 9) // 10 * 10 + 10
+
+            # ゾーン塗りつぶし（緑→黄→赤→グレー）
+            x = list(range(0, 101))
+            y1 = [0.6 * xi + 15 for xi in x]  # 緑/黄 境界
+            y2 = [0.6 * xi + 30 for xi in x]  # 黄/赤 境界
+            
+            # 緑ゾーン（下）
+            fig.add_trace(go.Scatter(
+                x=x, y=y1, fill="tozeroy", fillcolor="rgba(144,238,144,0.3)",
+                line=dict(color="green", width=1), showlegend=False,
+            ))
+            # 黄ゾーン（中）
+            fig.add_trace(go.Scatter(
+                x=x, y=y2, fill="tonexty", fillcolor="rgba(255,255,150,0.3)",
+                line=dict(color="orange", width=1), showlegend=False,
+            ))
+            # 赤ゾーン（100%まで）
+            y_100 = [100] * len(x)
+            fig.add_trace(go.Scatter(
+                x=x, y=y_100, fill="tonexty", fillcolor="rgba(255,160,160,0.3)",
+                line=dict(width=0), showlegend=False,
+            ))
+            # 100%超え グレーゾーン
+            if y_range_max > 100:
+                y_top = [y_range_max] * len(x)
+                fig.add_trace(go.Scatter(
+                    x=x, y=y_top, fill="tonexty", fillcolor="rgba(200,200,200,0.3)",
+                    line=dict(width=0), showlegend=False,
+                ))
+
+            # 進捗プロット（日付・メモラベル付き）
+            fig.add_trace(go.Scatter(
+                x=progress_hist, y=buffer_hist,
+                mode="lines+markers+text",
+                text=plot_texts,
+                textposition="top center",
+                textfont=dict(size=18),
+                marker=dict(size=14),
+                line=dict(width=4),
+                name="進捗",
+            ))
+            fig.update_layout(
+                xaxis_title="クリティカルチェーン完了率 (%)", yaxis_title="バッファ消費率 (%)",
+                xaxis=dict(range=[0, 100], tickfont=dict(size=18)),
+                yaxis=dict(range=[0, y_range_max], tickfont=dict(size=18)),
+                font=dict(size=20),
+                hoverlabel=dict(font_size=20),
+                width=900, height=675, # 75%縮小
+                margin=dict(t=30, b=50, l=50, r=30),
+            )
+            st.plotly_chart(fig, use_container_width=False)
+
+        with data_col:
+            st.caption(
+                f"📊 CC完了率: **{fever['progress']:.1f}%** / バッファ消費率: **{fever['buffer_used']:.1f}%**"
+            )
+            if st.button("📝 現在の値を記録", key="ccpm_record_fever"):
+                if "progress" not in requirement_data:
+                    requirement_data["progress"] = {}
+                requirement_data["progress"][today_str] = [
+                    round(fever["progress"], 2),
+                    round(fever["buffer_used"], 2),
+                    ""
+                ]
+                update_source_data(file_path, requirement_manager.requirements)
+                st.success(f"{today_str} の値を記録しました。")
+                st.query_params.view = "fever"
+                st.rerun()
+
+            # 過去データの編集テーブル
+            st.write("##### 📋 記録データ")
+            import pandas as pd
+            if progress_data:
+                df = pd.DataFrame([
+                    {
+                        "日付": k, 
+                        "CC完了率(%)": v[0] if isinstance(v, list) and len(v) > 0 else v, 
+                        "バッファ消費率(%)": v[1] if isinstance(v, list) and len(v) > 1 else 0,
+                        "メモ": str(v[2]) if isinstance(v, list) and len(v) > 2 else ""
+                    }
+                    for k, v in progress_data.items()
+                ])
+                edited_df = st.data_editor(
+                    df, num_rows="dynamic", use_container_width=True,
+                    key="ccpm_progress_editor",
+                )
+                if st.button("💾 データを保存", key="ccpm_save_progress"):
+                    new_progress = {}
+                    for _, row in edited_df.iterrows():
+                        date_key = str(row["日付"])
+                        if date_key and date_key != "nan":
+                            new_progress[date_key] = [
+                                round(float(row["CC完了率(%)"]), 2),
+                                round(float(row["バッファ消費率(%)"]), 2),
+                                str(row.get("メモ", ""))
+                            ]
+                    
+                    # 日付キー辞書の昇順（文字列順）でソート
+                    sorted_progress = dict(sorted(new_progress.items(), key=lambda item: item[0]))
+                    requirement_data["progress"] = sorted_progress
+                    update_source_data(file_path, requirement_manager.requirements)
+                    st.success("データを保存しました。")
+                    st.query_params.view = "fever"
+                    st.rerun()
+            else:
+                st.info("まだ記録がありません。")
+    else:
+        st.info("クリティカルパスが計算できません。")
+
+
+def _render_priority_tab(active_chain: list, nx_graph):
+    """優先度タブの UI (優先度テーブル) を描画する"""
+    if active_chain:
+        priority = calculate_priority_table(nx_graph, active_chain)
+        if priority:
+            import pandas as pd
+            df = pd.DataFrame(priority)
+            
+            # 表示の整理と日本語ヘッダーへのリネーム
+            df = df[["status", "title", "resource", "days", "total_remains", "buffer", "task"]]
+            df = df.rename(columns={
+                "status": "状態",
+                "title": "タスク名",
+                "resource": "担当",
+                "days": "工数(日)",
+                "total_remains": "後続パス長",
+                "buffer": "余裕(バッファ)",
+                "task": "ID"
+            })
+            
+            # ID列などを見やすく調整しつつ出力
+            st.dataframe(df, use_container_width=True, hide_index=True)
+        else:
+            st.info("優先度を計算できるタスクがありません。")
+    else:
+        st.info("クリティカルパスが計算できません。")
 
 
 def render_ccpm_analysis():
@@ -551,226 +835,29 @@ def render_ccpm_analysis():
     tab_priority = sub_tabs[sub_titles.index("📋 優先度")]
 
     with tab_gantt:
-        project = requirement_data.get("project", {})
-        if project.get("start") and active_chain:
-            gantt_puml = make_gantt_puml(nx_graph, project, active_chain, virtual_edges)
-            plantuml_server = config_data.get("plantuml", "")
-            if "runtime_plantuml_url" in st.session_state:
-                plantuml_server = st.session_state["runtime_plantuml_url"]
-            if plantuml_server:
-                gantt_svg = get_diagram(gantt_puml, plantuml_server)
-                if gantt_svg:
-                    # デフォルトで付くリンク下線を隠す
-                    gantt_svg = gantt_svg.replace(
-                        "<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>"
-                    )
-                    st.markdown(
-                        f'''
-                        <div style="width:100%; min-height:{config_data.get('viewer_height', 600)}px; overflow:auto; border:0px solid black;">
-                            {gantt_svg}
-                        </div>
-                        ''',
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.error("ガントチャートの生成に失敗しました。")
-            else:
-                st.warning("PlantUML サーバーが設定されていません。")
-        else:
-            st.info("プロジェクト開始日を設定してください。")
+        _render_gantt_tab(
+            project=requirement_data.get("project", {}),
+            active_chain=active_chain,
+            nx_graph=nx_graph,
+            virtual_edges=virtual_edges,
+            config_data=config_data,
+        )
 
     with tab_fever:
-        if go is None:
-            st.warning("plotly がインストールされていません。")
-        elif active_chain:
-            fever = calculate_fever_data(
-                nx_graph, requirement_data.get("project", {}), active_chain, active_length
-            )
-
-            # 過去の進捗データ
-            progress_data = requirement_data.get("progress", {})
-            dates = []
-            progress_hist = []
-            buffer_hist = []
-            memos = []
-            for k, v in progress_data.items():
-                dates.append(k)
-                if isinstance(v, list):
-                    progress_hist.append(v[0] if len(v) > 0 else 0)
-                    buffer_hist.append(v[1] if len(v) > 1 else 0)
-                    memos.append(str(v[2]) if len(v) > 2 else "")
-                else:
-                    progress_hist.append(v)
-                    buffer_hist.append(0)
-                    memos.append("")
-
-            # 現在値を追加（もし今日の記録が既にある場合は、チャート上では現在の計算値で置き換える）
-            today_str = requirement_data.get("project", {}).get("today", "now")
-            if today_str in dates:
-                idx = dates.index(today_str)
-                dates.pop(idx)
-                progress_hist.pop(idx)
-                buffer_hist.pop(idx)
-                memos.pop(idx)
-            
-            dates.append(today_str + " (現在)")
-            progress_hist.append(fever["progress"])
-            buffer_hist.append(fever["buffer_used"])
-            memos.append("")
-            
-            # メモ付きのチャートラベルを生成
-            plot_texts = []
-            for d, m in zip(dates, memos):
-                if m:
-                    plot_texts.append(f"{d}<br>🗣 {m}")
-                else:
-                    plot_texts.append(d)
-
-            # チャート（75%縮小に伴いカラム比率を拡大）とデータテーブルを横並び
-            chart_col, data_col = st.columns([2, 1])
-
-            with chart_col:
-                fig = go.Figure()
-                
-                # Y軸の最大値を計算（100を超える場合は自動拡張）
-                max_buf = max(buffer_hist) if buffer_hist else 0
-                y_range_max = 100
-                if max_buf > 100:
-                    y_range_max = int(max_buf + 9) // 10 * 10 + 10
-
-                # ゾーン塗りつぶし（緑→黄→赤→グレー）
-                x = list(range(0, 101))
-                y1 = [0.6 * xi + 15 for xi in x]  # 緑/黄 境界
-                y2 = [0.6 * xi + 30 for xi in x]  # 黄/赤 境界
-                
-                # 緑ゾーン（下）
-                fig.add_trace(go.Scatter(
-                    x=x, y=y1, fill="tozeroy", fillcolor="rgba(144,238,144,0.3)",
-                    line=dict(color="green", width=1), showlegend=False,
-                ))
-                # 黄ゾーン（中）
-                fig.add_trace(go.Scatter(
-                    x=x, y=y2, fill="tonexty", fillcolor="rgba(255,255,150,0.3)",
-                    line=dict(color="orange", width=1), showlegend=False,
-                ))
-                # 赤ゾーン（100%まで）
-                y_100 = [100] * len(x)
-                fig.add_trace(go.Scatter(
-                    x=x, y=y_100, fill="tonexty", fillcolor="rgba(255,160,160,0.3)",
-                    line=dict(width=0), showlegend=False,
-                ))
-                # 100%超え グレーゾーン
-                if y_range_max > 100:
-                    y_top = [y_range_max] * len(x)
-                    fig.add_trace(go.Scatter(
-                        x=x, y=y_top, fill="tonexty", fillcolor="rgba(200,200,200,0.3)",
-                        line=dict(width=0), showlegend=False,
-                    ))
-
-                # 進捗プロット（日付・メモラベル付き）
-                fig.add_trace(go.Scatter(
-                    x=progress_hist, y=buffer_hist,
-                    mode="lines+markers+text",
-                    text=plot_texts,
-                    textposition="top center",
-                    textfont=dict(size=18),
-                    marker=dict(size=14),
-                    line=dict(width=4),
-                    name="進捗",
-                ))
-                fig.update_layout(
-                    xaxis_title="クリティカルチェーン完了率 (%)", yaxis_title="バッファ消費率 (%)",
-                    xaxis=dict(range=[0, 100], tickfont=dict(size=18)),
-                    yaxis=dict(range=[0, y_range_max], tickfont=dict(size=18)),
-                    font=dict(size=20),
-                    hoverlabel=dict(font_size=20),
-                    width=900, height=675, # 75%縮小
-                    margin=dict(t=30, b=50, l=50, r=30),
-                )
-                st.plotly_chart(fig, use_container_width=False)
-
-            with data_col:
-                st.caption(
-                    f"📊 CC完了率: **{fever['progress']:.1f}%** / バッファ消費率: **{fever['buffer_used']:.1f}%**"
-                )
-                if st.button("📝 現在の値を記録", key="ccpm_record_fever"):
-                    if "progress" not in requirement_data:
-                        requirement_data["progress"] = {}
-                    requirement_data["progress"][today_str] = [
-                        round(fever["progress"], 2),
-                        round(fever["buffer_used"], 2),
-                        ""
-                    ]
-                    update_source_data(file_path, requirement_manager.requirements)
-                    st.success(f"{today_str} の値を記録しました。")
-                    st.query_params.view = "fever"
-                    st.rerun()
-
-                # 過去データの編集テーブル
-                st.write("##### 📋 記録データ")
-                import pandas as pd
-                if progress_data:
-                    df = pd.DataFrame([
-                        {
-                            "日付": k, 
-                            "CC完了率(%)": v[0] if isinstance(v, list) and len(v) > 0 else v, 
-                            "バッファ消費率(%)": v[1] if isinstance(v, list) and len(v) > 1 else 0,
-                            "メモ": str(v[2]) if isinstance(v, list) and len(v) > 2 else ""
-                        }
-                        for k, v in progress_data.items()
-                    ])
-                    edited_df = st.data_editor(
-                        df, num_rows="dynamic", use_container_width=True,
-                        key="ccpm_progress_editor",
-                    )
-                    if st.button("💾 データを保存", key="ccpm_save_progress"):
-                        new_progress = {}
-                        for _, row in edited_df.iterrows():
-                            date_key = str(row["日付"])
-                            if date_key and date_key != "nan":
-                                new_progress[date_key] = [
-                                    round(float(row["CC完了率(%)"]), 2),
-                                    round(float(row["バッファ消費率(%)"]), 2),
-                                    str(row.get("メモ", ""))
-                                ]
-                        
-                        # 日付キー辞書の昇順（文字列順）でソート
-                        sorted_progress = dict(sorted(new_progress.items(), key=lambda item: item[0]))
-                        requirement_data["progress"] = sorted_progress
-                        update_source_data(file_path, requirement_manager.requirements)
-                        st.success("データを保存しました。")
-                        st.query_params.view = "fever"
-                        st.rerun()
-                else:
-                    st.info("まだ記録がありません。")
-        else:
-            st.info("クリティカルパスが計算できません。")
+        _render_fever_tab(
+            active_chain=active_chain,
+            nx_graph=nx_graph,
+            requirement_data=requirement_data,
+            active_length=active_length,
+            requirement_manager=requirement_manager,
+            file_path=file_path,
+        )
 
     with tab_priority:
-        if active_chain:
-            priority = calculate_priority_table(nx_graph, active_chain)
-            if priority:
-                import pandas as pd
-                df = pd.DataFrame(priority)
-                
-                # 表示の整理と日本語ヘッダーへのリネーム
-                df = df[["status", "title", "resource", "days", "total_remains", "buffer", "task"]]
-                df = df.rename(columns={
-                    "status": "状態",
-                    "title": "タスク名",
-                    "resource": "担当",
-                    "days": "工数(日)",
-                    "total_remains": "後続パス長",
-                    "buffer": "余裕(バッファ)",
-                    "task": "ID"
-                })
-                
-                # ID列などを見やすく調整しつつ出力
-                st.dataframe(df, use_container_width=True, hide_index=True)
-            else:
-                st.info("優先度を計算できるタスクがありません。")
-        else:
-            st.info("クリティカルパスが計算できません。")
+        _render_priority_tab(
+            active_chain=active_chain,
+            nx_graph=nx_graph,
+        )
 
 
 with edit_column:
