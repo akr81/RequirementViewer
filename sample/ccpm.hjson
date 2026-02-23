@@ -53,8 +53,8 @@
             unique_id: t01
             title: 要件ヒアリング
             type: process
-            days: 10
-            remains: 58
+            days: 10.0
+            remains: 10.0
             resource: 田中
             start: 2025/07/01
             end: 2025/07/15

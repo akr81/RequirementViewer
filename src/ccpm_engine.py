@@ -343,6 +343,36 @@ def _estimate_end_date(
     return dt_end.date().strftime("%Y/%m/%d")
 
 
+def _make_project_buffer_bar(project: Dict[str, Any]) -> List[str]:
+    """ベースライン情報を元に、当初のプロジェクトバッファのバーを描画する。"""
+    baseline = project.get("baseline", {})
+    cc_length = baseline.get("cc_length", 0)
+    total_buffer = baseline.get("total_buffer", 0)
+    start_str = project.get("start", "")
+
+    if not cc_length or not total_buffer or not start_str or not workdays:
+        return []
+
+    import math
+    try:
+        holidays_str = project.get("holidays", [])
+        dt_holidays = [datetime.strptime(h, "%Y/%m/%d") for h in holidays_str]
+        dt_start = datetime.strptime(start_str, "%Y/%m/%d")
+        
+        # プロジェクト開始日から数えて CC長(稼働日) 経過した次の日をバッファ開始日とする
+        # workdays.workday(start, 1) は翌稼働日を返すため、cc_length を指定するとちょうどCC終了の次稼働日となる
+        buffer_start_dt = workdays.workday(dt_start, days=int(math.ceil(cc_length)), holidays=dt_holidays)
+        buffer_start_str = buffer_start_dt.date().strftime("%Y/%m/%d")
+
+        lines = [
+            f"[当初のプロジェクトバッファ] starts {buffer_start_str} and lasts {int(math.ceil(total_buffer))} days",
+            "[当初のプロジェクトバッファ] is colored in lightgray"
+        ]
+        return lines
+    except Exception:
+        return []
+
+
 def make_gantt_puml(
     graph: nx.DiGraph,
     project: Dict[str, Any],
@@ -359,6 +389,8 @@ def make_gantt_puml(
     lines.extend(_make_story_bars(graph, critical_path, project))
     lines.append("")
     lines.extend(_make_dependency_arrows(graph, critical_path))
+    lines.append("")
+    lines.extend(_make_project_buffer_bar(project))
     lines.append("")
     lines.append("@endgantt")
     return "\n".join(lines)
@@ -448,10 +480,11 @@ def calculate_fever_data(
         ) - 1 if workdays else (dt_today - dt_start).days
         elapsed = max(0, elapsed)
 
-        # 消費バッファ = (今日までの経過稼働総日数) - (CCとして消化できたとみなせる日数)
-        # 本来予定通りなら elapsed と finished_days_equivalent は一致するが、
-        # 進捗が遅れている（elapsed > finished_days）ほど、その差分だけバッファを食いつぶしたと判定する
-        consumed_buffer = max(0.0, elapsed - finished_days_equivalent)
+        # 現在見込まれる総所要日数 = (今日までの経過稼働総日数) + (未完了のCC残日数合計)
+        # 本来予定通りなら projected_total_duration は baseline_cc_length と一致するが、
+        # 進捗が遅れている（remainsが増えた等）ほど、その超過分がバッファを食いつぶしたと判定する
+        projected_total_duration = elapsed + remaining_cc_length
+        consumed_buffer = max(0.0, projected_total_duration - baseline_cc_length)
 
         buffer_used = (consumed_buffer / baseline_total_buffer) * 100
     except Exception:
