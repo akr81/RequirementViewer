@@ -185,7 +185,8 @@ def _detect_resource_conflicts(
     if max_concurrency > 0:
         events = []
         for node, (start, end) in schedule.items():
-            if graph.nodes[node].get("days", 0) > 0:
+            node_type = graph.nodes[node].get("type", "")
+            if graph.nodes[node].get("days", 0) > 0 and node_type != "deliverable":
                 events.append((start, "start", node))
                 events.append((end, "end", node))
         
