@@ -245,10 +245,11 @@ def _make_story_bars(
         attrs = graph.nodes[node_id]
         days = attrs.get("days", 0)
         if days <= 0:
-            continue  # 成果物など日数0のノードはスキップ
+            continue  # 日数0のノードはスキップ
 
         start = attrs.get("start", "")
         finished = attrs.get("finished", False)
+        node_type = attrs.get("type", "")
 
         if start and project:
             # 着手済み: 残日数ベースで終了日を推定
@@ -268,6 +269,9 @@ def _make_story_bars(
             bar += " and is colored in lightgray"
         elif node_id in critical_path:
             bar += " and is colored in pink"
+        elif node_type == "deliverable":
+            # 成果物で日数を持つものはフィードバッファとして青色で表示
+            bar += " and is colored in lightblue"
 
         lines.append(bar)
     return lines

@@ -17,9 +17,9 @@
             unique_id: d02
             title: 設計書一式
             type: deliverable
-            days: 0
-            remains: 0
-            resource: ""
+            days: 5.0
+            remains: 5.0
+            resource: 共通バッファ
             start: ""
             end: ""
             finished: false
@@ -161,8 +161,8 @@
             unique_id: t11
             title: 認証設計
             type: process
-            days: 2.0
-            remains: 0.0
+            days: 2
+            remains: 0
             resource: 伊藤
             start: ""
             end: ""
