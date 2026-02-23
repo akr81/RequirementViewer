@@ -36,16 +36,38 @@ def load_colors() -> list:
 
 def load_config() -> dict:
     """JSONファイルから設定(config)を読み込む。
+    default_config.hjsonをベースとし、ユーザー設定に不足しているキーは補完して保存する。
 
     Returns:
         dict: 設定項目の辞書
     """
-    if os.path.exists("setting/config.hjson"):
-        config_file = "setting/config.hjson"
-    else:
-        config_file = "setting/default_config.hjson"
-    with open(config_file, "r", encoding="utf-8") as f:
+    default_config_file = "setting/default_config.hjson"
+    user_config_file = "setting/config.hjson"
+
+    # まずデフォルト設定を読み込む
+    with open(default_config_file, "r", encoding="utf-8") as f:
         config = hjson.load(f)
+
+    # ユーザー設定が存在する場合は統合する
+    if os.path.exists(user_config_file):
+        with open(user_config_file, "r", encoding="utf-8") as f:
+            user_config = hjson.load(f)
+            
+        needs_save = False
+        # デフォルトにあるがユーザー設定にないキーを補完
+        for key, value in config.items():
+            if key not in user_config:
+                user_config[key] = value
+                needs_save = True
+
+        # ユーザー設定でデフォルトをパッチする
+        for key, value in user_config.items():
+            config[key] = value
+
+        # 補完が発生した場合は保存し直す
+        if needs_save:
+            save_config(config)
+
     return config
 
 
