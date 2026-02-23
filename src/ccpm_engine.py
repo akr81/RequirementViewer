@@ -27,7 +27,7 @@ def get_in_out_edge_list(graph: nx.DiGraph) -> Tuple[List[str], List[str]]:
 def calculate_critical_path(
     graph: nx.DiGraph, inputs: List[str], outputs: List[str]
 ) -> Tuple[float, List[str]]:
-    """全パスを探索し、最長パス（クリティカルパス）を返す。
+    """動的計画法 (DP) を用いて O(V+E) で最長パス（クリティカルパス）を返す。
 
     Args:
         graph: ノード属性に "days" を持つ有向グラフ
@@ -37,23 +37,60 @@ def calculate_critical_path(
     Returns:
         (クリティカルパス長, クリティカルパスのノードリスト)
     """
-    critical_path: List[str] = []
-    critical_path_length: float = 0
+    if not graph.nodes:
+        return 0.0, []
 
-    for output in outputs:
-        for inp in inputs:
-            try:
-                for path in nx.all_simple_paths(graph, inp, output):
-                    length = sum(
-                        graph.nodes[task].get("days", 0) for task in path
-                    )
-                    if length > critical_path_length:
-                        critical_path_length = length
-                        critical_path = path
-            except nx.NetworkXError:
-                continue
+    # トポロジカルソート（CCPMはDAG前提）
+    try:
+        topo_order = list(nx.topological_sort(graph))
+    except nx.NetworkXUnfeasible:
+        # 閉路がある場合は空を返す
+        return 0.0, []
 
-    return critical_path_length, critical_path
+    # dist[node] = そのノードの終了時点での最長距離（入力からの距離 + 自身の日数）
+    # pred[node] = 最長パスを構成するための親ノード
+    dist: Dict[str, float] = {}
+    pred: Dict[str, Optional[str]] = {}
+
+    for node in topo_order:
+        days = float(graph.nodes[node].get("days", 0))
+        dist[node] = days  # 親がない入端の場合
+        pred[node] = None
+        
+        # 親ノードの終了距離(dist)が最も大きいものを選ぶ
+        predecessors = list(graph.predecessors(node))
+        if predecessors:
+            max_p = None
+            max_d = -1.0
+            for p in predecessors:
+                if p in dist and dist[p] > max_d:
+                    max_d = dist[p]
+                    max_p = p
+            if max_p is not None:
+                dist[node] = dist[max_p] + days
+                pred[node] = max_p
+
+    # outputs の中で最大の dist を持つノードを見つける
+    target_outputs = outputs if outputs else list(graph.nodes)
+    max_out_node = None
+    max_out_dist = -1.0
+    for out in target_outputs:
+        if out in dist and dist[out] > max_out_dist:
+            max_out_dist = dist[out]
+            max_out_node = out
+
+    if max_out_node is None:
+        return 0.0, []
+
+    # 経路の復元（後ろから辿って反転）
+    critical_path = []
+    curr = max_out_node
+    while curr is not None:
+        critical_path.append(curr)
+        curr = pred.get(curr)
+    
+    critical_path.reverse()
+    return max_out_dist, critical_path
 
 
 # ---------------------------------------------------------------------------
@@ -105,8 +142,9 @@ def _compute_remaining_path_length(
 def _detect_resource_conflicts(
     graph: nx.DiGraph,
     schedule: Dict[str, Tuple[float, float]],
+    max_concurrency: int = 0
 ) -> List[Tuple[str, str, str]]:
-    """同一リソースで時間帯が重なるタスクペアを検出する。
+    """同一リソースで時間帯が重なるタスクペア、または同時実行上限を超えるタスクペアを検出する。
 
     Returns:
         [(task_a, task_b, resource), ...] task_a は開始が早い方
@@ -143,22 +181,68 @@ def _detect_resource_conflicts(
                     else:
                         conflicts.append((b, a, resource))
 
+    # 2. 全体での同時実行上限（無名リソース）の競合チェック
+    if max_concurrency > 0:
+        events = []
+        for node, (start, end) in schedule.items():
+            if graph.nodes[node].get("days", 0) > 0:
+                events.append((start, "start", node))
+                events.append((end, "end", node))
+        
+        # 時間順でソート（同じ時刻なら終了 'end' を先に処理して重なりと判定させない）
+        events.sort(key=lambda x: (x[0], 0 if x[1] == "end" else 1))
+        
+        active_tasks = set()
+        for t, evt_type, node in events:
+            if evt_type == "start":
+                active_tasks.add(node)
+                if len(active_tasks) > max_concurrency:
+                    # 同時実行数の上限を超えた場合、走っているタスクの中から依存関係のない2つを選んで
+                    # 疑似的な競合ペアとして（短い方を遅らせるべく）追加する
+                    import itertools
+                    conflict_found = False
+                    for a, b in itertools.combinations(list(active_tasks), 2):
+                        if nx.has_path(graph, a, b) or nx.has_path(graph, b, a):
+                            continue
+                        
+                        a_start = schedule[a][0]
+                        b_start = schedule[b][0]
+                        if a_start <= b_start:
+                            pair = (a, b, "ConcurrencyLimit")
+                        else:
+                            pair = (b, a, "ConcurrencyLimit")
+                            
+                        # 既存の明示的競合ペアなどと重複していなければ追加
+                        already_exists = any((p[0] == pair[0] and p[1] == pair[1]) for p in conflicts)
+                        if not already_exists:
+                            conflicts.append(pair)
+                            conflict_found = True
+                            break # 1ループにつき1つの競合を解消させれば再スケジュールが走るので十分
+                            
+                    if conflict_found:
+                        break # 一度競合が見つかれば、最初の競合を返すだけでループを回せる
+            else:
+                if node in active_tasks:
+                    active_tasks.remove(node)
+
     return conflicts
 
 
 def calculate_critical_chain(
     graph: nx.DiGraph,
+    max_concurrency: int = 0
 ) -> Tuple[float, List[str], List[Tuple[str, str, str]]]:
-    """リソース競合を考慮したクリティカルチェーンを算出する。
+    """リソース競合および同時実行上限を考慮したクリティカルチェーンを算出する。
 
     ゴールドラット流ヒューリスティック:
     1. ASAP スケジューリングで最早開始時刻を算出
-    2. リソース競合を検出
+    2. リソース名による競合、および同時実行タスク数上限の超過を検出
     3. 残路長が長い方を優先し、短い方を遅らせる仮想エッジを追加
     4. 競合がなくなるまで繰り返し
 
     Args:
         graph: ノード属性に "days", "resource" を持つ有向グラフ
+        max_concurrency: 同時実行可能なタスク数の上限（0以下の場合は無制限）
 
     Returns:
         (チェーン長, チェーンのノードリスト, 追加された仮想エッジ[(src, dst, resource)])
@@ -173,7 +257,7 @@ def calculate_critical_chain(
         if not schedule:
             break
 
-        conflicts = _detect_resource_conflicts(work_graph, schedule)
+        conflicts = _detect_resource_conflicts(work_graph, schedule, max_concurrency)
         if not conflicts:
             break  # 競合がなくなったら終了
 
@@ -289,7 +373,7 @@ def _make_story_bars(
 
 
 def _make_dependency_arrows(
-    graph: nx.DiGraph, critical_path: List[str]
+    graph: nx.DiGraph, critical_path: List[str], virtual_edges: Optional[List[Tuple[str, str, str]]] = None
 ) -> List[str]:
     """エッジの依存関係文字列を作成する（クリティカルパス優先）。"""
     arrows: List[str] = []
@@ -299,20 +383,27 @@ def _make_dependency_arrows(
         node_type = graph.nodes[n_id].get("type", "")
         return node_type not in ["note", "cloud"]
 
+    # 仮想エッジを含めた描画順序計算用のグラフを作成
+    render_graph = graph.copy()
+    if virtual_edges:
+        for src, dst, _ in virtual_edges:
+            if not render_graph.has_edge(src, dst):
+                render_graph.add_edge(src, dst, virtual=True)
+
     # 1. 各ノードの earliest_end を計算 (PlantUMLの複数合流バグ回避のため)
     # 複数先行タスクがある場合、最も遅く終わるタスクにのみ依存するようにフィルタする
     try:
-        topo_nodes = list(nx.topological_sort(graph))
+        topo_nodes = list(nx.topological_sort(render_graph))
     except nx.NetworkXUnfeasible:
         # 閉路がある場合は諦めてそのままの順序等にする
-        topo_nodes = list(graph.nodes)
+        topo_nodes = list(render_graph.nodes)
 
     # トポロジカルソート順に生成してPlantUMLの1パスパースによる波及バグを回避する
     for node in topo_nodes:
         if not _is_target(node):
             continue
         
-        preds = list(graph.predecessors(node))
+        preds = list(render_graph.predecessors(node))
         valid_preds = [p for p in preds if _is_target(p)]
         
         for p in valid_preds:
@@ -377,6 +468,7 @@ def make_gantt_puml(
     graph: nx.DiGraph,
     project: Dict[str, Any],
     critical_path: List[str],
+    virtual_edges: Optional[List[Tuple[str, str, str]]] = None,
 ) -> str:
     """グラフとプロジェクト設定からPlantUMLガントチャートコードを生成する。
 
@@ -388,7 +480,7 @@ def make_gantt_puml(
     lines.append("")
     lines.extend(_make_story_bars(graph, critical_path, project))
     lines.append("")
-    lines.extend(_make_dependency_arrows(graph, critical_path))
+    lines.extend(_make_dependency_arrows(graph, critical_path, virtual_edges))
     lines.append("")
     lines.extend(_make_project_buffer_bar(project))
     lines.append("")

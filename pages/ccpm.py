@@ -186,15 +186,29 @@ def render_edit_panel():
         project["end"] = raw_end.strftime("%Y/%m/%d")
         project["today"] = raw_today.strftime("%Y/%m/%d")
 
-        holidays_str = st.text_area(
-            "祝日 (YYYY/MM/DD を1行ずつ)",
-            value="\n".join(project.get("holidays", [])),
-            height=100,
-            key="ccpm_proj_holidays",
-        )
-        project["holidays"] = [
-            h.strip() for h in holidays_str.split("\n") if h.strip()
-        ]
+        col_text1, col_text2 = st.columns(2)
+        with col_text1:
+            holidays_str = st.text_area(
+                "祝日 (YYYY/MM/DD を1行ずつ)",
+                value="\n".join(project.get("holidays", [])),
+                height=150,
+                key="ccpm_proj_holidays",
+            )
+            project["holidays"] = [
+                h.strip() for h in holidays_str.split("\n") if h.strip()
+            ]
+        with col_text2:
+            resources_str = st.text_area(
+                "利用可能リソース (上限数計算用 / 1名ずつ改行)",
+                value="\n".join(project.get("resources", [])),
+                height=150,
+                key="ccpm_proj_resources",
+                help="入力された行数（人数）が、プロジェクト全体の同時実行可能なタスク数の上限としてクリティカルチェーン算出時に考慮されます。"
+            )
+            project["resources"] = [
+                r.strip() for r in resources_str.split("\n") if r.strip()
+            ]
+
         requirement_data["project"] = project
 
         # クリティカルチェーン長の事前計算
@@ -202,7 +216,8 @@ def render_edit_panel():
         try:
             inputs, outputs = get_in_out_edge_list(nx_graph)
             cp_length, cp = calculate_critical_path(nx_graph, inputs, outputs)
-            cc_length, cc, _ = calculate_critical_chain(nx_graph)
+            max_concurrency = len(project.get("resources", []))
+            cc_length, cc, _ = calculate_critical_chain(nx_graph, max_concurrency=max_concurrency)
             active_chain = cc if cc else cp
             active_length = cc_length if cc else cp_length
         except Exception:
@@ -456,7 +471,11 @@ def render_ccpm_analysis():
     nx_graph = graph_data.graph
     inputs, outputs = get_in_out_edge_list(nx_graph)
     cp_length, cp = calculate_critical_path(nx_graph, inputs, outputs)
-    cc_length, cc, virtual_edges = calculate_critical_chain(nx_graph)
+    
+    # プロジェクト設定から同時実行上限を取得
+    project = requirement_data.get("project", {})
+    max_concurrency = len(project.get("resources", []))
+    cc_length, cc, virtual_edges = calculate_critical_chain(nx_graph, max_concurrency=max_concurrency)
 
     def _format_chain(graph, chain):
         """チェーンのタスク名リストを作成する（days>0のみ）。"""
@@ -516,7 +535,7 @@ def render_ccpm_analysis():
     with tab_gantt:
         project = requirement_data.get("project", {})
         if project.get("start") and active_chain:
-            gantt_puml = make_gantt_puml(nx_graph, project, active_chain)
+            gantt_puml = make_gantt_puml(nx_graph, project, active_chain, virtual_edges)
             plantuml_server = config_data.get("plantuml", "")
             if "runtime_plantuml_url" in st.session_state:
                 plantuml_server = st.session_state["runtime_plantuml_url"]

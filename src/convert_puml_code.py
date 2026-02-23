@@ -873,7 +873,9 @@ class ConvertPumlCode:
         # CP / CC 算出
         inputs, outputs = get_in_out_edge_list(graph)
         cp_length, cp = calculate_critical_path(graph, inputs, outputs)
-        cc_length, cc, virtual_edges = calculate_critical_chain(graph)
+        
+        max_concurrency = parameters_dict.get("max_concurrency", 0)
+        cc_length, cc, virtual_edges = calculate_critical_chain(graph, max_concurrency=max_concurrency)
 
         # CP / CC のエッジペアセットを構築
         cp_edges = set()

@@ -159,6 +159,10 @@ def _render_diagram(
     parameters_dict["link_mode"] = options.link_mode
     parameters_dict["previous_selected"] = options.previous_selected
 
+    # プロジェクト設定から同時実行上限（リソースの行数）を取得してパラメータに渡す
+    project = context.requirements.get("project", {})
+    parameters_dict["max_concurrency"] = len(project.get("resources", []))
+
     plantuml_code = ""
     try:
         plantuml_code = _converter.convert_to_puml(
