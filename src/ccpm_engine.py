@@ -388,14 +388,23 @@ def calculate_fever_data(
     if not critical_path or critical_path_length <= 0:
         return {"progress": 0.0, "buffer_used": 0.0}
 
-    # CC 完了状況
-    finished_days = 0.0
+    # CC 残日数の計算
+    remaining_cc_length = 0.0
     for task_id in critical_path:
         attrs = graph.nodes[task_id]
         if attrs.get("finished", False):
-            finished_days += attrs.get("days", 0)
+            # 完了済みのタスクは残なし
+            continue
+        elif attrs.get("start", ""):
+            # 着手済みの未完了タスクは現在の残日数(remains)を使う
+            remaining_cc_length += float(attrs.get("remains", 0.0))
+        else:
+            # 未着手のタスクは初期の見積り日数(days)をそのまま使う
+            remaining_cc_length += float(attrs.get("days", 0.0))
 
-    progress = (finished_days / critical_path_length) * 100
+    # CC完了率 = (初期CC長 - 現在の残CC長) / 初期CC長
+    finished_days_equivalent = max(0.0, critical_path_length - remaining_cc_length)
+    progress = (finished_days_equivalent / critical_path_length) * 100
 
     # バッファ消費率
     start_str = project.get("start", "")
@@ -416,20 +425,24 @@ def calculate_fever_data(
             dt_start, dt_end, holidays=dt_holidays
         ) if workdays else (dt_end - dt_start).days
 
-        # 全バッファ = プロジェクト稼働日数 - CC 長
+        # 全バッファ = プロジェクト稼働日数 - 初期CC長 (分母を固定)
         total_buffer = total_workdays - critical_path_length
         if total_buffer <= 0:
             # バッファなし（CC がプロジェクト期間以上）
-            return {"progress": progress, "buffer_used": 100.0 if finished_days < critical_path_length else 0.0}
+            return {"progress": progress, "buffer_used": 100.0 if remaining_cc_length > 0 else 0.0}
 
         # 経過稼働日
         elapsed = workdays.networkdays(
             dt_start, dt_today, holidays=dt_holidays
         ) - 1 if workdays else (dt_today - dt_start).days
+        elapsed = max(0, elapsed)
 
-        # 消費バッファ = 経過稼働日 - 完了した CC 日数
-        # （予定通りなら 0、遅れていればプラス）
-        consumed_buffer = max(0, elapsed - finished_days)
+        # 現在の予想総所要稼働日数 = 経過日数 + 残日数の合計
+        expected_total_duration = elapsed + remaining_cc_length
+
+        # 消費バッファ = 予想総所要日数 - 初期CC長
+        # (予定より時間を使っていればプラス、早く進んでいればマイナス)
+        consumed_buffer = max(0.0, expected_total_duration - critical_path_length)
 
         buffer_used = (consumed_buffer / total_buffer) * 100
     except Exception:

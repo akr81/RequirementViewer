@@ -4,8 +4,8 @@
         {
             type: deliverable
             title: 画面待ちバッファ
-            days: 2.0
-            remains: 0.0
+            days: 2
+            remains: 0
             resource: 共通バッファ
             start: ""
             end: ""
@@ -53,12 +53,12 @@
             unique_id: t01
             title: 要件ヒアリング
             type: process
-            days: 10
-            remains: 10
+            days: 10.0
+            remains: 3.0
             resource: 田中
             start: 2025/07/01
             end: 2025/07/15
-            finished: true
+            finished: false
             color: None
         }
         {
@@ -718,29 +718,24 @@
             2025/09/23
             2025/10/13
         ]
-        today: 2025/08/19
+        today: 2025/07/11
     }
     progress:
     {
-        2025/07/10:
+        2025/07/01:
         [
             0
-            26.92
-        ]
-        2025/08/10:
-        [
-            7.14
-            82.14
-        ]
-        2025/08/15:
-        [
-            16.07
-            78.57
-        ]
-        2025/08/19:
-        [
-            56.9
             0
+        ]
+        2025/07/04:
+        [
+            7.94
+            0
+        ]
+        2025/07/08:
+        [
+            3.17
+            14.29
         ]
     }
 }

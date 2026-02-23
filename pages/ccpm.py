@@ -591,6 +591,7 @@ def render_ccpm_analysis():
                     ]
                     update_source_data(file_path, requirement_manager.requirements)
                     st.success(f"{today_str} の値を記録しました。")
+                    st.query_params.view = "fever"
                     st.rerun()
 
                 # 過去データの編集テーブル
@@ -617,6 +618,7 @@ def render_ccpm_analysis():
                         requirement_data["progress"] = new_progress
                         update_source_data(file_path, requirement_manager.requirements)
                         st.success("データを保存しました。")
+                        st.query_params.view = "fever"
                         st.rerun()
                 else:
                     st.info("まだ記録がありません。")
@@ -641,7 +643,7 @@ with edit_column:
 with diagram_column:
     view_mode = st.query_params.get("view", "")
     main_titles = ["🗗️ ネットワーク図", "📊 CCPM 分析"]
-    if view_mode == "gantt":
+    if view_mode in ["gantt", "fever"]:
         main_titles = ["📊 CCPM 分析", "🗗️ ネットワーク図"]
         
     main_tabs = st.tabs(main_titles)
