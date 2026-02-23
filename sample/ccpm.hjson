@@ -4,8 +4,8 @@
         {
             type: deliverable
             title: 画面待ちバッファ
-            days: 3
-            remains: 0
+            days: 2.0
+            remains: 0.0
             resource: 共通バッファ
             start: ""
             end: ""
@@ -341,7 +341,7 @@
             unique_id: t25
             title: 性能テスト
             type: process
-            days: 3
+            days: 5
             remains: 0
             resource: 田中
             start: ""
@@ -416,6 +416,7 @@
             type: arrow
             source: 31a52e5ce46a414aaea9779d449b54f9
             destination: t22
+            comment: ""
         }
         {
             source: d01
@@ -576,16 +577,19 @@
             type: arrow
             source: t13
             destination: 31a52e5ce46a414aaea9779d449b54f9
+            comment: ""
         }
         {
             type: arrow
             source: t14
             destination: 31a52e5ce46a414aaea9779d449b54f9
+            comment: ""
         }
         {
             type: arrow
             source: t15
             destination: 31a52e5ce46a414aaea9779d449b54f9
+            comment: ""
         }
         {
             source: t16

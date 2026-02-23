@@ -448,8 +448,17 @@ def render_ccpm_analysis():
     active_chain = cc if cc else cp
     active_length = cc_length if cc else cp_length
 
-    # タブ表示（フィーバーチャートを優先）
-    tab_fever, tab_gantt, tab_priority = st.tabs(["🌡️ フィーバーチャート", "📅 ガントチャート", "📋 優先度"])
+    # URLパラメータに基づく初期表示タブの切り替え設定
+    view_mode = st.query_params.get("view", "")
+    sub_titles = ["🌡️ フィーバーチャート", "📅 ガントチャート", "📋 優先度"]
+    if view_mode == "gantt":
+        # ガントチャートをデフォルトにするため先頭に移動
+        sub_titles = ["📅 ガントチャート", "🌡️ フィーバーチャート", "📋 優先度"]
+
+    sub_tabs = st.tabs(sub_titles)
+    tab_fever = sub_tabs[sub_titles.index("🌡️ フィーバーチャート")]
+    tab_gantt = sub_tabs[sub_titles.index("📅 ガントチャート")]
+    tab_priority = sub_tabs[sub_titles.index("📋 優先度")]
 
     with tab_gantt:
         project = requirement_data.get("project", {})
@@ -461,6 +470,10 @@ def render_ccpm_analysis():
             if plantuml_server:
                 gantt_svg = get_diagram(gantt_puml, plantuml_server)
                 if gantt_svg:
+                    # デフォルトで付くリンク下線を隠す
+                    gantt_svg = gantt_svg.replace(
+                        "<defs/>", "<defs/><style>a {text-decoration: none !important;}</style>"
+                    )
                     st.markdown(
                         f'''
                         <div style="width:100%; min-height:{config_data.get('viewer_height', 600)}px; overflow:auto; border:0px solid black;">
@@ -626,7 +639,15 @@ with edit_column:
 
 # 左カラムに「ネットワーク図」と「CCPM分析」のタブを配置
 with diagram_column:
-    tab_diagram, tab_analysis = st.tabs(["🗗️ ネットワーク図", "📊 CCPM 分析"])
+    view_mode = st.query_params.get("view", "")
+    main_titles = ["🗗️ ネットワーク図", "📊 CCPM 分析"]
+    if view_mode == "gantt":
+        main_titles = ["📊 CCPM 分析", "🗗️ ネットワーク図"]
+        
+    main_tabs = st.tabs(main_titles)
+    tab_diagram = main_tabs[main_titles.index("🗗️ ネットワーク図")]
+    tab_analysis = main_tabs[main_titles.index("📊 CCPM 分析")]
+
     with tab_diagram:
         plantuml_code = draw_diagram_column(
             tab_diagram, context=diagram_context, options=diagram_options,

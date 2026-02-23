@@ -281,6 +281,10 @@ def _make_story_bars(
             bar += " and is colored in lightblue"
 
         lines.append(bar)
+        
+        # ガントバーをクリックした際に、右側の編集パネル（selectedパラメータ）を連動させるためのリンク
+        lines.append(f"[{node_id}] links to [[?selected={node_id}&view=gantt]]")
+        
     return lines
 
 
