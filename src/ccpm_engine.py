@@ -646,7 +646,7 @@ def calculate_priority_table(
         elif buffer <= (unfinished_cp_length * 0.2):
             status = "🟡 注意"
         else:
-            status = "🟢 順調"
+            status = "🟢 余裕あり"
         
         all_info[task] = {
             "task": task,

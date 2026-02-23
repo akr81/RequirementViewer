@@ -53,22 +53,22 @@
             unique_id: t01
             title: 要件ヒアリング
             type: process
-            days: 5.0
-            remains: 5.0
+            days: 5
+            remains: 3
             resource: 田中
             start: 2025/07/01
-            end: 2025/07/15
-            finished: false
+            end: 2025/07/08
+            finished: true
             color: None
         }
         {
             unique_id: t02
             title: 業務フロー分析
             type: process
-            days: 2
-            remains: 2
+            days: 2.0
+            remains: 4.0
             resource: 鈴木
-            start: ""
+            start: 2025/07/08
             end: ""
             finished: false
             color: None
@@ -721,9 +721,9 @@
         today: 2025/07/08
         baseline:
         {
-            cc_length: 63
-            total_buffer: 21
-            registered_at: 2026/02/23 19:58:56
+            cc_length: 60
+            total_buffer: 24
+            registered_at: 2026/02/23 20:52:23
         }
         resources:
         [
@@ -742,8 +742,14 @@
         ]
         2025/07/04:
         [
-            3.17
-            4.76
+            3.33
+            4.17
+            ""
+        ]
+        2025/07/08:
+        [
+            8.33
+            0
             ""
         ]
     }

@@ -159,32 +159,38 @@ def render_edit_panel():
     with st.expander("📅 プロジェクト設定", expanded=False):
         from datetime import datetime
         
-        # 既存の文字列をdatetime(date)に変換するヘルパー
+        # 文字列をdatetime(date)に変換するヘルパー。未設定ならNoneを返す
         def _get_date(date_str: str):
             if not date_str:
-                return datetime.today().date()
+                return None
             try:
                 return datetime.strptime(date_str, "%Y/%m/%d").date()
             except ValueError:
-                return datetime.today().date()
+                return None
+                
+        # st.date_input がクリアされた時に初期値で巻き戻らないようにするヘルパー
+        def _get_val(key: str, default_val):
+            if key in st.session_state:
+                return st.session_state[key]
+            return default_val
         
         col_proj1, col_proj2, col_proj3 = st.columns(3)
         with col_proj1:
             raw_start = st.date_input(
-                "開始日", value=_get_date(project.get("start", "")), key="ccpm_proj_start"
+                "開始日", value=_get_val("ccpm_proj_start", _get_date(project.get("start", ""))), key="ccpm_proj_start"
             )
         with col_proj2:
             raw_end = st.date_input(
-                "終了日", value=_get_date(project.get("end", "")), key="ccpm_proj_end"
+                "終了日", value=_get_val("ccpm_proj_end", _get_date(project.get("end", ""))), key="ccpm_proj_end"
             )
         with col_proj3:
             raw_today = st.date_input(
-                "今日の日付", value=_get_date(project.get("today", "")), key="ccpm_proj_today"
+                "今日の日付", value=_get_val("ccpm_proj_today", _get_date(project.get("today", ""))), key="ccpm_proj_today"
             )
             
-        project["start"] = raw_start.strftime("%Y/%m/%d")
-        project["end"] = raw_end.strftime("%Y/%m/%d")
-        project["today"] = raw_today.strftime("%Y/%m/%d")
+        project["start"] = raw_start.strftime("%Y/%m/%d") if raw_start else ""
+        project["end"] = raw_end.strftime("%Y/%m/%d") if raw_end else ""
+        project["today"] = raw_today.strftime("%Y/%m/%d") if raw_today else ""
 
         col_text1, col_text2 = st.columns(2)
         with col_text1:
@@ -226,72 +232,77 @@ def render_edit_panel():
 
         # 日数計算と表示
         try:
-            import workdays as wd
-            s_date = datetime.strptime(project["start"], "%Y/%m/%d")
-            e_date = datetime.strptime(project["end"], "%Y/%m/%d")
-            t_date = datetime.strptime(project["today"], "%Y/%m/%d")
-            
-            if s_date <= e_date:
-                # 1. 総日数 (両端含む)
-                total_days = (e_date - s_date).days + 1
+            if project.get("start") and project.get("end") and project.get("today"):
+                import workdays as wd
+                s_date = datetime.strptime(project["start"], "%Y/%m/%d")
+                e_date = datetime.strptime(project["end"], "%Y/%m/%d")
+                t_date = datetime.strptime(project["today"], "%Y/%m/%d")
                 
-                # 2. 土日抜きの日数
-                weekdays_only = wd.networkdays(s_date, e_date)
-                
-                # 3. 土日祝抜きの実稼働日数
-                holidays_list = []
-                for h_str in project.get("holidays", []):
-                    try:
-                        holidays_list.append(datetime.strptime(h_str, "%Y/%m/%d"))
-                    except ValueError:
-                        pass
-                actual_workdays = wd.networkdays(s_date, e_date, holidays_list)
-                
-                # 今日の日付からの残日数（土日祝抜）
-                if t_date <= e_date:
-                    # 今日が開始日より前なら、開始日からの日数と同じにする
-                    calc_start = max(s_date, t_date)
-                    remain_workdays = wd.networkdays(calc_start, e_date, holidays_list)
-                    remain_text = f"(残り {remain_workdays} 日)"
+                if s_date <= e_date:
+                    # 1. 総日数 (両端含む)
+                    total_days = (e_date - s_date).days + 1
+                    
+                    # 2. 土日抜きの日数
+                    weekdays_only = wd.networkdays(s_date, e_date)
+                    
+                    # 3. 土日祝抜きの実稼働日数
+                    holidays_list = []
+                    for h_str in project.get("holidays", []):
+                        try:
+                            holidays_list.append(datetime.strptime(h_str, "%Y/%m/%d"))
+                        except ValueError:
+                            pass
+                    actual_workdays = wd.networkdays(s_date, e_date, holidays_list)
+                    
+                    # 今日の日付からの残日数（土日祝抜）
+                    if t_date <= e_date:
+                        # 今日が開始日より前なら、開始日からの日数と同じにする
+                        calc_start = max(s_date, t_date)
+                        remain_workdays = wd.networkdays(calc_start, e_date, holidays_list)
+                        remain_text = f"(残り {remain_workdays} 日)"
+                    else:
+                        remain_text = "(終了済み)"
+                    
+                    # 現在のCC情報の計算
+                    cc_info_text = "<b>🚨 クリティカルチェーン情報</b><br>・<i>(ネットワーク図が計算されていません)</i>"
+                    if active_chain and active_length > 0:
+                        current_buffer = actual_workdays - active_length
+                        buffer_color = "red" if current_buffer < 0 else "green"
+                        
+                        cc_info_text = f"""
+                        <b>🚨 クリティカルチェーン情報</b><br>
+                        ・現在のCC長 (予想総所要日数): <b>{active_length}</b> 日<br>
+                        ・現在の全バッファ (稼働日 - CC長): <span style='color: {buffer_color}; font-weight: bold;'>{current_buffer}</span> 日
+                        """
+    
+                    st.markdown(
+                        f"""
+                        <div style='background-color: #f0f2f6; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
+                            <b>📅 プロジェクト期間情報</b><br>
+                            ・総日数 (土日祝込): <b>{total_days}</b> 日<br>
+                            ・土日抜き日数: <b>{weekdays_only}</b> 日<br>
+                            ・実稼働日数 (土日祝抜): <span style='color: blue; font-weight: bold;'>{actual_workdays}</span> 日 <span style='color: red; font-weight: bold;'>{remain_text}</span>
+                        </div>
+                        
+                        <div style='background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
+                            {cc_info_text}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
                 else:
-                    remain_text = "(終了済み)"
-                
-                # 現在のCC情報の計算
-                cc_info_text = "<b>🚨 クリティカルチェーン情報</b><br>・<i>(ネットワーク図が計算されていません)</i>"
-                if active_chain and active_length > 0:
-                    current_buffer = actual_workdays - active_length
-                    buffer_color = "red" if current_buffer < 0 else "green"
-                    
-                    cc_info_text = f"""
-                    <b>🚨 クリティカルチェーン情報</b><br>
-                    ・現在のCC長 (予想総所要日数): <b>{active_length}</b> 日<br>
-                    ・現在の全バッファ (稼働日 - CC長): <span style='color: {buffer_color}; font-weight: bold;'>{current_buffer}</span> 日
-                    """
-
-                st.markdown(
-                    f"""
-                    <div style='background-color: #f0f2f6; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
-                        <b>📅 プロジェクト期間情報</b><br>
-                        ・総日数 (土日祝込): <b>{total_days}</b> 日<br>
-                        ・土日抜き日数: <b>{weekdays_only}</b> 日<br>
-                        ・実稼働日数 (土日祝抜): <span style='color: blue; font-weight: bold;'>{actual_workdays}</span> 日 <span style='color: red; font-weight: bold;'>{remain_text}</span>
-                    </div>
-                    
-                    <div style='background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
-                        {cc_info_text}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                    st.warning("終了日は開始日以降に設定してください。")
             else:
-                st.warning("終了日は開始日以降に設定してください。")
+                st.info("カレンダーで開始日、終了日、今日の日付を設定してください。")
         except Exception as e:
             st.warning("日付計算でエラーが発生しました。")
 
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
             if st.button("🚩 現在のCCをベースラインに登録", key="ccpm_save_baseline"):
-                if active_length > 0:
+                if not (project.get("start") and project.get("end") and project.get("today")):
+                    st.warning("開始日・終了日・今日の日付を設定してから登録してください。")
+                elif active_length > 0:
                     try:
                         import workdays as wd
                         s_date = datetime.strptime(project["start"], "%Y/%m/%d")
@@ -375,17 +386,24 @@ def render_edit_panel():
         except ValueError:
             return None
 
+    def _get_val_node(key: str, default_val):
+        if key in st.session_state:
+            return st.session_state[key]
+        return default_val
+
     with col_start:
+        start_key = f"ccpm_start_{selected_unique_id}"
         raw_estart = st.date_input(
-            "開始日", value=_get_entity_date(tmp_entity.get("start", "")),
-            key=f"ccpm_start_{selected_unique_id}",
+            "開始日", value=_get_val_node(start_key, _get_entity_date(tmp_entity.get("start", ""))),
+            key=start_key,
         )
         tmp_entity["start"] = raw_estart.strftime("%Y/%m/%d") if raw_estart else ""
 
     with col_end:
+        end_key = f"ccpm_end_{selected_unique_id}"
         raw_eend = st.date_input(
-            "終了日", value=_get_entity_date(tmp_entity.get("end", "")),
-            key=f"ccpm_end_{selected_unique_id}",
+            "終了日", value=_get_val_node(end_key, _get_entity_date(tmp_entity.get("end", ""))),
+            key=end_key,
         )
         tmp_entity["end"] = raw_eend.strftime("%Y/%m/%d") if raw_eend else ""
 
