@@ -1,7 +1,7 @@
 {
     plantuml: https://www.plantuml.com/plantuml
     // plantuml: http://localhost:8080
-    viewer_height: 1200
+    viewer_height: 480
     upstream_filter_max: 10
     downstream_filter_max: 10
     requirement_data: sample/requirement.hjson
