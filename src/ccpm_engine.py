@@ -111,7 +111,12 @@ def _compute_earliest_schedule(graph: nx.DiGraph) -> Dict[str, Tuple[float, floa
         return schedule
 
     for node in topo_order:
-        days = graph.nodes[node].get("days", 0)
+        days = float(graph.nodes[node].get("days", 0))
+        # Finished tasks take 0 days in the forward schedule calculation
+        # so they don't incorrectly push back the start times of subsequent tasks
+        # but they still need an ES/EF entry so dependencies can resolve.
+        if graph.nodes[node].get("finished", False):
+            days = 0.0
         predecessors = list(graph.predecessors(node))
         if not predecessors:
             es = 0.0
@@ -128,7 +133,7 @@ def _compute_remaining_path_length(
     """ノードから終端までの最長残パス長を計算する（メモ化再帰）。"""
     if node in memo:
         return memo[node]
-    days = graph.nodes[node].get("days", 0)
+    days = float(graph.nodes[node].get("days", 0))
     successors = list(graph.successors(node))
     if not successors:
         memo[node] = days
@@ -152,8 +157,10 @@ def _detect_resource_conflicts(
     # リソースごとにタスクをグルーピング
     resource_tasks: Dict[str, List[str]] = {}
     for node in graph.nodes:
+        if graph.nodes[node].get("finished", False):
+            continue
         res = graph.nodes[node].get("resource", "")
-        days = graph.nodes[node].get("days", 0)
+        days = float(graph.nodes[node].get("days", 0))
         if not res or days <= 0:
             continue
         resource_tasks.setdefault(res, []).append(node)
@@ -185,8 +192,10 @@ def _detect_resource_conflicts(
     if max_concurrency > 0:
         events = []
         for node, (start, end) in schedule.items():
+            if graph.nodes[node].get("finished", False):
+                continue
             node_type = graph.nodes[node].get("type", "")
-            if graph.nodes[node].get("days", 0) > 0 and node_type != "deliverable":
+            if float(graph.nodes[node].get("days", 0)) > 0 and node_type != "deliverable":
                 events.append((start, "start", node))
                 events.append((end, "end", node))
         
@@ -288,6 +297,17 @@ def calculate_critical_chain(
         if not work_graph.has_edge(first, second):
             work_graph.add_edge(first, second, virtual=True)
             virtual_edges.append((first, second, resource))
+
+    # --- 仮想エッジの推移的簡約（冗長な迂回ルートの除去） ---
+    try:
+        tr_graph = nx.transitive_reduction(work_graph)
+        reduced_virtual_edges = []
+        for src, dst, res in virtual_edges:
+            if tr_graph.has_edge(src, dst):
+                reduced_virtual_edges.append((src, dst, res))
+        virtual_edges = reduced_virtual_edges
+    except Exception:
+        pass  # 閉路などで推移的簡約が失敗した場合はそのまま
 
     # 最終的なクリティカルチェーンを算出
     inputs, outputs = get_in_out_edge_list(work_graph)
