@@ -65,8 +65,8 @@
             unique_id: t02
             title: 業務フロー分析
             type: process
-            days: 2.0
-            remains: 4.0
+            days: 2
+            remains: 2
             resource: 鈴木
             start: 2025/07/08
             end: ""
@@ -727,8 +727,11 @@
         }
         resources:
         [
-            佐藤
             鈴木
+            佐藤
+            高橋
+            伊藤
+            山田
             渡辺
         ]
     }

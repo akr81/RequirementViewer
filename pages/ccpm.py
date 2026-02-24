@@ -406,13 +406,25 @@ def _render_project_settings(
                     # 現在のCC情報の計算
                     cc_info_text = "<b>🚨 クリティカルチェーン情報</b><br>・<i>(ネットワーク図が計算されていません)</i>"
                     if active_chain and active_length > 0:
-                        current_buffer = actual_workdays - active_length
-                        buffer_color = "red" if current_buffer < 0 else "green"
+                        # 動的進捗情報の計算
+                        fever_data = calculate_fever_data(
+                            nx_graph, project, active_chain, active_length
+                        )
+                        progress = fever_data["progress"]
+                        buffer_used = fever_data["buffer_used"]
+                        remaining_cc = fever_data["remaining_cc_length"]
+                        consumed_buf = fever_data["consumed_buffer"]
+                        base_total_buf = fever_data["baseline_total_buffer"]
+                        remaining_buf = base_total_buf - consumed_buf
+                        
+                        buffer_color = "red" if remaining_buf < 0 else "green"
                         
                         cc_info_text = f"""
                         <b>🚨 クリティカルチェーン情報</b><br>
                         ・現在のCC長 (予想総所要日数): <b>{active_length}</b> 日<br>
-                        ・現在の全バッファ (稼働日 - CC長): <span style='color: {buffer_color}; font-weight: bold;'>{current_buffer}</span> 日
+                        ・残りのCC長: <b>{remaining_cc:.1f}</b> 日 (完了率: <b>{progress:.1f}%</b>)<br>
+                        ・現在の全バッファ: <b>{base_total_buf:.1f}</b> 日<br>
+                        ・現在の残バッファ: <span style='color: {buffer_color}; font-weight: bold;'>{remaining_buf:.1f}</span> 日 (消費率: <b>{buffer_used:.1f}%</b>)
                         """
     
                     st.markdown(
@@ -582,9 +594,14 @@ def _render_fever_tab(
     if go is None:
         st.warning("plotly がインストールされていません。")
     elif active_chain:
-        fever = calculate_fever_data(
+        fever_data = calculate_fever_data(
             nx_graph, requirement_data.get("project", {}), active_chain, active_length
         )
+        # progress と buffer_used を抽出
+        fever = {
+            "progress": fever_data["progress"],
+            "buffer_used": fever_data["buffer_used"]
+        }
 
         # 過去の進捗データ
         progress_data = requirement_data.get("progress", {})

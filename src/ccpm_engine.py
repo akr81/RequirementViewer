@@ -528,10 +528,24 @@ def calculate_fever_data(
       - 消費バッファ = 経過稼働日 - 完了した CC タスクの見積り日数
 
     Returns:
-        {"progress": float, "buffer_used": float} (0-100%)
+        {
+            "progress": float,
+            "buffer_used": float,
+            "remaining_cc_length": float,
+            "consumed_buffer": float,
+            "baseline_cc_length": float,
+            "baseline_total_buffer": float
+        }
     """
     if not critical_path or critical_path_length <= 0:
-        return {"progress": 0.0, "buffer_used": 0.0}
+        return {
+            "progress": 0.0,
+            "buffer_used": 0.0,
+            "remaining_cc_length": 0.0,
+            "consumed_buffer": 0.0,
+            "baseline_cc_length": 0.0,
+            "baseline_total_buffer": 0.0
+        }
 
     # ベースライン情報の取得
     baseline = project.get("baseline", {})
@@ -539,7 +553,14 @@ def calculate_fever_data(
     baseline_total_buffer = baseline.get("total_buffer", None)
 
     if baseline_cc_length <= 0:
-        return {"progress": 0.0, "buffer_used": 0.0}
+        return {
+            "progress": 0.0,
+            "buffer_used": 0.0,
+            "remaining_cc_length": 0.0,
+            "consumed_buffer": 0.0,
+            "baseline_cc_length": 0.0,
+            "baseline_total_buffer": 0.0
+        }
 
     # CC 残日数の計算と、完了したCCタスク日数の算出
     remaining_cc_length = 0.0
@@ -571,7 +592,14 @@ def calculate_fever_data(
     end_str = project.get("end", "")
     today_str = project.get("today", "")
     if not start_str or not end_str or not today_str:
-        return {"progress": progress, "buffer_used": 0.0}
+        return {
+            "progress": progress,
+            "buffer_used": 0.0,
+            "remaining_cc_length": remaining_cc_length,
+            "consumed_buffer": 0.0,
+            "baseline_cc_length": baseline_cc_length,
+            "baseline_total_buffer": baseline_total_buffer if baseline_total_buffer is not None else 0.0
+        }
 
     try:
         holidays_str = project.get("holidays", [])
@@ -591,7 +619,14 @@ def calculate_fever_data(
 
         if baseline_total_buffer <= 0:
             # バッファなし（CC がプロジェクト期間以上）
-            return {"progress": progress, "buffer_used": 100.0 if remaining_cc_length > 0 else 0.0}
+            return {
+                "progress": progress,
+                "buffer_used": 100.0 if remaining_cc_length > 0 else 0.0,
+                "remaining_cc_length": remaining_cc_length,
+                "consumed_buffer": 0.0,
+                "baseline_cc_length": baseline_cc_length,
+                "baseline_total_buffer": 0.0
+            }
 
         # 経過稼働日
         elapsed = workdays.networkdays(
@@ -607,9 +642,17 @@ def calculate_fever_data(
 
         buffer_used = (consumed_buffer / baseline_total_buffer) * 100
     except Exception:
+        consumed_buffer = 0.0
         buffer_used = 0.0
 
-    return {"progress": progress, "buffer_used": buffer_used}
+    return {
+        "progress": progress,
+        "buffer_used": buffer_used,
+        "remaining_cc_length": remaining_cc_length,
+        "consumed_buffer": consumed_buffer,
+        "baseline_cc_length": baseline_cc_length,
+        "baseline_total_buffer": baseline_total_buffer
+    }
 
 
 # ---------------------------------------------------------------------------
