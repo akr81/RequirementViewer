@@ -2,46 +2,47 @@
     nodes:
     [
         {
-            id: "2.2"
-            necessary_assumption: ""
-            strategy: 戦略
-            parallel_assumption: ""
-            tactics: 戦術
-            sufficient_assumption: ""
-            unique_id: 5195f50ad4b344afb65fc3ea6807f0d0
-            color: None
-        }
-        {
             id: "1"
-            necessary_assumption: ""
-            strategy: 戦略
-            parallel_assumption: ""
-            tactics: 戦術
-            sufficient_assumption: ""
-            unique_id: 6294fe56d27b42768d59750c91d89d38
+            necessary_assumption: "今の家賃を払い続けるより、資産になるマイホームを持ちたい"
+            strategy: "理想のマイホームを購入して家族のQOLを上げる"
+            parallel_assumption: "購入には物件価格の約2割の頭金と諸費用が必要となる"
+            tactics: "頭金500万円と諸費用200万円、合計700万円を3年で貯める"
+            sufficient_assumption: "目標額が貯まれば、無理のない住宅ローン審査に通る可能性が高い"
+            unique_id: stt_root_home_purchase
             color: None
         }
         {
             id: "2.1"
-            necessary_assumption: ""
-            strategy: 戦略
-            parallel_assumption: ""
-            tactics: 戦術
-            sufficient_assumption: ""
-            unique_id: 670c2fce79ac45489196707158ec20f8
+            necessary_assumption: "現在の支出ペースでは3年で700万円は貯まらない"
+            strategy: "家計の無駄を徹底的に見直して貯蓄に回す資金を増やす"
+            parallel_assumption: "固定費と変動費の両方を見直すことで効果が最大化する"
+            tactics: "格安SIMへの乗り換えと、サブスクの解約、外食ルールの設定（月1回まで）を行う"
+            sufficient_assumption: "支出が月5万円減れば、3年間で180万円の追加貯蓄が可能になる"
+            unique_id: stt_sub_expense_review
+            color: None
+        }
+        {
+            id: "2.2"
+            necessary_assumption: "支出削減だけでは目標額に届かない"
+            strategy: "世帯の収入（キャッシュイン）を増やす仕組みを作る"
+            parallel_assumption: "本業の手取り額が急激に増えることは見込めない"
+            tactics: "夫婦での副業開始（フリマアプリ活用やスキル販売）と継続的な積立NISAの運用"
+            sufficient_assumption: "これらで月5万円の利益を生み出せれば、複利も含めて目標到達が現実的になる"
+            unique_id: stt_sub_income_increase
             color: None
         }
     ]
     edges:
     [
         {
-            source: 5195f50ad4b344afb65fc3ea6807f0d0
-            destination: 6294fe56d27b42768d59750c91d89d38
+            source: stt_sub_expense_review
+            destination: stt_root_home_purchase
             type: arrow
+            color: None
         }
         {
-            source: 670c2fce79ac45489196707158ec20f8
-            destination: 6294fe56d27b42768d59750c91d89d38
+            source: stt_sub_income_increase
+            destination: stt_root_home_purchase
             type: arrow
             color: None
         }

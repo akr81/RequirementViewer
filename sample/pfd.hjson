@@ -2,231 +2,225 @@
     nodes:
     [
         {
-            type: process
-            id: 野菜を切る
+            type: deliverable
+            id: 寝起きの自分
             color: None
-            unique_id: 094d53a1c34b479588d4e174de550023
+            unique_id: dlv_wakeup_self
+        }
+        {
+            type: process
+            id: 顔を洗う
+            color: None
+            unique_id: prc_wash_face
         }
         {
             type: deliverable
-            id: 包丁・まな板
+            id: 洗顔済みの顔
             color: None
-            unique_id: 10bc881c96894c18a75ca760868e4dcd
+            unique_id: dlv_washed_face
+        }
+        {
+            type: deliverable
+            id: いつもの服
+            color: None
+            unique_id: dlv_clothes
+        }
+        {
+            type: process
+            id: 服を着替える
+            color: None
+            unique_id: prc_change_clothes
+        }
+        {
+            type: deliverable
+            id: 身支度完了
+            color: None
+            unique_id: dlv_ready_self
+        }
+        {
+            type: deliverable
+            id: 食パン
+            color: None
+            unique_id: dlv_bread
+        }
+        {
+            type: process
+            id: パンをトーストする
+            color: None
+            unique_id: prc_toast_bread
+        }
+        {
+            type: deliverable
+            id: トースト
+            color: None
+            unique_id: dlv_toast
         }
         {
             type: deliverable
             id: 水
             color: None
-            unique_id: 43990fedc2ae40ea90ae894a05837ee3
+            unique_id: dlv_water
+        }
+        {
+            type: process
+            id: お湯を沸かす
+            color: None
+            unique_id: prc_boil_water
         }
         {
             type: deliverable
-            id: カットした肉
+            id: お湯
             color: None
-            unique_id: 4ac032e977e947af95a7a48be783bfad
-        }
-        {
-            type: process
-            id: 肉を切る
-            color: None
-            unique_id: 52e0dcec931b4111bfca6437437f19d8
+            unique_id: dlv_hot_water
         }
         {
             type: deliverable
-            id: カレー粉
+            id: インスタントコーヒー
             color: None
-            unique_id: 64daa9568bcb4a188163f57febfdf799
+            unique_id: dlv_coffee_powder
         }
         {
             type: process
-            id: 煮込む
+            id: コーヒーを淹れる
             color: None
-            unique_id: 7218a5f998dc414b871c6aa16e03d369
-        }
-        {
-            type: process
-            id: 鍋で肉に火を通す
-            color: None
-            unique_id: 7c8743024e8f4bf1aec21f7cdab8ed9f
-        }
-        {
-            type: process
-            id: 盛り付ける
-            color: None
-            unique_id: 83d2156d3a134fd3bad1df419dba7ef0
+            unique_id: prc_make_coffee
         }
         {
             type: deliverable
-            id: カレー
+            id: ホットコーヒー
             color: None
-            unique_id: 85288d192bf14ad18fe725a5622a577a
+            unique_id: dlv_hot_coffee
+        }
+        {
+            type: process
+            id: 朝食をテーブルに並べる
+            color: None
+            unique_id: prc_serve_breakfast
+        }
+        {
+            type: deliverable
+            id: 準備万端の朝
+            color: Orange
+            unique_id: dlv_morning_ready
         }
         {
             type: note
             id:
                 '''
-                煮込むため問題は無いが
-                野菜→肉の順にカットした方がいいかも
+                お湯を沸かしている間に
+                着替えを済ませると効率的
                 '''
             color: Yellow
-            unique_id: add738405fce4806b8196a54b2bd080f
-        }
-        {
-            type: deliverable
-            id: 切った野菜
-            color: None
-            unique_id: b06092c07f2c491dac3dc71e41d98bee
-        }
-        {
-            type: deliverable
-            id: 野菜
-            color: None
-            unique_id: c085c92b4f204efd81ab8ed0d1f2795b
-        }
-        {
-            type: deliverable
-            id: 生肉
-            color: None
-            unique_id: d3add67b31674ea69eedd20b5c0901ec
-        }
-        {
-            type: deliverable
-            id: 火が通った肉
-            color: None
-            unique_id: efa353f1d801440bbdda897a5daa048a
-        }
-        {
-            type: deliverable
-            id: ごはん
-            color: None
-            unique_id: f5e2513a19a94565b8e15441acbf9c10
-        }
-        {
-            type: deliverable
-            id: 鍋
-            color: None
-            unique_id: f8c6cc6b81d24d7db425a77d7b8592bf
-        }
-        {
-            type: deliverable
-            id: カレーライス
-            color: None
-            unique_id: fa47d5ace65a435d8598f37854d95c6f
+            unique_id: note_efficiency
         }
     ]
     edges:
     [
         {
-            source: 094d53a1c34b479588d4e174de550023
-            destination: b06092c07f2c491dac3dc71e41d98bee
-            comment: 一口サイズ
-            type: arrow
-        }
-        {
-            source: 10bc881c96894c18a75ca760868e4dcd
-            destination: 52e0dcec931b4111bfca6437437f19d8
+            source: dlv_wakeup_self
+            destination: prc_wash_face
             comment: ""
             type: arrow
         }
         {
-            source: 10bc881c96894c18a75ca760868e4dcd
-            destination: 094d53a1c34b479588d4e174de550023
+            source: prc_wash_face
+            destination: dlv_washed_face
             comment: ""
             type: arrow
         }
         {
-            source: 43990fedc2ae40ea90ae894a05837ee3
-            destination: 7218a5f998dc414b871c6aa16e03d369
+            source: dlv_washed_face
+            destination: prc_change_clothes
             comment: ""
             type: arrow
         }
         {
-            source: 4ac032e977e947af95a7a48be783bfad
-            destination: 7c8743024e8f4bf1aec21f7cdab8ed9f
+            source: dlv_clothes
+            destination: prc_change_clothes
             comment: ""
             type: arrow
         }
         {
-            source: 52e0dcec931b4111bfca6437437f19d8
-            destination: 4ac032e977e947af95a7a48be783bfad
-            comment: 一口サイズ
-            type: arrow
-        }
-        {
-            source: 64daa9568bcb4a188163f57febfdf799
-            destination: 7218a5f998dc414b871c6aa16e03d369
+            source: prc_change_clothes
+            destination: dlv_ready_self
             comment: ""
             type: arrow
         }
         {
-            source: 7218a5f998dc414b871c6aa16e03d369
-            destination: 85288d192bf14ad18fe725a5622a577a
+            source: dlv_water
+            destination: prc_boil_water
             comment: ""
             type: arrow
         }
         {
-            source: 7c8743024e8f4bf1aec21f7cdab8ed9f
-            destination: efa353f1d801440bbdda897a5daa048a
+            source: prc_boil_water
+            destination: dlv_hot_water
             comment: ""
             type: arrow
         }
         {
-            source: 83d2156d3a134fd3bad1df419dba7ef0
-            destination: fa47d5ace65a435d8598f37854d95c6f
+            source: dlv_hot_water
+            destination: prc_make_coffee
             comment: ""
             type: arrow
         }
         {
-            source: 85288d192bf14ad18fe725a5622a577a
-            destination: 83d2156d3a134fd3bad1df419dba7ef0
+            source: dlv_coffee_powder
+            destination: prc_make_coffee
             comment: ""
             type: arrow
         }
         {
-            source: add738405fce4806b8196a54b2bd080f
-            destination: 52e0dcec931b4111bfca6437437f19d8
+            source: prc_make_coffee
+            destination: dlv_hot_coffee
             comment: ""
             type: arrow
         }
         {
-            source: add738405fce4806b8196a54b2bd080f
-            destination: 094d53a1c34b479588d4e174de550023
+            source: dlv_bread
+            destination: prc_toast_bread
             comment: ""
             type: arrow
         }
         {
-            source: b06092c07f2c491dac3dc71e41d98bee
-            destination: 7218a5f998dc414b871c6aa16e03d369
+            source: prc_toast_bread
+            destination: dlv_toast
             comment: ""
             type: arrow
         }
         {
-            source: c085c92b4f204efd81ab8ed0d1f2795b
-            destination: 094d53a1c34b479588d4e174de550023
+            source: dlv_hot_coffee
+            destination: prc_serve_breakfast
             comment: ""
             type: arrow
         }
         {
-            source: d3add67b31674ea69eedd20b5c0901ec
-            destination: 52e0dcec931b4111bfca6437437f19d8
+            source: dlv_toast
+            destination: prc_serve_breakfast
             comment: ""
             type: arrow
         }
         {
-            source: efa353f1d801440bbdda897a5daa048a
-            destination: 7218a5f998dc414b871c6aa16e03d369
+            source: dlv_ready_self
+            destination: prc_serve_breakfast
             comment: ""
             type: arrow
         }
         {
-            source: f5e2513a19a94565b8e15441acbf9c10
-            destination: 83d2156d3a134fd3bad1df419dba7ef0
+            source: prc_serve_breakfast
+            destination: dlv_morning_ready
             comment: ""
             type: arrow
         }
         {
-            source: f8c6cc6b81d24d7db425a77d7b8592bf
-            destination: 7c8743024e8f4bf1aec21f7cdab8ed9f
+            source: note_efficiency
+            destination: prc_boil_water
+            comment: ""
+            type: arrow
+        }
+        {
+            source: note_efficiency
+            destination: prc_change_clothes
             comment: ""
             type: arrow
         }

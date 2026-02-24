@@ -2,76 +2,100 @@
     nodes:
     [
         {
-            id: 寝付きが悪かった
+            id: 金曜の夜に夜更かししてしまう
             color: None
-            unique_id: 0fd9e7082d3f4806b0fb5160889fe3c4
+            unique_id: root_stay_up_late
             type: entity
         }
         {
-            id: 寝坊した
-            color: Blue
-            unique_id: 10b3b233c251493bbbceb901bda93677
+            id: 土曜の昼過ぎまで寝てしまう
+            color: None
+            unique_id: node_sleep_in
             type: entity
         }
         {
-            id: 終電まで飲み会に参加
+            id: 休日の明確な予定を立てていない
             color: None
-            unique_id: 619a684b7a3348f8b3e752e604a18b34
+            unique_id: root_no_plan
             type: entity
         }
         {
-            id: 乗っていた電車が遅延した
+            id: 起きてから何をしようか迷う
             color: None
-            unique_id: a0fad373845d4c7eaaea5f3cc95301fb
+            unique_id: node_wonder_what_to_do
             type: entity
         }
         {
-            id: 遅刻した
+            id: とりあえずスマホや動画を見てしまう
             color: None
-            unique_id: f1c033c6cdc043ddb21ee901f1e042b7
+            unique_id: node_watch_smartphone
+            type: entity
+        }
+        {
+            id: 気づけば夕方になっている
+            color: None
+            unique_id: node_already_evening
             type: entity
         }
         {
             id:
                 '''
-                いつもの次の電車に乗った
-                （ギリギリ間に合うはず）
+                今から出かけても遅いと
+                諦めてしまう
                 '''
             color: None
-            unique_id: f4a7597145584c54aad13408a1c10ee1
+            unique_id: node_give_up_going_out
+            type: entity
+        }
+        {
+            id: 休日に何もせずダラダラ過ごして自己嫌悪になる
+            color: Red
+            unique_id: ude_self_hatred
             type: entity
         }
     ]
     edges:
     [
         {
-            source: 0fd9e7082d3f4806b0fb5160889fe3c4
-            destination: 10b3b233c251493bbbceb901bda93677
-            and: "2"
-            type: arrow
-        }
-        {
-            source: 10b3b233c251493bbbceb901bda93677
-            destination: f4a7597145584c54aad13408a1c10ee1
+            source: root_stay_up_late
+            destination: node_sleep_in
             and: None
             type: arrow
         }
         {
-            source: 619a684b7a3348f8b3e752e604a18b34
-            destination: 10b3b233c251493bbbceb901bda93677
-            and: "2"
+            source: node_sleep_in
+            destination: node_already_evening
+            and: None
             type: arrow
         }
         {
-            source: a0fad373845d4c7eaaea5f3cc95301fb
-            destination: f1c033c6cdc043ddb21ee901f1e042b7
-            and: "1"
+            source: root_no_plan
+            destination: node_wonder_what_to_do
+            and: None
             type: arrow
         }
         {
-            source: f4a7597145584c54aad13408a1c10ee1
-            destination: f1c033c6cdc043ddb21ee901f1e042b7
-            and: "1"
+            source: node_wonder_what_to_do
+            destination: node_watch_smartphone
+            and: None
+            type: arrow
+        }
+        {
+            source: node_watch_smartphone
+            destination: node_already_evening
+            and: None
+            type: arrow
+        }
+        {
+            source: node_already_evening
+            destination: node_give_up_going_out
+            and: None
+            type: arrow
+        }
+        {
+            source: node_give_up_going_out
+            destination: ude_self_hatred
+            and: None
             type: arrow
         }
     ]
