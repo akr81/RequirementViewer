@@ -541,24 +541,30 @@ def calculate_fever_data(
     if baseline_cc_length <= 0:
         return {"progress": 0.0, "buffer_used": 0.0}
 
-    # CC 残日数の計算 (remainsの合計)
+    # CC 残日数の計算と、完了したCCタスク日数の算出
     remaining_cc_length = 0.0
+    finished_days_equivalent = 0.0
     for task_id in critical_path:
         attrs = graph.nodes[task_id]
+        days = float(attrs.get("days", 0.0))
         if attrs.get("finished", False):
-            # 完了済みのタスクは残なし
-            continue
+            # 完了済みのタスクは残なし、当初見積り日数を消化したとみなす
+            finished_days_equivalent += days
         elif attrs.get("start", ""):
             # 着手済みの未完了タスクは現在の残日数(remains)を使う
-            remaining_cc_length += float(attrs.get("remains", 0.0))
+            remains = float(attrs.get("remains", 0.0))
+            remaining_cc_length += remains
+            # 消化済み分を加算 (見積り - 残日数、遅れのバッファ食いはY軸に任せる)
+            if days > remains:
+                finished_days_equivalent += (days - remains)
         else:
             # 未着手のタスクは初期の見積り日数(days)をそのまま使う
-            remaining_cc_length += float(attrs.get("days", 0.0))
+            remaining_cc_length += days
 
-    # CC完了率 = (ベースラインCC長 - 現在の残CC長) / ベースラインCC長
-    # ※遅延によってremainsが増えても、完了率がマイナス（左へ逆走）にならないよう0でクリップ
-    finished_days_equivalent = max(0.0, baseline_cc_length - remaining_cc_length)
+    # CC完了率 = 消化済み日数 / ベースラインCC長
     progress = (finished_days_equivalent / baseline_cc_length) * 100
+    # 進行率が100%を超えないようにクリップ
+    progress = min(100.0, max(0.0, progress))
 
     # バッファ消費率
     start_str = project.get("start", "")
