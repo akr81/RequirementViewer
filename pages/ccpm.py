@@ -422,9 +422,9 @@ def _render_project_settings(
                         cc_info_text = f"""
                         <b>🚨 クリティカルチェーン情報</b><br>
                         ・現在のCC長 (予想総所要日数): <b>{active_length}</b> 日<br>
-                        ・残りのCC長: <b>{remaining_cc:.1f}</b> 日 (完了率: <b>{progress:.1f}%</b>)<br>
                         ・現在の全バッファ: <b>{base_total_buf:.1f}</b> 日<br>
-                        ・現在の残バッファ: <span style='color: {buffer_color}; font-weight: bold;'>{remaining_buf:.1f}</span> 日 (消費率: <b>{buffer_used:.1f}%</b>)
+                        ・今日からの残CC長: <b>{remaining_cc:.1f}</b> 日 (完了率: <b>{progress:.1f}%</b>)<br>
+                        ・今日からの残バッファ: <span style='color: {buffer_color}; font-weight: bold;'>{remaining_buf:.1f}</span> 日 (消費率: <b>{buffer_used:.1f}%</b>)
                         """
     
                     st.markdown(
@@ -656,8 +656,8 @@ def _render_fever_tab(
 
             # ゾーン塗りつぶし（緑→黄→赤→グレー）
             x = list(range(0, 101))
-            y1 = [0.6 * xi + 15 for xi in x]  # 緑/黄 境界
-            y2 = [0.6 * xi + 30 for xi in x]  # 黄/赤 境界
+            y1 = [0.6 * xi + 10 for xi in x]  # 緑/黄 境界 (以前の15から10に下げて厳格化)
+            y2 = [0.6 * xi + 25 for xi in x]  # 黄/赤 境界 (以前の30から25に下げて厳格化)
             
             # 緑ゾーン（下）
             fig.add_trace(go.Scatter(

@@ -707,12 +707,14 @@ def calculate_priority_table(
         remain_length = days + following_length
         buffer = unfinished_cp_length - remain_length
         
-        # 状態（信号色）の判定
+        # 状態（信号色）の判定 (1/3ルールに基づいた早期警告設定)
         if is_finished:
             status = "⚫ 完了"
-        elif buffer <= 0:
+        elif buffer <= (unfinished_cp_length * 0.1):
+            # 残バッファが残りCCの10%以下（消費率90%超）で赤
             status = "🔴 警告"
-        elif buffer <= (unfinished_cp_length * 0.2):
+        elif buffer <= (unfinished_cp_length * 0.3):
+            # 残バッファが残りCCの30%以下（消費率70%超）で黄
             status = "🟡 注意"
         else:
             status = "🟢 余裕あり"
