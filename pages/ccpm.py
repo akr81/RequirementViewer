@@ -704,7 +704,7 @@ def _render_fever_tab(
                 width=900, height=675, # 75%縮小
                 margin=dict(t=30, b=50, l=50, r=30),
             )
-            st.plotly_chart(fig, use_container_width=False)
+            st.plotly_chart(fig, width="content")
 
         with data_col:
             st.caption(
@@ -737,7 +737,7 @@ def _render_fever_tab(
                     for k, v in progress_data.items()
                 ])
                 edited_df = st.data_editor(
-                    df, num_rows="dynamic", use_container_width=True,
+                    df, num_rows="dynamic", width="stretch",
                     key="ccpm_progress_editor",
                 )
                 if st.button("💾 データを保存", key="ccpm_save_progress"):
@@ -785,7 +785,7 @@ def _render_priority_tab(active_chain: list, nx_graph):
             })
             
             # ID列などを見やすく調整しつつ出力
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.dataframe(df, width="stretch", hide_index=True)
         else:
             st.info("優先度を計算できるタスクがありません。")
     else:

@@ -400,9 +400,9 @@ def show_backup_diff_preview(current_data: Dict):
     if not os.path.exists(png_path):
         png_path = _find_closest_backup_png(selected)
     if png_path:
-        st.image(png_path, caption="バックアップ時の図", use_container_width=True)
+        st.image(png_path, caption="バックアップ時の図", width="stretch")
         with st.expander("🔍 フルサイズで表示"):
-            st.image(png_path, use_container_width=False)
+            st.image(png_path, width="content")
 
     # 復元ボタン
     if st.button("📥 このバックアップを復元", key="restore_backup_btn"):
