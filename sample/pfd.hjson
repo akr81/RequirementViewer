@@ -3,109 +3,109 @@
     [
         {
             type: deliverable
-            id: 寝起きの自分
+            title: 寝起きの自分
             color: None
             unique_id: dlv_wakeup_self
         }
         {
             type: process
-            id: 顔を洗う
+            title: 顔を洗う
             color: None
             unique_id: prc_wash_face
         }
         {
             type: deliverable
-            id: 洗顔済みの顔
+            title: 洗顔済みの顔
             color: None
             unique_id: dlv_washed_face
         }
         {
             type: deliverable
-            id: いつもの服
+            title: いつもの服
             color: None
             unique_id: dlv_clothes
         }
         {
             type: process
-            id: 服を着替える
+            title: 服を着替える
             color: None
             unique_id: prc_change_clothes
         }
         {
             type: deliverable
-            id: 身支度完了
+            title: 身支度完了
             color: None
             unique_id: dlv_ready_self
         }
         {
             type: deliverable
-            id: 食パン
+            title: 食パン
             color: None
             unique_id: dlv_bread
         }
         {
             type: process
-            id: パンをトーストする
+            title: パンをトーストする
             color: None
             unique_id: prc_toast_bread
         }
         {
             type: deliverable
-            id: トースト
+            title: トースト
             color: None
             unique_id: dlv_toast
         }
         {
             type: deliverable
-            id: 水
+            title: 水
             color: None
             unique_id: dlv_water
         }
         {
             type: process
-            id: お湯を沸かす
+            title: お湯を沸かす
             color: None
             unique_id: prc_boil_water
         }
         {
             type: deliverable
-            id: お湯
+            title: お湯
             color: None
             unique_id: dlv_hot_water
         }
         {
             type: deliverable
-            id: インスタントコーヒー
+            title: インスタントコーヒー
             color: None
             unique_id: dlv_coffee_powder
         }
         {
             type: process
-            id: コーヒーを淹れる
+            title: コーヒーを淹れる
             color: None
             unique_id: prc_make_coffee
         }
         {
             type: deliverable
-            id: ホットコーヒー
+            title: ホットコーヒー
             color: None
             unique_id: dlv_hot_coffee
         }
         {
             type: process
-            id: 朝食をテーブルに並べる
+            title: 朝食をテーブルに並べる
             color: None
             unique_id: prc_serve_breakfast
         }
         {
             type: deliverable
-            id: 準備万端の朝
+            title: 準備万端の朝
             color: Orange
             unique_id: dlv_morning_ready
         }
         {
             type: note
-            id:
+            title:
                 '''
                 お湯を沸かしている間に
                 着替えを済ませると効率的

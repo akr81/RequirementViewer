@@ -3,28 +3,28 @@
     [
         {
             id: head
-            title: 健康で楽しく過ごす
+            text: 健康で楽しく過ごす
             unique_id: head
             color: None
             type: entity
         }
         {
             id: left_hand
-            title: 我慢する
+            text: 我慢する
             unique_id: left_hand
             color: None
             type: entity
         }
         {
             id: left_hand_note
-            title: 仮定
+            text: 仮定
             unique_id: left_hand_note
             color: None
             type: note
         }
         {
             id: left_hand_to_shoulder
-            title:
+            text:
                 '''
                 * ケーキを食べるとカロリーオーバーになる
                 * 一度食べると甘いもの依存から抜け出せない
@@ -35,14 +35,14 @@
         }
         {
             id: left_shoulder
-            title: 痩せて綺麗な体型になる
+            text: 痩せて綺麗な体型になる
             unique_id: left_shoulder
             color: None
             type: entity
         }
         {
             id: left_shoulder_to_head
-            title:
+            text:
                 '''
                 * 体型に自信が持てると外出が楽しくなる
                 * 健康診断の数値を気にせず生活できる
@@ -53,21 +53,21 @@
         }
         {
             id: right_hand
-            title: ケーキを食べる
+            text: ケーキを食べる
             unique_id: right_hand
             color: None
             type: entity
         }
         {
             id: right_hand_note
-            title: 仮定
+            text: 仮定
             unique_id: right_hand_note
             color: None
             type: note
         }
         {
             id: right_hand_to_shoulder
-            title:
+            text:
                 '''
                 * 甘いものを食べないと仕事の疲れが取れない
                 * ご褒美がないと人生はつまらない
@@ -78,14 +78,14 @@
         }
         {
             id: right_shoulder
-            title: ストレスを発散する
+            text: ストレスを発散する
             unique_id: right_shoulder
             color: None
             type: entity
         }
         {
             id: right_shoulder_to_head
-            title:
+            text:
                 '''
                 * 精神的なゆとりがないと人は優しくなれない
                 * ストレスを溜め続けると結局暴食してしまう
