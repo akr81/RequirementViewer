@@ -24,6 +24,19 @@ def get_in_out_edge_list(graph: nx.DiGraph) -> Tuple[List[str], List[str]]:
     return inputs, outputs
 
 
+def _get_effective_days(graph: nx.DiGraph, node: str) -> float:
+    """ノードの実質的な残日数を返す。
+    - 完了済み: 0.0
+    - 着手済み（開始日あり）: remains
+    - 未着手: days (見積もり日数)
+    """
+    if graph.nodes[node].get("finished", False):
+        return 0.0
+    if graph.nodes[node].get("start", ""):
+        return float(graph.nodes[node].get("remains", 0.0))
+    return float(graph.nodes[node].get("days", 0.0))
+
+
 def calculate_critical_path(
     graph: nx.DiGraph, inputs: List[str], outputs: List[str]
 ) -> Tuple[float, List[str]]:
@@ -53,7 +66,7 @@ def calculate_critical_path(
     pred: Dict[str, Optional[str]] = {}
 
     for node in topo_order:
-        days = float(graph.nodes[node].get("days", 0))
+        days = _get_effective_days(graph, node)
         dist[node] = days  # 親がない入端の場合
         pred[node] = None
         
@@ -111,12 +124,7 @@ def _compute_earliest_schedule(graph: nx.DiGraph) -> Dict[str, Tuple[float, floa
         return schedule
 
     for node in topo_order:
-        days = float(graph.nodes[node].get("days", 0))
-        # Finished tasks take 0 days in the forward schedule calculation
-        # so they don't incorrectly push back the start times of subsequent tasks
-        # but they still need an ES/EF entry so dependencies can resolve.
-        if graph.nodes[node].get("finished", False):
-            days = 0.0
+        days = _get_effective_days(graph, node)
         predecessors = list(graph.predecessors(node))
         if not predecessors:
             es = 0.0
@@ -133,7 +141,7 @@ def _compute_remaining_path_length(
     """ノードから終端までの最長残パス長を計算する（メモ化再帰）。"""
     if node in memo:
         return memo[node]
-    days = float(graph.nodes[node].get("days", 0))
+    days = _get_effective_days(graph, node)
     successors = list(graph.successors(node))
     if not successors:
         memo[node] = days
@@ -160,7 +168,7 @@ def _detect_resource_conflicts(
         if graph.nodes[node].get("finished", False):
             continue
         res = graph.nodes[node].get("resource", "")
-        days = float(graph.nodes[node].get("days", 0))
+        days = _get_effective_days(graph, node)
         if not res or days <= 0:
             continue
         resource_tasks.setdefault(res, []).append(node)
@@ -195,7 +203,7 @@ def _detect_resource_conflicts(
             if graph.nodes[node].get("finished", False):
                 continue
             node_type = graph.nodes[node].get("type", "")
-            if float(graph.nodes[node].get("days", 0)) > 0 and node_type != "deliverable":
+            if _get_effective_days(graph, node) > 0 and node_type != "deliverable":
                 events.append((start, "start", node))
                 events.append((end, "end", node))
         
@@ -684,7 +692,7 @@ def calculate_priority_table(
         return []
 
     unfinished_cp_length = sum(
-        graph.nodes[t].get("days", 0)
+        _get_effective_days(graph, t)
         for t in critical_path[critical_path.index(first_unfinished):]
     )
 
@@ -701,7 +709,7 @@ def calculate_priority_table(
             
         # 該当タスク以降の最長パス(自身のdaysを含まない)
         following_length = _compute_remaining_path_length(graph, task, memo)
-        days = graph.nodes[task].get("days", 0)
+        days = _get_effective_days(graph, task)
         
         # 自身 + その後の最長パス = そのタスクからの最長残日数
         remain_length = days + following_length
