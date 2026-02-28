@@ -5,6 +5,7 @@ from src.utility import (
     copy_file,
     calculate_text_area_height,
     unescape_newline,
+    show_backup_diff_preview,
 )  # draw_diagram_column を削除
 from src.operate_buttons import add_operate_buttons
 from src.page_setup import setup_page_layout_and_data  # 変更
@@ -138,9 +139,9 @@ def render_edit_panel():
             backup_files,
             0,
             label_visibility="collapsed",
-            on_change=copy_file,
             key="selected_backup_file",
         )
+    show_backup_diff_preview(requirement_data)
     # ダイアグラムのタイトルを表示
     diagram_title = st.text_input(
         "CRTタイトル",

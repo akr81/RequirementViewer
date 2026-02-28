@@ -8,6 +8,7 @@ from src.utility import (
     calculate_text_area_height,
     unescape_newline,
     update_source_data,
+    show_backup_diff_preview,
 )
 from src.ccpm_engine import (
     get_in_out_edge_list,
@@ -507,9 +508,9 @@ def render_edit_panel():
             backup_files,
             0,
             label_visibility="collapsed",
-            on_change=copy_file,
             key="selected_backup_file",
         )
+    show_backup_diff_preview(requirement_data)
 
     _render_project_settings(
         requirement_data=requirement_data,

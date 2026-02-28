@@ -7,6 +7,7 @@ from src.utility import (  # copy_file, get_backup_files_for_current_data のみ
     calculate_text_area_height,
     unescape_newline,
     update_source_data,
+    show_backup_diff_preview,
 )
 import copy
 
@@ -45,9 +46,9 @@ def render_edit_panel():
             backup_files,
             0,
             label_visibility="collapsed",
-            on_change=copy_file,
             key="selected_backup_file",
         )
+    show_backup_diff_preview(requirement_data)
     diagram_title = st.text_input(
         "ECタイトル",
         value=requirement_data.get("title", ""),

@@ -6,6 +6,7 @@ from src.utility import (  # copy_file, get_backup_files_for_current_data のみ
     copy_file,
     calculate_text_area_height,
     unescape_newline,
+    show_backup_diff_preview,
 )
 import uuid
 import copy
@@ -134,9 +135,9 @@ def render_edit_panel():
             backup_files,
             0,
             label_visibility="collapsed",
-            on_change=copy_file,
             key="selected_backup_file",
         )
+    show_backup_diff_preview(requirement_data)
     # ダイアグラムのタイトルを表示
     diagram_title = st.text_input(
         "PFDタイトル",

@@ -284,3 +284,129 @@ def copy_file():
         shutil.copy(src, dst)
         # @st.fragment 内からの呼び出しでもページ全体を再描画するためフラグを設定
         st.session_state["need_full_rerun"] = True
+
+
+def _find_closest_backup_png(hjson_filename: str) -> str:
+    """hjsonバックアップに対応する最も近いタイムスタンプのPNGを探す。
+
+    hjsonとpngは別々のタイミングで保存されるため、秒がずれることがある。
+    同じpostfixを持つPNGの中からタイムスタンプ差が5秒以内のものを返す。
+
+    Args:
+        hjson_filename: バックアップのhjsonファイル名（例: "20260228_180000_ccpm.hjson"）
+
+    Returns:
+        PNGファイルのパス。見つからない場合は空文字列。
+    """
+    # postfix部分を抽出（例: "_ccpm" を取得）
+    base = hjson_filename.replace(".hjson", "")
+    # タイムスタンプ部分を抽出（先頭15文字: YYYYMMDD_HHMMSS）
+    if len(base) < 15:
+        return ""
+    ts_str = base[:15]
+    postfix = base[15:]  # 例: "_ccpm"
+
+    try:
+        hjson_time = datetime.datetime.strptime(ts_str, "%Y%m%d_%H%M%S")
+    except ValueError:
+        return ""
+
+    # 同じpostfixのPNGファイルを検索
+    best_path = ""
+    best_diff = datetime.timedelta(seconds=6)  # 5秒超は不採用
+    back_dir = "back"
+    if not os.path.isdir(back_dir):
+        return ""
+
+    for f in os.listdir(back_dir):
+        if not f.endswith(f"{postfix}.png"):
+            continue
+        f_ts_str = f[:15]
+        try:
+            f_time = datetime.datetime.strptime(f_ts_str, "%Y%m%d_%H%M%S")
+        except ValueError:
+            continue
+        diff = abs(f_time - hjson_time)
+        if diff < best_diff:
+            best_diff = diff
+            best_path = os.path.join(back_dir, f)
+
+    return best_path
+
+
+def show_backup_diff_preview(current_data: Dict):
+    """選択中のバックアップと現在のデータの差分サマリを表示し、復元ボタンを提供する。
+
+    バックアップが選択されていない場合は何も表示しない。
+    復元ボタンが押されると、バックアップを現在のファイルにコピーしてページをリロードする。
+    """
+    selected = st.session_state.get("selected_backup_file", "バックアップから読込")
+    if selected == "バックアップから読込":
+        return
+
+    backup_path = os.path.join("back", selected)
+    if not os.path.exists(backup_path):
+        return
+
+    try:
+        backup_data = load_source_data(backup_path)
+    except Exception:
+        return
+
+    if not isinstance(backup_data, dict) or not isinstance(current_data, dict):
+        return
+
+    # ノード名の取得（title > text > id > unique_id の優先順でラベルを取得）
+    def _node_label(node: Dict) -> str:
+        return (
+            node.get("title")
+            or node.get("text")
+            or node.get("id")
+            or node.get("unique_id", "?")
+        )
+
+    cur_nodes = {n.get("unique_id"): n for n in current_data.get("nodes", [])}
+    bak_nodes = {n.get("unique_id"): n for n in backup_data.get("nodes", [])}
+    cur_edges = current_data.get("edges", [])
+    bak_edges = backup_data.get("edges", [])
+
+    added_ids = set(bak_nodes) - set(cur_nodes)
+    removed_ids = set(cur_nodes) - set(bak_nodes)
+    edge_diff = len(bak_edges) - len(cur_edges)
+
+    # 差分サマリの構築
+    if not added_ids and not removed_ids and edge_diff == 0:
+        summary = "📋 現在のデータと同一です"
+    else:
+        parts = []
+        if added_ids:
+            names = ", ".join(_node_label(bak_nodes[uid]) for uid in sorted(added_ids))
+            parts.append(f"＋ノード {len(added_ids)}件: {names}")
+        if removed_ids:
+            names = ", ".join(_node_label(cur_nodes[uid]) for uid in sorted(removed_ids))
+            parts.append(f"－ノード {len(removed_ids)}件: {names}")
+        if edge_diff > 0:
+            parts.append(f"＋エッジ {edge_diff}件")
+        elif edge_diff < 0:
+            parts.append(f"－エッジ {abs(edge_diff)}件")
+        summary = "📋 " + " / ".join(parts)
+
+    st.caption(summary)
+
+    # 対応するPNG画像があればサムネイルを表示
+    # hjsonとpngの保存タイミングが異なり秒がずれる場合があるため、
+    # 完全一致で見つからなければ近いタイムスタンプのPNGを探す
+    png_path = backup_path.replace(".hjson", ".png")
+    if not os.path.exists(png_path):
+        png_path = _find_closest_backup_png(selected)
+    if png_path:
+        st.image(png_path, caption="バックアップ時の図", use_container_width=True)
+        with st.expander("🔍 フルサイズで表示"):
+            st.image(png_path, use_container_width=False)
+
+    # 復元ボタン
+    if st.button("📥 このバックアップを復元", key="restore_backup_btn"):
+        copy_file()
+        st.rerun(scope="app")
+
+
