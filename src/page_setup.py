@@ -58,6 +58,20 @@ def initialize_page(app_name: str):
         initial_sidebar_state="collapsed",  # サイドバーを閉じた状態で表示
     )
 
+    # ボタンのフォントサイズとパディングを縮小し、横長レイアウトを維持する
+    st.markdown(
+        """
+        <style>
+        .stButton > button {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            min-height: 0;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     # 色のリストを読み込む
     color_list = load_colors()
 
