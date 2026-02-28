@@ -158,10 +158,12 @@ def render_edit_panel():
     tmp_entity["type"] = st.selectbox(
         "タイプ", pfd_type_list, index=pfd_type_list.index(tmp_entity["type"])
     )
+    # 旧データでは id にコンテンツが入っている場合があるためフォールバック
+    title_value = tmp_entity.get("title", "") or tmp_entity.get("id", "")
     tmp_entity["title"] = st.text_area(
         "プロセス名 / タイトル",
-        unescape_newline(tmp_entity.get("title", "")),
-        height=calculate_text_area_height(unescape_newline(tmp_entity.get("title", ""))),
+        unescape_newline(title_value),
+        height=calculate_text_area_height(unescape_newline(title_value)),
         key=f"pfd_title_{selected_unique_id}",
     )
 
