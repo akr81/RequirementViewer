@@ -38,13 +38,11 @@
             source: stt_sub_expense_review
             destination: stt_root_home_purchase
             type: arrow
-            color: None
         }
         {
             source: stt_sub_income_increase
             destination: stt_root_home_purchase
             type: arrow
-            color: None
         }
     ]
 }
