@@ -100,6 +100,7 @@ def render_edit_panel():
         no_new=True,
         no_add=True,
         no_remove=True,
+        no_duplicate=True,
         tmp_edges=tmp_edges,
         display_key="text",
     )

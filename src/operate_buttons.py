@@ -30,6 +30,7 @@ def add_operate_buttons(
     no_new=False,
     no_add=False,
     no_remove=False,
+    no_duplicate=False,
     tmp_edges=None,
     new_edges=None,
     key_suffix="",
@@ -37,11 +38,12 @@ def add_operate_buttons(
 ):
     (
         new_button_column,
+        duplicate_button_column,
         _,
         add_button_column,
         update_button_column,
         remove_button_column,
-    ) = st.columns([1, 2, 1, 1, 1])
+    ) = st.columns([1, 1, 1, 1, 1, 1])
     with new_button_column:
         # 新規ボタンを表示
         # デフォルトエンティティが選択された状態にする
@@ -50,6 +52,39 @@ def add_operate_buttons(
                 st.query_params.selected = "default"
                 st.query_params.detail = "True"
                 st.rerun()
+    with duplicate_button_column:
+        # 複製ボタンを表示
+        if not no_duplicate:
+            if st.button("複製", key=f"duplicate_button_{key_suffix}"):
+                if selected_unique_id not in unique_id_dict:
+                    st.error("複製すべきエンティティがありません。")
+                else:
+                    import uuid
+                    import copy
+
+                    # ノードの深いコピーを作成し、新しい unique_id を付与
+                    new_node = copy.deepcopy(
+                        next(
+                            n for n in requirement_manager.requirements["nodes"]
+                            if n.get("unique_id") == selected_unique_id
+                        )
+                    )
+                    new_unique_id = f"{uuid.uuid4()}".replace("-", "")
+                    new_node["unique_id"] = new_unique_id
+
+                    # ノードを追加
+                    requirement_manager.requirements["nodes"].append(new_node)
+
+                    # 元ノードの outgoing edges（source が元ノード）を複製
+                    for edge in requirement_manager.requirements["edges"][:]:
+                        if edge.get("source") == selected_unique_id:
+                            new_edge = copy.deepcopy(edge)
+                            new_edge["source"] = new_unique_id
+                            requirement_manager.requirements["edges"].append(new_edge)
+
+                    update_source_data(file_path, requirement_manager.requirements)
+                    st.query_params.selected = new_unique_id
+                    st.rerun()
     with add_button_column:
         if not no_add:
             # 追加ボタンを表示
@@ -92,3 +127,4 @@ def add_operate_buttons(
                     update_source_data(file_path, requirement_manager.requirements)
                     st.write("エンティティを削除しました。")
                     st.rerun()
+
