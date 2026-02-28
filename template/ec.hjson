@@ -1,114 +1,105 @@
-[
-    {
-        id: head
-        title: 共通目的
-        unique_id: head
-        relations: []
-        color: None
-        type: entity
-    }
-    {
-        id: left_hand
-        title: 行動
-        unique_id: left_hand
-        relations:
-        [
-            {
-                destination: left_shoulder
-                type: arrow
-            }
-        ]
-        color: None
-        type: entity
-    }
-    {
-        id: left_hand_note
-        title: 仮定
-        unique_id: left_hand_note
-        relations: []
-        color: None
-        type: note
-    }
-    {
-        id: left_hand_to_shoulder
-        title: 仮定
-        unique_id: left_hand_to_shoulder
-        relations: []
-        color: None
-        type: note
-    }
-    {
-        id: left_shoulder
-        title: 要望
-        unique_id: left_shoulder
-        relations:
-        [
-            {
-                destination: head
-                type: arrow
-            }
-        ]
-        color: None
-        type: entity
-    }
-    {
-        id: left_shoulder_to_head
-        title: 仮定
-        unique_id: left_shoulder_to_head
-        relations: []
-        color: None
-        type: note
-    }
-    {
-        id: right_hand
-        title: 行動
-        unique_id: right_hand
-        relations:
-        [
-            {
-                destination: right_shoulder
-                type: arrow
-            }
-        ]
-        color: None
-        type: entity
-    }
-    {
-        id: right_hand_note
-        title: 仮定
-        unique_id: right_hand_note
-        relations: []
-        color: None
-        type: note
-    }
-    {
-        id: right_hand_to_shoulder
-        title: 仮定
-        unique_id: right_hand_to_shoulder
-        relations: []
-        color: None
-        type: note
-    }
-    {
-        id: right_shoulder
-        title: 要望
-        unique_id: right_shoulder
-        relations:
-        [
-            {
-                destination: head
-                type: arrow
-            }
-        ]
-        color: None
-        type: entity
-    }
-    {
-        id: right_shoulder_to_head
-        title: 仮定
-        unique_id: right_shoulder_to_head
-        relations: []
-        color: None
-        type: note
-    }
-]
+{
+    nodes:
+    [
+        {
+            id: head
+            text: 共通目的
+            unique_id: head
+            color: None
+            type: entity
+        }
+        {
+            id: left_hand
+            text: 行動D
+            unique_id: left_hand
+            color: None
+            type: entity
+        }
+        {
+            id: left_hand_note
+            text: 仮定
+            unique_id: left_hand_note
+            color: None
+            type: note
+        }
+        {
+            id: left_hand_to_shoulder
+            text: 仮定
+            unique_id: left_hand_to_shoulder
+            color: None
+            type: note
+        }
+        {
+            id: left_shoulder
+            text: 要望B
+            unique_id: left_shoulder
+            color: None
+            type: entity
+        }
+        {
+            id: left_shoulder_to_head
+            text: 仮定
+            unique_id: left_shoulder_to_head
+            color: None
+            type: note
+        }
+        {
+            id: right_hand
+            text: 行動D'
+            unique_id: right_hand
+            color: None
+            type: entity
+        }
+        {
+            id: right_hand_note
+            text: 仮定
+            unique_id: right_hand_note
+            color: None
+            type: note
+        }
+        {
+            id: right_hand_to_shoulder
+            text: 仮定
+            unique_id: right_hand_to_shoulder
+            color: None
+            type: note
+        }
+        {
+            id: right_shoulder
+            text: 要望C
+            unique_id: right_shoulder
+            color: None
+            type: entity
+        }
+        {
+            id: right_shoulder_to_head
+            text: 仮定
+            unique_id: right_shoulder_to_head
+            color: None
+            type: note
+        }
+    ]
+    edges:
+    [
+        {
+            source: left_hand
+            destination: left_shoulder
+            type: arrow
+        }
+        {
+            source: left_shoulder
+            destination: head
+            type: arrow
+        }
+        {
+            source: right_hand
+            destination: right_shoulder
+            type: arrow
+        }
+        {
+            source: right_shoulder
+            destination: head
+            type: arrow
+        }
+    ]
+}

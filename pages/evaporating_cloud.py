@@ -6,6 +6,7 @@ from src.utility import (  # copy_file, get_backup_files_for_current_data のみ
     copy_file,
     calculate_text_area_height,
     unescape_newline,
+    update_source_data,
 )
 import copy
 
@@ -58,6 +59,10 @@ def render_edit_panel():
     tmp_entity = copy.deepcopy(selected_entity)
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
 
+    # text フィールドが未設定の場合に title からフォールバック（旧データ互換）
+    if not tmp_entity.get("text", "") and tmp_entity.get("title", ""):
+        tmp_entity["text"] = tmp_entity["title"]
+
     st.write(tmp_entity["id"])
     if tmp_entity["id"] == "head":
         question = "共通の目的は何か？"
@@ -99,7 +104,40 @@ def render_edit_panel():
     )
 
 
+def _render_ec_checklist(requirement_data: dict, requirement_manager, file_path: str):
+    """TOCワークフロー支援チェックリストを描画する。"""
+    checklist = requirement_data.get("checklist", {})
+    with st.expander("✅ TOC 対立解消チェックリスト", expanded=False):
+        st.caption("対立を蒸発させるためのワークフローを確認しましょう。")
+
+        items = [
+            ("q1", "共通目的（A）は双方が合意できるものか？"),
+            ("q2", "各要望（B, C）はAを達成するために本当に必要か？"),
+            ("q3", "各行動（D, D'）はB, Cを満たす唯一の方法か？"),
+            ("q4", "各矢印の仮定を検証したか？（特に斜め線の仮定）"),
+            ("q5", "仮定を無効化するインジェクション（解決策）は見つかったか？"),
+        ]
+
+        changed = False
+        for key, label in items:
+            old_val = checklist.get(key, False)
+            new_val = st.checkbox(label, value=old_val, key=f"ec_ck_{key}")
+            if new_val != old_val:
+                checklist[key] = new_val
+                changed = True
+
+        if changed:
+            requirement_data["checklist"] = checklist
+            update_source_data(file_path, requirement_manager.requirements)
+            st.rerun()
+
+        completed = sum(1 for k, _ in items if checklist.get(k, False))
+        st.progress(completed / len(items), text=f"{completed}/{len(items)} 完了")
+
+
 with edit_column:
     render_edit_panel()
+    _render_ec_checklist(requirement_data, requirement_manager, file_path)
     
 st.session_state.graph_data = graph_data
+

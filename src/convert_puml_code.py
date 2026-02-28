@@ -49,7 +49,9 @@ class ConvertPumlCode:
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
-        content = self._escape_puml(node_attrs.get(field, ""), keep_newline=True)
+        # 指定フィールドが空の場合は title フィールドにフォールバック（旧ECデータ互換）
+        raw_content = node_attrs.get(field, "") or node_attrs.get("title", "")
+        content = self._escape_puml(raw_content, keep_newline=True)
 
         return self._create_note_puml(
             node_attrs["unique_id"],
@@ -397,8 +399,10 @@ class ConvertPumlCode:
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
+        # 指定フィールドが空の場合は title フィールドにフォールバック（旧ECデータ互換）
+        raw_content = node_attrs.get(content_field, "") or node_attrs.get("title", "")
         # カード要素は文字列の途中で改行が有効になるように \n を許可しておく
-        content = self._escape_puml(node_attrs.get(content_field, ""), keep_newline=True)
+        content = self._escape_puml(raw_content, keep_newline=True)
 
         return self._create_card_puml(
             node_attrs["unique_id"], content, parameters_str, color_str
