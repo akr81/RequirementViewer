@@ -286,6 +286,41 @@ def copy_file():
         st.session_state["need_full_rerun"] = True
 
 
+def undo_last_change() -> bool:
+    """直前の変更を取り消し、1つ前のバックアップに戻す。
+
+    最新のバックアップは現在の保存状態と同一なので、
+    2番目に新しいバックアップを現在のファイルにコピーする。
+
+    Returns:
+        True: 復元成功, False: 復元するバックアップが見つからない
+    """
+    postfix = st.session_state.app_data[st.session_state.app_name]["postfix"]
+    back_dir = "back"
+    if not os.path.isdir(back_dir):
+        return False
+
+    # 現在のページ用のバックアップを新しい順に取得
+    backup_files = sorted(
+        [
+            f for f in os.listdir(back_dir)
+            if f.endswith(".hjson") and postfix in f
+        ],
+        reverse=True,
+    )
+
+    # 2番目に新しいバックアップ（= 1つ前の状態）を探す
+    if len(backup_files) < 2:
+        return False
+
+    prev_backup = os.path.join(back_dir, backup_files[1])
+    dst = st.session_state["file_path"]
+    if os.path.exists(prev_backup):
+        shutil.copy(prev_backup, dst)
+        return True
+    return False
+
+
 def _find_closest_backup_png(hjson_filename: str) -> str:
     """hjsonバックアップに対応する最も近いタイムスタンプのPNGを探す。
 

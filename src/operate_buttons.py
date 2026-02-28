@@ -1,5 +1,5 @@
 import streamlit as st
-from src.utility import update_source_data
+from src.utility import update_source_data, undo_last_change
 
 
 def _reset_new_connection_widgets():
@@ -39,7 +39,7 @@ def add_operate_buttons(
     (
         new_button_column,
         duplicate_button_column,
-        _,
+        undo_button_column,
         add_button_column,
         update_button_column,
         remove_button_column,
@@ -85,6 +85,13 @@ def add_operate_buttons(
                     update_source_data(file_path, requirement_manager.requirements)
                     st.query_params.selected = new_unique_id
                     st.rerun()
+    with undo_button_column:
+        # 戻すボタンを表示
+        if st.button("戻す", key=f"undo_button_{key_suffix}"):
+            if undo_last_change():
+                st.rerun(scope="app")
+            else:
+                st.error("戻せるバックアップがありません。")
     with add_button_column:
         if not no_add:
             # 追加ボタンを表示
