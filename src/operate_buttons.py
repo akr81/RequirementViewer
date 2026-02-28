@@ -104,6 +104,7 @@ def add_operate_buttons(
                     added_id = requirement_manager.add(tmp_entity, tmp_edges, new_edges)
                     update_source_data(file_path, requirement_manager.requirements)
                     st.write("エンティティを追加しました。")
+                    _reset_new_connection_widgets()
                     st.query_params.selected = added_id
                     st.rerun()
     with update_button_column:
