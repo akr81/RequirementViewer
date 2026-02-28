@@ -446,7 +446,10 @@ def _make_dependency_arrows(
 def _estimate_end_date(
     project: Dict[str, Any], start_date: str, remain_day: int
 ) -> str:
-    """稼働日ベースで完了予定日を計算する。"""
+    """稼働日ベースで完了予定日を計算する。
+
+    CCPMでは着手済みタスクの完了見込みは「今日 + 残日数」で算出する。
+    """
     if not workdays:
         return ""
     holidays_str = project.get("holidays", [])
@@ -455,11 +458,9 @@ def _estimate_end_date(
     if not today_str:
         return ""
     dt_today = datetime.strptime(today_str, "%Y/%m/%d")
-    dt_start = datetime.strptime(start_date, "%Y/%m/%d")
 
-    elapsed = workdays.networkdays(dt_start, dt_today, holidays=dt_holidays) - 1
-    estimated = elapsed + remain_day
-    dt_end = workdays.workday(dt_start, days=estimated, holidays=dt_holidays)
+    # 今日から残日数分だけ先の稼働日を完了予定日とする
+    dt_end = workdays.workday(dt_today, days=int(remain_day), holidays=dt_holidays)
     return dt_end.date().strftime("%Y/%m/%d")
 
 
@@ -707,12 +708,9 @@ def calculate_priority_table(
 
         is_finished = graph.nodes[task].get("finished", False)
             
-        # 該当タスク以降の最長パス(自身のdaysを含まない)
-        following_length = _compute_remaining_path_length(graph, task, memo)
+        # 該当タスクから終端までの最長残パス長（自身の日数を含む）
+        remain_length = _compute_remaining_path_length(graph, task, memo)
         days = _get_effective_days(graph, task)
-        
-        # 自身 + その後の最長パス = そのタスクからの最長残日数
-        remain_length = days + following_length
         buffer = unfinished_cp_length - remain_length
         
         # 状態（信号色）の判定 (1/3ルールに基づいた早期警告設定)

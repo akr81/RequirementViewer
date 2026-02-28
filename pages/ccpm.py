@@ -844,6 +844,21 @@ def render_ccpm_analysis():
     else:
         st.warning("クリティカルパスが計算できません。タスクと依存関係を確認してください。")
 
+    # 着手済み・未完了・残日数0 のタスクに対する警告
+    zero_remains_tasks = [
+        nx_graph.nodes[n].get("title", n)
+        for n in nx_graph.nodes
+        if nx_graph.nodes[n].get("start", "")
+        and not nx_graph.nodes[n].get("finished", False)
+        and float(nx_graph.nodes[n].get("remains", 0)) == 0
+        and float(nx_graph.nodes[n].get("days", 0)) > 0
+    ]
+    if zero_remains_tasks:
+        st.warning(
+            f"⚠️ 着手済みで残日数が 0 のタスクがあります（CC計算上、所要 0 日として扱われます）: "
+            f"**{'、'.join(zero_remains_tasks)}**"
+        )
+
     # 分析で使うチェーン（CC があればそちらを優先）
     active_chain = cc if cc else cp
     active_length = cc_length if cc else cp_length
