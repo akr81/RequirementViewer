@@ -32,6 +32,8 @@ def add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_uni
         st.rerun(scope="app")
 
 
+
+
 def _reset_new_connection_widgets():
     """
     現在のアプリケーションに関連する新規接続ウィジェットの
@@ -157,16 +159,19 @@ def add_operate_buttons(
             st.rerun()
     with remove_button_column:
         if not no_remove:
-            # 削除ボタンをPopoverで実装し、確認ダイアログとする
-            if is_existing:
-                with st.popover("削除"):
-                    st.write("本当に削除しますか？関連するエッジも削除されます。")
-                    if st.button("はい、削除します", key=f"confirm_remove_{key_suffix}"):
-                        requirement_manager.remove(selected_unique_id)
-                        update_source_data(file_path, requirement_manager.requirements)
-                        st.toast("エンティティを削除しました 🗑️")
-                        st.rerun()
+            # 2クリック削除: 1回目で確認状態、2回目で実行
+            confirm_key = f"confirm_delete_{key_suffix}"
+            is_confirming = st.session_state.get(confirm_key) == selected_unique_id
+            if is_confirming:
+                if st.button("本当に？", key=f"remove_button_{key_suffix}", disabled=not is_existing, type="primary"):
+                    requirement_manager.remove(selected_unique_id)
+                    update_source_data(file_path, requirement_manager.requirements)
+                    st.session_state.pop(confirm_key, None)
+                    st.toast("エンティティを削除しました 🗑️")
+                    st.rerun()
             else:
-                st.button("削除", key=f"remove_button_{key_suffix}", disabled=True)
+                if st.button("削除", key=f"remove_button_{key_suffix}", disabled=not is_existing):
+                    st.session_state[confirm_key] = selected_unique_id
+                    st.rerun()
 
 
