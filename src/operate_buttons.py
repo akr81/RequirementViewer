@@ -36,6 +36,9 @@ def add_operate_buttons(
     key_suffix="",
     display_key="id",
 ):
+    # 既存ノード編集中か新規作成中かを判定
+    is_existing = selected_unique_id in unique_id_dict
+
     (
         new_button_column,
         duplicate_button_column,
@@ -53,38 +56,40 @@ def add_operate_buttons(
                 st.query_params.detail = "True"
                 st.rerun()
     with duplicate_button_column:
-        # 複製ボタンを表示
+        # 複製ボタンを表示（既存ノード選択時のみ有効）
         if not no_duplicate:
-            if st.button("複製", key=f"duplicate_button_{key_suffix}"):
-                if selected_unique_id not in unique_id_dict:
-                    st.error("複製すべきエンティティがありません。")
-                else:
-                    import uuid
-                    import copy
+            if st.button("複製", key=f"duplicate_button_{key_suffix}", disabled=not is_existing):
+                import uuid
+                import copy
 
-                    # ノードの深いコピーを作成し、新しい unique_id を付与
-                    new_node = copy.deepcopy(
-                        next(
-                            n for n in requirement_manager.requirements["nodes"]
-                            if n.get("unique_id") == selected_unique_id
-                        )
+                # ノードの深いコピーを作成し、新しい unique_id を付与
+                new_node = copy.deepcopy(
+                    next(
+                        n for n in requirement_manager.requirements["nodes"]
+                        if n.get("unique_id") == selected_unique_id
                     )
-                    new_unique_id = f"{uuid.uuid4()}".replace("-", "")
-                    new_node["unique_id"] = new_unique_id
+                )
+                new_unique_id = f"{uuid.uuid4()}".replace("-", "")
+                new_node["unique_id"] = new_unique_id
 
-                    # ノードを追加
-                    requirement_manager.requirements["nodes"].append(new_node)
+                # ノードを追加
+                requirement_manager.requirements["nodes"].append(new_node)
 
-                    # 元ノードの outgoing edges（source が元ノード）を複製
-                    for edge in requirement_manager.requirements["edges"][:]:
-                        if edge.get("source") == selected_unique_id:
-                            new_edge = copy.deepcopy(edge)
-                            new_edge["source"] = new_unique_id
-                            requirement_manager.requirements["edges"].append(new_edge)
+                # 元ノードの outgoing edges（source が元ノード）を複製
+                # 元ノードの incoming edges（destination が元ノード）も複製
+                for edge in requirement_manager.requirements["edges"][:]:
+                    if edge.get("source") == selected_unique_id:
+                        new_edge = copy.deepcopy(edge)
+                        new_edge["source"] = new_unique_id
+                        requirement_manager.requirements["edges"].append(new_edge)
+                    elif edge.get("destination") == selected_unique_id:
+                        new_edge = copy.deepcopy(edge)
+                        new_edge["destination"] = new_unique_id
+                        requirement_manager.requirements["edges"].append(new_edge)
 
-                    update_source_data(file_path, requirement_manager.requirements)
-                    st.query_params.selected = new_unique_id
-                    st.rerun()
+                update_source_data(file_path, requirement_manager.requirements)
+                st.query_params.selected = new_unique_id
+                st.rerun()
     with undo_button_column:
         # 戻すボタンを表示
         if st.button("戻す", key=f"undo_button_{key_suffix}"):
@@ -94,8 +99,8 @@ def add_operate_buttons(
                 st.error("戻せるバックアップがありません。")
     with add_button_column:
         if not no_add:
-            # 追加ボタンを表示
-            if st.button("追加", key=f"add_button_{key_suffix}"):
+            # 追加ボタン（新規作成時のみ有効）
+            if st.button("追加", key=f"add_button_{key_suffix}", disabled=is_existing):
                 entity_title = tmp_entity.get(display_key, "")
                 if entity_title in id_title_dict:
                     st.error("入力内容が既存のエンティティと重複しています。")
@@ -108,31 +113,25 @@ def add_operate_buttons(
                     st.query_params.selected = added_id
                     st.rerun()
     with update_button_column:
-        # 更新ボタンを表示
-        if st.button("更新", key=f"update_button_{key_suffix}"):
-            if not selected_unique_id in unique_id_dict:
-                st.error("更新すべきエンティティがありません。")
-            else:
-                requirement_manager.update(
-                    selected_unique_id, tmp_entity, tmp_edges, new_edges
-                )
-                update_source_data(file_path, requirement_manager.requirements)
-                st.write("エンティティを更新しました。")
-                _reset_new_connection_widgets()
-                st.query_params.selected = tmp_entity[
-                    "unique_id"
-                ]  # リセット後にselectedを設定
-                st.rerun()
+        # 更新ボタン（既存ノード選択時のみ有効）
+        if st.button("更新", key=f"update_button_{key_suffix}", disabled=not is_existing):
+            requirement_manager.update(
+                selected_unique_id, tmp_entity, tmp_edges, new_edges
+            )
+            update_source_data(file_path, requirement_manager.requirements)
+            st.write("エンティティを更新しました。")
+            _reset_new_connection_widgets()
+            st.query_params.selected = tmp_entity[
+                "unique_id"
+            ]  # リセット後にselectedを設定
+            st.rerun()
     with remove_button_column:
         if not no_remove:
-            # 削除ボタンを表示
-            if st.button("削除", key=f"remove_button_{key_suffix}"):
-                entity_title = tmp_entity.get(display_key, "")
-                if entity_title not in id_title_dict:
-                    st.error("削除すべきエンティティがありません。")
-                else:
-                    requirement_manager.remove(selected_unique_id)
-                    update_source_data(file_path, requirement_manager.requirements)
-                    st.write("エンティティを削除しました。")
-                    st.rerun()
+            # 削除ボタン（既存ノード選択時のみ有効）
+            if st.button("削除", key=f"remove_button_{key_suffix}", disabled=not is_existing):
+                requirement_manager.remove(selected_unique_id)
+                update_source_data(file_path, requirement_manager.requirements)
+                st.write("エンティティを削除しました。")
+                st.rerun()
+
 
