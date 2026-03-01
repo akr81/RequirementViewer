@@ -60,14 +60,24 @@ uv sync
 初期の状態では、PlantUMLの公式サーバで処理を行います。  
 重要な情報を扱う際には、ローカルサーバを利用するようにしてください。
 
-#### `Java`のセットアップ
+ローカルサーバの構築には、以下のいずれかの方法を利用します。
 
-画像のプロットにPlantUMLを使用しています。  
-ローカルでPlantUMLを実行する場合は`Java`のインストールが必要です。
+#### 方法1: JavaとJARファイルを利用する
 
-#### PlantUMLの配置
+1. **Javaのセットアップ**: PlantUMLの実行に`Java`が必要です。[Adoptium](https://adoptium.net/) 等からインストールしてください。
+2. **PlantUMLの配置**: PlantUMLの公式サイトから`jar`ファイルを取得し、RequirementViewerフォルダ直下に`plantuml.jar`として配置します。
 
-PlantUMLの公式サイトから`jar`ファイルを取得し、RequirementViewerフォルダ直下に`plantuml.jar`として配置します。
+配置後、`config.hjson` の `plantuml` にローカルURL（例: `http://localhost:8080`）を設定するとアプリ起動時にサーバが自動起動します。
+
+#### 方法2: Dockerを利用する（Docker環境がある場合）
+
+既にDocker環境がある場合は、JavaやJARファイルの準備なしに以下のコマンドだけでローカルサーバを起動できます。
+
+```bash
+docker run -d -p 8080:8080 plantuml/plantuml-server:tomcat
+```
+
+起動後、設定画面（Setting）または `config.hjson` から接続先URLを `http://localhost:8080` に設定してください。
 
 ## 実行
 
@@ -90,19 +100,13 @@ uv run streamlit run app.py
 
 ### 各ダイアグラム固有の特徴
 
-| 画面 | 特徴 |
-| :--- | :--- |
-| 要求図 | ノードタイプが多い（Requirement / UseCase / Block 等）。エッジに関係タイプ（satisfy / refine 等）と注釈が設定可能。 |
-| PFD | ノードタイプにプロセス / 成果物 / クラウド等がある。エッジの向きは上流→下流。 |
-| CRT | ANDノードで複数の原因を論理的にまとめられる。ノードの内容は `text` フィールドに記述。 |
-| EC | ノード構成が固定（A〜D' の5ノード）。新規追加・削除・複製は無効。更新のみ可能。 |
-| S&T | 各ノードに「必要条件仮定」「戦略」「並行仮定」「戦術」「充分条件仮定」の5フィールドがある。 |
-
-![要求図](images/requirement_diagram.webp)
-![プロセスフロー図](images/process_flow_diagram.webp)
-![現状ツリー](images/current_reality_tree.webp)
-![クラウド](images/evaporating_cloud.webp)
-![S&Tツリー](images/strategy_and_tactics.webp)
+| 画面 | 特徴 | 画面イメージ |
+| :--- | :--- | :---: |
+| 要求図 | ノードタイプが多い（Requirement / UseCase / Block 等）。エッジに関係タイプ（satisfy / refine 等）と注釈が設定可能。 | <a href="images/requirement_diagram.webp"><img src="images/requirement_diagram.webp" width="200"></a> |
+| PFD | ノードタイプにプロセス / 成果物 / クラウド等がある。エッジの向きは上流→下流。 | <a href="images/process_flow_diagram.webp"><img src="images/process_flow_diagram.webp" width="200"></a> |
+| CRT | ANDノードで複数の原因を論理的にまとめられる。ノードの内容は `text` フィールドに記述。 | <a href="images/current_reality_tree.webp"><img src="images/current_reality_tree.webp" width="200"></a> |
+| EC | ノード構成が固定（A〜D' の5ノード）。新規追加・削除・複製は無効。更新のみ可能。 | <a href="images/evaporating_cloud.webp"><img src="images/evaporating_cloud.webp" width="200"></a> |
+| S&T | 各ノードに「必要条件仮定」「戦略」「並行仮定」「戦術」「充分条件仮定」の5フィールドがある。 | <a href="images/strategy_and_tactics.webp"><img src="images/strategy_and_tactics.webp" width="200"></a> |
 
 ### CCPM画面の操作
 
