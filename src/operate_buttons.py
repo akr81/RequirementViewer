@@ -157,11 +157,16 @@ def add_operate_buttons(
             st.rerun()
     with remove_button_column:
         if not no_remove:
-            # 削除ボタン（既存ノード選択時のみ有効）
-            if st.button("削除", key=f"remove_button_{key_suffix}", disabled=not is_existing):
-                requirement_manager.remove(selected_unique_id)
-                update_source_data(file_path, requirement_manager.requirements)
-                st.toast("エンティティを削除しました 🗑️")
-                st.rerun()
+            # 削除ボタンをPopoverで実装し、確認ダイアログとする
+            if is_existing:
+                with st.popover("削除"):
+                    st.write("本当に削除しますか？関連するエッジも削除されます。")
+                    if st.button("はい、削除します", key=f"confirm_remove_{key_suffix}"):
+                        requirement_manager.remove(selected_unique_id)
+                        update_source_data(file_path, requirement_manager.requirements)
+                        st.toast("エンティティを削除しました 🗑️")
+                        st.rerun()
+            else:
+                st.button("削除", key=f"remove_button_{key_suffix}", disabled=True)
 
 

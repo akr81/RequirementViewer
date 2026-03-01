@@ -348,10 +348,19 @@ def undo_last_change() -> bool:
     if len(backup_files) < 2:
         return False
 
+    latest_backup = os.path.join(back_dir, backup_files[0])
     prev_backup = os.path.join(back_dir, backup_files[1])
     dst = st.session_state["file_path"]
     if os.path.exists(prev_backup):
         shutil.copy(prev_backup, dst)
+        # Undoを複数回可能にするため、最新のバックアップを削除する
+        try:
+            os.remove(latest_backup)
+            png_to_delete = _find_closest_backup_png(backup_files[0])
+            if png_to_delete and os.path.exists(png_to_delete):
+                os.remove(png_to_delete)
+        except OSError:
+            pass
         return True
     return False
 
