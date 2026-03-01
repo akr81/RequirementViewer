@@ -7,7 +7,7 @@ from src.utility import (
     unescape_newline,
     show_backup_diff_preview,
 )  # draw_diagram_column を削除
-from src.operate_buttons import add_operate_buttons
+from src.operate_buttons import add_operate_buttons, add_node_selector
 from src.page_setup import setup_page_layout_and_data  # 変更
 import uuid
 import copy
@@ -142,6 +142,7 @@ def render_edit_panel():
             key="selected_backup_file",
         )
     show_backup_diff_preview(requirement_data)
+    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
     # ダイアグラムのタイトルを表示
     diagram_title = st.text_input(
         "CRTタイトル",

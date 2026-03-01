@@ -1,5 +1,5 @@
 import streamlit as st
-from src.operate_buttons import add_operate_buttons
+from src.operate_buttons import add_operate_buttons, add_node_selector
 from src.page_setup import setup_page_layout_and_data
 from src.diagram_column import draw_diagram_column
 from src.utility import (
@@ -511,6 +511,7 @@ def render_edit_panel():
             key="selected_backup_file",
         )
     show_backup_diff_preview(requirement_data)
+    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
 
     _render_project_settings(
         requirement_data=requirement_data,

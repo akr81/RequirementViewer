@@ -1,5 +1,5 @@
 import streamlit as st
-from src.operate_buttons import add_operate_buttons
+from src.operate_buttons import add_operate_buttons, add_node_selector
 from src.page_setup import setup_page_layout_and_data  # 変更
 from src.utility import (  # copy_file, get_backup_files_for_current_data のみ使用
     get_backup_files_for_current_data,
@@ -24,6 +24,7 @@ requirement_data = page_elements["requirement_data"]
 requirement_manager = page_elements["requirement_manager"]
 graph_data = page_elements["graph_data"]
 id_title_dict = page_elements["id_title_dict"]
+id_title_list = page_elements["id_title_list"]
 unique_id_dict = page_elements["unique_id_dict"]
 selected_unique_id = page_elements["selected_unique_id"]
 selected_entity = page_elements["selected_entity"]
@@ -49,6 +50,7 @@ def render_edit_panel():
             key="selected_backup_file",
         )
     show_backup_diff_preview(requirement_data)
+    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
     diagram_title = st.text_input(
         "ECタイトル",
         value=requirement_data.get("title", ""),

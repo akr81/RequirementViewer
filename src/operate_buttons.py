@@ -2,6 +2,36 @@ import streamlit as st
 from src.utility import update_source_data, undo_last_change
 
 
+def add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id):
+    """右パネル上部にノード検索・選択用セレクトボックスを描画する。
+
+    ユーザーがセレクトボックスで別のノードを選ぶと、
+    query_params.selected を更新してページ全体を再描画する。
+    """
+    # 「None」を除いた選択肢を作成
+    node_options = [label for label in id_title_list if label != "None"]
+    if not node_options:
+        return
+
+    # 現在選択中のノードのラベルを取得
+    current_label = unique_id_dict.get(selected_unique_id, "None")
+    if current_label in node_options:
+        current_index = node_options.index(current_label)
+    else:
+        current_index = 0
+
+    selected_label = st.selectbox(
+        "🔍 ノード検索",
+        node_options,
+        index=current_index,
+        key="node_selector",
+    )
+    new_unique_id = id_title_dict.get(selected_label)
+    if new_unique_id and new_unique_id != selected_unique_id:
+        st.query_params.selected = new_unique_id
+        st.rerun(scope="app")
+
+
 def _reset_new_connection_widgets():
     """
     現在のアプリケーションに関連する新規接続ウィジェットの

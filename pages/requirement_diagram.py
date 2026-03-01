@@ -1,5 +1,5 @@
 import streamlit as st
-from src.operate_buttons import add_operate_buttons
+from src.operate_buttons import add_operate_buttons, add_node_selector
 from src.page_setup import setup_page_layout_and_data  # 変更
 from src.utility import (  # copy_file, get_backup_files_for_current_data のみ使用
     get_backup_files_for_current_data,
@@ -110,6 +110,7 @@ def render_edit_panel():
             key="selected_backup_file",
         )
     show_backup_diff_preview(requirement_data)
+    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
     # ダイアグラムのタイトルを表示
     diagram_title = st.text_input(
         "REQタイトル",
