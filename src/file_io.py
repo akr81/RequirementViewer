@@ -242,6 +242,38 @@ def atomic_write_json(file_path: str, data: Any):
         raise
 
 
+def _cleanup_old_backups():
+    """設定された保持日数を超えた古いバックアップファイルを削除する。
+
+    ファイル名のタイムスタンプ（YYYYMMDD_HHMMSS）を基準に判定する。
+    hjsonとpngの両方を対象とする。
+    """
+    back_dir = "back"
+    if not os.path.isdir(back_dir):
+        return
+
+    retention_days = st.session_state.get("config_data", {}).get(
+        "backup_retention_days", 30
+    )
+    cutoff = datetime.datetime.now() - datetime.timedelta(days=retention_days)
+
+    for f in os.listdir(back_dir):
+        if not (f.endswith(".hjson") or f.endswith(".png")):
+            continue
+        # タイムスタンプをファイル名から取得（先頭15文字: YYYYMMDD_HHMMSS）
+        if len(f) < 15:
+            continue
+        try:
+            file_time = datetime.datetime.strptime(f[:15], "%Y%m%d_%H%M%S")
+        except ValueError:
+            continue
+        if file_time < cutoff:
+            try:
+                os.remove(os.path.join(back_dir, f))
+            except OSError:
+                pass
+
+
 def get_backup_files_for_current_data():
     """現在のデータに対するバックアップファイルの一覧を取得する。
 
@@ -252,6 +284,9 @@ def get_backup_files_for_current_data():
     # （fragment内の通常レンダリングパスなのでst.rerunが正常動作する）
     if st.session_state.pop("need_full_rerun", False):
         st.rerun(scope="app")
+
+    # 古いバックアップを自動クリーンアップ
+    _cleanup_old_backups()
 
     # バックアップファイルのリストを取得
     backup_files = [
