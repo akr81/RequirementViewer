@@ -471,7 +471,7 @@ def _render_project_settings(
                             "registered_at": datetime.today().strftime("%Y/%m/%d %H:%M:%S")
                         }
                         update_source_data(file_path, requirement_manager.requirements)
-                        st.success(f"CC長: {active_length}日, 全バッファ: {total_buffer}日 でベースラインを登録しました。")
+                        st.toast(f"CC長: {active_length}日, 全バッファ: {total_buffer}日 でベースラインを登録しました ✅")
                     except Exception as e:
                         st.error(f"ベースライン登録エラー: {e}")
                 else:
@@ -479,7 +479,7 @@ def _render_project_settings(
         with col_btn2:
             if st.button("💾 プロジェクト設定を保存", key="ccpm_save_project"):
                 update_source_data(file_path, requirement_manager.requirements)
-                st.success("プロジェクト設定を保存しました。")
+                st.toast("プロジェクト設定を保存しました ✅")
                 st.rerun()
                     
     st.write("---")
@@ -755,7 +755,7 @@ def _render_fever_tab(
                     sorted_progress = dict(sorted(new_progress.items(), key=lambda item: item[0]))
                     requirement_data["progress"] = sorted_progress
                     update_source_data(file_path, requirement_manager.requirements)
-                    st.success("データを保存しました。")
+                    st.toast("データを保存しました ✅")
                     st.query_params.view = "fever"
                     st.rerun()
             else:

@@ -71,7 +71,7 @@ if st.button("💾 保存", key="save_settings"):
 
     save_config(updated_config)
     st.session_state.config_data = updated_config
-    st.success("設定を保存しました。")
+    st.toast("設定を保存しました ✅")
 
 st.divider()
 

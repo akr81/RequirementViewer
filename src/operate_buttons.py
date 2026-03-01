@@ -108,7 +108,7 @@ def add_operate_buttons(
                     # 追加の場合、既存のedgeを変更する必要はない
                     added_id = requirement_manager.add(tmp_entity, tmp_edges, new_edges)
                     update_source_data(file_path, requirement_manager.requirements)
-                    st.write("エンティティを追加しました。")
+                    st.toast("エンティティを追加しました ✅")
                     _reset_new_connection_widgets()
                     st.query_params.selected = added_id
                     st.rerun()
@@ -119,7 +119,7 @@ def add_operate_buttons(
                 selected_unique_id, tmp_entity, tmp_edges, new_edges
             )
             update_source_data(file_path, requirement_manager.requirements)
-            st.write("エンティティを更新しました。")
+            st.toast("エンティティを更新しました ✅")
             _reset_new_connection_widgets()
             st.query_params.selected = tmp_entity[
                 "unique_id"
@@ -131,7 +131,7 @@ def add_operate_buttons(
             if st.button("削除", key=f"remove_button_{key_suffix}", disabled=not is_existing):
                 requirement_manager.remove(selected_unique_id)
                 update_source_data(file_path, requirement_manager.requirements)
-                st.write("エンティティを削除しました。")
+                st.toast("エンティティを削除しました 🗑️")
                 st.rerun()
 
 
