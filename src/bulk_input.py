@@ -36,6 +36,7 @@ def parse_entities(
     content_field: str = "title",
     default_color: str = "None",
     extra_fields: Dict = None,
+    metadata_columns: List[Dict] = None,
 ) -> Tuple[List[Dict], Dict[int, Dict], Set[str]]:
     """テキストからエンティティの追加・削除リストを生成する。
 
@@ -47,6 +48,8 @@ def parse_entities(
         content_field: テキストを格納するフィールド名（PFD/CCPM: "title", CRT: "id"）
         default_color: デフォルトの色
         extra_fields: エンティティに追加するフィールド（CCPM の days, remains 等）
+        metadata_columns: カンマ区切りで入力可能なメタデータの定義リスト
+            例: [{"key": "days", "name": "日数", "type": int, "default": 1}]
 
     Returns:
         (新規エンティティリスト, 新規分の仮IDマップ, 削除対象unique_idセット)
@@ -71,18 +74,44 @@ def parse_entities(
         # テキスト行 → 新規エンティティ
         temp_id = start_id + len(entities_to_add)
         unique_id = f"{uuid.uuid4()}".replace("-", "")
+        
+        parts = [p.strip() for p in line.split(",")]
+        main_text = parts[0]
+        
         entity = {
             "type": default_type,
-            content_field: line,
+            content_field: main_text,
             "color": default_color,
             "unique_id": unique_id,
         }
         if extra_fields:
             entity.update(extra_fields)
+            
+        meta_preview_parts = []
+        if metadata_columns:
+            for i, col in enumerate(metadata_columns):
+                val = col.get("default")
+                if i + 1 < len(parts) and parts[i+1]:
+                    raw_val = parts[i+1]
+                    col_type = col.get("type", str)
+                    try:
+                        # bool型の場合は文字列の"true"/"false"等をハンドルする想定だが、ここは単純に
+                        if col_type == bool:
+                            val = raw_val.lower() in ("true", "1", "yes", "on")
+                        else:
+                            val = col_type(raw_val)
+                    except ValueError:
+                        pass
+                entity[col["key"]] = val
+                meta_preview_parts.append(f"{col.get('name', col['key'])}:{val}")
+
         entities_to_add.append(entity)
+        
+        preview_suffix = f" [{', '.join(meta_preview_parts)}]" if meta_preview_parts else f" [{default_type}]"
         new_temp_map[temp_id] = {
             "unique_id": unique_id,
-            "label": line,
+            "label": main_text,
+            "preview_suffix": preview_suffix,
         }
     return entities_to_add, new_temp_map, ids_to_delete
 
@@ -205,6 +234,7 @@ def render_bulk_input_ui(
     content_field: str = "title",
     extra_fields: Dict = None,
     extra_edge_fields: Dict = None,
+    metadata_columns: List[Dict] = None,
 ):
     """一括入力UIを描画する。
 
@@ -212,6 +242,7 @@ def render_bulk_input_ui(
         content_field: 入力テキストを格納するフィールド名（PFD/CCPM: 'title', CRT: 'id'）
         extra_fields: エンティティに追加するデフォルトフィールド（CCPMの days, remains 等）
         extra_edge_fields: エッジに追加するデフォルトフィールド（CRTの and 等）
+        metadata_columns: カンマ区切りで入力可能なメタデータの定義リスト
     """
 
     # カウンターベースのキー: 実行成功時にインクリメントし、
@@ -230,14 +261,22 @@ def render_bulk_input_ui(
     existing_map = build_temp_id_map(nodes, display_key)
     start_id = len(existing_map) + 1
 
-    # エンティティ入力
+    # エンティティ入力のプレースホルダー・キャプションを動的生成
+    format_hint = "テキスト"
+    placeholder_example = "プロセスA"
+    if metadata_columns:
+        meta_names = [col.get("name", col["key"]) for col in metadata_columns]
+        format_hint += f", {', '.join(meta_names)}"
+        example_vals = [str(col.get("default", "")) for col in metadata_columns]
+        placeholder_example += f", {', '.join(example_vals)}"
+
     st.caption(f"1行1エンティティ（#{start_id}～ 自動採番 / 既存の番号で削除）")
     entity_text = st.text_area(
         "エンティティ入力",
         height=150,
         key=f"{page_key_prefix}_bulk_entities_{counter}",
         label_visibility="collapsed",
-        placeholder="テキスト → 新規追加\n数字のみ → 該当エンティティを削除\n例:\nプロセスA\n3",
+        placeholder=f"書式: {format_hint}\n例:\n{placeholder_example}\n3",
     )
 
     # 接続関係入力
@@ -254,6 +293,7 @@ def render_bulk_input_ui(
     new_entities, new_temp_map, del_entity_ids = parse_entities(
         entity_text, start_id, default_type, existing_map,
         content_field=content_field, extra_fields=extra_fields,
+        metadata_columns=metadata_columns,
     )
     full_temp_map = {**existing_map, **new_temp_map}
     current_edges = requirement_manager.requirements.get("edges", [])
@@ -267,7 +307,7 @@ def render_bulk_input_ui(
     if has_changes:
         st.write("##### プレビュー")
         for temp_id, info in new_temp_map.items():
-            st.text(f"  ＋ #{temp_id}  {info['label']}  [{default_type}]")
+            st.text(f"  ＋ #{temp_id}  {info['label']}  {info.get('preview_suffix', '')}")
         for uid in del_entity_ids:
             st.text(f"  ー {_uid_to_display(uid, existing_map)}  [削除]")
         for edge in add_edges:

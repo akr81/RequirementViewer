@@ -161,8 +161,10 @@ def render_edit_panel():
             type_list=pfd_type_list,
             display_key="title",
             page_key_prefix="pfd",
+            metadata_columns=[
+                {"key": "color", "name": "色", "type": str, "default": "None"},
+            ],
         )
-
 
 def _render_individual_edit():
     """個別エンティティ編集タブの内容を描画する。"""

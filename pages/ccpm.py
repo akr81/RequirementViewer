@@ -537,6 +537,11 @@ def render_edit_panel():
             content_field="title",
             extra_fields={"days": 1, "remains": 0, "resource": "",
                           "start": "", "end": "", "finished": False},
+            metadata_columns=[
+                {"key": "days", "name": "日数", "type": int, "default": 1},
+                {"key": "resource", "name": "担当", "type": str, "default": ""},
+                {"key": "color", "name": "色", "type": str, "default": "None"},
+            ],
         )
 
 

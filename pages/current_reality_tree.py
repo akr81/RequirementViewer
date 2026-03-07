@@ -167,6 +167,9 @@ def render_edit_panel():
             page_key_prefix="crt",
             content_field="id",
             extra_edge_fields={"and": "None"},
+            metadata_columns=[
+                {"key": "color", "name": "色", "type": str, "default": "None"},
+            ],
         )
 
 
