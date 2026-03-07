@@ -95,8 +95,12 @@ uv run streamlit run app.py
 
 各ダイアグラム画面は左パネル（図の表示）と右パネル（データ編集）の2カラム構成です。
 
-- **左パネル**: PlantUMLで描画された図が表示されます。図上のノードをクリックすると、右パネルの編集対象が切り替わります。
-- **右パネル**: 選択中のエンティティの属性（名称、タイプ、色など）やエッジ（接続関係）を編集できます。上部の操作ボタンでエンティティの追加・更新・削除・複製・Undoを行います。
+- **左パネル**: PlantUMLで描画された図が表示されます。
+  - **仮ID表示（デフォルトON）**: 図上の各ノードに「仮ID（`#1`など）」を付記できます。これは、一括入力（後述）の際にノードを短い番号で参照するための便利な機能で、チェックボックスで表示/非表示を切り替えられます。
+  - 図上のノードをクリックすると、右パネルの編集対象が切り替わります。
+- **右パネル**: 以下の2つのタブでデータ編集を行います。
+  - **✏️ 個別入力**: 選択中のエンティティの属性（名称、タイプ、色など）やエッジ（接続関係）をGUIから編集します。
+  - **📝 一括入力**: テキストベースで複数のエンティティと接続関係を一気に登録・削除できる、初期スケッチに便利なモードです。カンマ区切りで名称以外のメタデータ（日数、担当、色など）の同時入力にも対応しています。
 
 ### 各ダイアグラム固有の特徴
 
@@ -104,9 +108,9 @@ uv run streamlit run app.py
 | :--- | :--- | :---: |
 | 要求図 | ノードタイプが多い（Requirement / UseCase / Block 等）。エッジに関係タイプ（satisfy / refine 等）と注釈が設定可能。 | <a href="images/requirement_diagram.webp"><img src="images/requirement_diagram.webp" width="200"></a> |
 | PFD | ノードタイプにプロセス / 成果物 / クラウド等がある。エッジの向きは上流→下流。 | <a href="images/process_flow_diagram.webp"><img src="images/process_flow_diagram.webp" width="200"></a> |
-| CRT | ANDノードで複数の原因を論理的にまとめられる。ノードの内容は `text` フィールドに記述。 | <a href="images/current_reality_tree.webp"><img src="images/current_reality_tree.webp" width="200"></a> |
+| CRT | ANDノードで複数の原因を論理的にまとめられる。ノードの中に長文・詳細なテキストを記述可能。 | <a href="images/current_reality_tree.webp"><img src="images/current_reality_tree.webp" width="200"></a> |
 | EC | ノード構成が固定（A〜D' の5ノード）。新規追加・削除・複製は無効。更新のみ可能。 | <a href="images/evaporating_cloud.webp"><img src="images/evaporating_cloud.webp" width="200"></a> |
-| S&T | 各ノードに「必要条件仮定」「戦略」「並行仮定」「戦術」「充分条件仮定」の5フィールドがある。 | <a href="images/strategy_and_tactics.webp"><img src="images/strategy_and_tactics.webp" width="200"></a> |
+| S&T | 各ノードに「必要条件仮定」「戦略」「並行仮定」「戦術」「充分条件仮定」の5項目の入力欄がある。 | <a href="images/strategy_and_tactics.webp"><img src="images/strategy_and_tactics.webp" width="200"></a> |
 
 ### CCPM画面の操作
 
