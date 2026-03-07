@@ -164,10 +164,24 @@ def _render_diagram(
     parameters_dict["max_concurrency"] = len(project.get("resources", []))
 
     plantuml_code = ""
+    # subgraphのノードtitleに仮ID(#N)を付加（表示のみ、元データには影響しない）
+    subgraph = options.graph_data.subgraph
+    all_nodes = context.requirements.get("nodes", [])
+    uid_to_temp_id = {
+        n.get("unique_id"): i for i, n in enumerate(all_nodes, start=1)
+    }
+    original_titles = {}
+    for node_id, attrs in subgraph.nodes(data=True):
+        temp_id = uid_to_temp_id.get(attrs.get("unique_id"))
+        if temp_id is not None:
+            # title, id のどちらかを内容として使うので両方にフォールバック
+            field = "title" if attrs.get("title") else "id"
+            original_titles[node_id] = (field, attrs.get(field, ""))
+            attrs[field] = f"{attrs.get(field, '')}\n(#{temp_id})"
     try:
         plantuml_code = _converter.convert_to_puml(
             context.app_name,
-            options.graph_data.subgraph,
+            subgraph,
             title=None,
             parameters_dict=parameters_dict,
             diagram_title=context.requirements.get("title", ""),
@@ -175,6 +189,10 @@ def _render_diagram(
     except:
         st.error("PlantUMLコードの変換に失敗しました。")
         plantuml_code = ""
+    finally:
+        # 仮IDを付加したtitleを元に戻す
+        for node_id, (field, original_value) in original_titles.items():
+            subgraph.nodes[node_id][field] = original_value
 
     svg_output = get_diagram(plantuml_code, context.config_data["plantuml"])
     svg_output = svg_output.replace(

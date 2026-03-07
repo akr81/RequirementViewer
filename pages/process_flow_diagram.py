@@ -1,5 +1,6 @@
 import streamlit as st
 from src.operate_buttons import add_operate_buttons, add_node_selector
+from src.bulk_input import render_bulk_input_ui
 from src.page_setup import setup_page_layout_and_data  # 変更
 from src.utility import (  # copy_file, get_backup_files_for_current_data のみ使用
     get_backup_files_for_current_data,
@@ -138,28 +139,44 @@ def render_edit_panel():
             key="selected_backup_file",
         )
     show_backup_diff_preview(requirement_data)
-    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
     # ダイアグラムのタイトルを表示
     diagram_title = st.text_input(
         "PFDタイトル",
         value=requirement_data.get("title", ""),
         key="diagram_title_input",
     )
-    requirement_data["title"] = diagram_title  # タイトルを更新
+    requirement_data["title"] = diagram_title
 
-    # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
+    # --- タブ切り替え: 個別入力 / 一括入力 ---
+    tab_individual, tab_bulk = st.tabs(["✏️ 個別入力", "📝 一括入力"])
+
+    with tab_individual:
+        _render_individual_edit()
+
+    with tab_bulk:
+        render_bulk_input_ui(
+            nodes=requirement_data.get("nodes", []),
+            requirement_manager=requirement_manager,
+            file_path=file_path,
+            type_list=pfd_type_list,
+            display_key="title",
+            page_key_prefix="pfd",
+        )
+
+
+def _render_individual_edit():
+    """個別エンティティ編集タブの内容を描画する。"""
+    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
     tmp_entity = copy.deepcopy(selected_entity)
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
-    tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
-    tmp_entity.setdefault("type", "entity")  # typeがない場合はentityを設定
+    tmp_entity.setdefault("color", "None")
+    tmp_entity.setdefault("type", "entity")
 
-    # 後でボタンを配置する
     top_button_container = st.container()
 
     tmp_entity["type"] = st.selectbox(
         "タイプ", pfd_type_list, index=pfd_type_list.index(tmp_entity["type"])
     )
-    # 旧データでは id にコンテンツが入っている場合があるためフォールバック
     title_value = tmp_entity.get("title", "") or tmp_entity.get("id", "")
     tmp_entity["title"] = st.text_area(
         "プロセス名 / タイトル",
@@ -175,12 +192,9 @@ def render_edit_panel():
         key=f"pfd_color_{selected_unique_id}",
     )
 
-    # 接続元の関係を取得
-    # 直接edgeは操作せず、コピーに対して操作する
     tmp_edges = copy.deepcopy(requirement_data["edges"])
 
     params_to = edge_params["to_selected"]
-    # データ参照を params に追加（関数シグネチャを変えずにグローバル依存を除去）
     params_to["selected_unique_id"] = selected_unique_id
     params_to["id_title_dict"] = id_title_dict
     params_to["unique_id_dict"] = unique_id_dict
@@ -192,14 +206,12 @@ def render_edit_panel():
             edge, i, visibility, edge_params["to_selected"]
         )
 
-    # 関係追加の操作があるため、1つは常に表示
     temp_predecessor = {
-        "source": "None",  # selectboxの選択肢に合わせる
+        "source": "None",
         "destination": tmp_entity["unique_id"],
-        "comment": "",  # text_inputのデフォルトに合わせる
+        "comment": "",
         "type": "arrow",
     }
-
     visibility = "visible"
     render_edge_connection_new(
         temp_predecessor, 0, visibility, edge_params["to_selected"]
@@ -207,9 +219,7 @@ def render_edit_panel():
 
     st.write("---")
 
-    # 接続先の関係を取得
     params_from = edge_params["from_selected"]
-    # データ参照を params に追加
     params_from["selected_unique_id"] = selected_unique_id
     params_from["id_title_dict"] = id_title_dict
     params_from["unique_id_dict"] = unique_id_dict
@@ -223,14 +233,12 @@ def render_edit_panel():
             edge, i, visibility, edge_params["from_selected"]
         )
 
-    # 関係追加の操作があるため、1つは常に表示
     temp_successor = {
         "source": tmp_entity["unique_id"],
-        "destination": "None",  # selectboxの選択肢に合わせる
-        "comment": "",  # text_inputのデフォルトに合わせる
+        "destination": "None",
+        "comment": "",
         "type": "arrow",
     }
-
     visibility = "visible"
     render_edge_connection_new(
         temp_successor, 0, visibility, edge_params["from_selected"]
@@ -238,7 +246,6 @@ def render_edit_panel():
 
     new_edges = [temp_predecessor, temp_successor]
 
-    # 上部のボタンを配置
     with top_button_container:
         add_operate_buttons(
             selected_unique_id,
@@ -249,11 +256,10 @@ def render_edit_panel():
             unique_id_dict,
             tmp_edges=tmp_edges,
             new_edges=new_edges,
-            key_suffix="top",  # 重複エラー回避用
+            key_suffix="top",
             display_key="title",
         )
 
-    # 下部のボタンを配置
     add_operate_buttons(
         selected_unique_id,
         tmp_entity,
@@ -263,12 +269,12 @@ def render_edit_panel():
         unique_id_dict,
         tmp_edges=tmp_edges,
         new_edges=new_edges,
-        key_suffix="bottom",  # 重複エラー回避用
+        key_suffix="bottom",
         display_key="title",
     )
 
 
 with edit_column:
     render_edit_panel()
-    
+
 st.session_state.graph_data = graph_data
