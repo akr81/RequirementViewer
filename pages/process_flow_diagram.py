@@ -161,8 +161,10 @@ def render_edit_panel():
             type_list=pfd_type_list,
             display_key="title",
             page_key_prefix="pfd",
+            extra_fields={"finished": False},
             metadata_columns=[
                 {"key": "color", "name": "色", "type": str, "default": "None"},
+                {"key": "finished", "name": "完了", "type": bool, "default": False},
             ],
         )
 
@@ -173,6 +175,7 @@ def _render_individual_edit():
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")
     tmp_entity.setdefault("type", "entity")
+    tmp_entity.setdefault("finished", False)
 
     top_button_container = st.container()
 
@@ -187,13 +190,19 @@ def _render_individual_edit():
         key=f"pfd_title_{selected_unique_id}",
     )
 
+    tmp_entity["finished"] = st.checkbox(
+        "完了",
+        value=tmp_entity.get("finished", False),
+        key=f"pfd_finished_{selected_unique_id}",
+    )
+
     tmp_entity["color"] = st.selectbox(
         "色",
         color_list,
         index=color_list.index(tmp_entity["color"]),
         key=f"pfd_color_{selected_unique_id}",
     )
-
+    
     tmp_edges = copy.deepcopy(requirement_data["edges"])
 
     params_to = edge_params["to_selected"]

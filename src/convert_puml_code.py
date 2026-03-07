@@ -399,8 +399,10 @@ class ConvertPumlCode:
         node_attrs = node[1]
         parameters_str = self._convert_parameters_dict(node, parameters_dict)
         color_str = self._get_puml_color(node_attrs)
-        # 指定フィールドが空の場合は title → id の順にフォールバック（旧データ互換）
         raw_content = node_attrs.get(content_field, "") or node_attrs.get("title", "") or node_attrs.get("id", "")
+        if node_attrs.get("finished", False):
+            raw_content = "☑ " + raw_content
+            
         # カード要素は文字列の途中で改行が有効になるように \n を許可しておく
         content = self._escape_puml(raw_content, keep_newline=True)
 
@@ -937,6 +939,9 @@ class ConvertPumlCode:
         color_str = self._get_puml_color(node_attrs)
         
         id_val = node_attrs.get("title", "")
+        if node_attrs.get("finished", False):
+            id_val = "☑ " + id_val
+            
         # エスケープ処理 (usecaseなどは\nに変換)
         escaped_id_val = self._escape_puml(id_val, keep_newline=False)
         
