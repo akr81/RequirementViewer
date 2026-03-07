@@ -107,17 +107,23 @@ def _render_controls(context: DiagramContext, options: DiagramOptions) -> Option
         )
 
     with landscape_column:
-        options.landscape = st.checkbox(
-            "横向き",
-            value=options.landscape,
-            key=f"{context.app_name}_landscape_checkbox",
-        )
-        options.title = st.checkbox(
-            "タイトル", value=options.title, key=f"{context.app_name}_title_checkbox"
-        )
-        options.detail = st.checkbox(
-            "詳細", value=options.detail, key=f"{context.app_name}_detail_checkbox"
-        )
+        cb_col1, cb_col2 = st.columns(2)
+        with cb_col1:
+            options.landscape = st.checkbox(
+                "横向き",
+                value=options.landscape,
+                key=f"{context.app_name}_landscape_checkbox",
+            )
+            options.detail = st.checkbox(
+                "詳細", value=options.detail, key=f"{context.app_name}_detail_checkbox"
+            )
+        with cb_col2:
+            options.title = st.checkbox(
+                "タイトル", value=options.title, key=f"{context.app_name}_title_checkbox"
+            )
+            options.show_temp_id = st.checkbox(
+                "ID表示", value=True, key=f"{context.app_name}_tempid_checkbox"
+            )
         options.link_mode = st.toggle(
             "🖱️ 接続モード",
             value=options.link_mode,
@@ -164,20 +170,20 @@ def _render_diagram(
     parameters_dict["max_concurrency"] = len(project.get("resources", []))
 
     plantuml_code = ""
-    # subgraphのノードtitleに仮ID(#N)を付加（表示のみ、元データには影響しない）
+    # show_temp_id が ON の場合のみ、subgraphのノードtitleに仮ID(#N)を付加
     subgraph = options.graph_data.subgraph
-    all_nodes = context.requirements.get("nodes", [])
-    uid_to_temp_id = {
-        n.get("unique_id"): i for i, n in enumerate(all_nodes, start=1)
-    }
     original_titles = {}
-    for node_id, attrs in subgraph.nodes(data=True):
-        temp_id = uid_to_temp_id.get(attrs.get("unique_id"))
-        if temp_id is not None:
-            # title, id のどちらかを内容として使うので両方にフォールバック
-            field = "title" if attrs.get("title") else "id"
-            original_titles[node_id] = (field, attrs.get(field, ""))
-            attrs[field] = f"{attrs.get(field, '')}\n(#{temp_id})"
+    if getattr(options, "show_temp_id", False):
+        all_nodes = context.requirements.get("nodes", [])
+        uid_to_temp_id = {
+            n.get("unique_id"): i for i, n in enumerate(all_nodes, start=1)
+        }
+        for node_id, attrs in subgraph.nodes(data=True):
+            temp_id = uid_to_temp_id.get(attrs.get("unique_id"))
+            if temp_id is not None:
+                field = "title" if attrs.get("title") else "id"
+                original_titles[node_id] = (field, attrs.get(field, ""))
+                attrs[field] = f"{attrs.get(field, '')}\n(#{temp_id})"
     try:
         plantuml_code = _converter.convert_to_puml(
             context.app_name,
