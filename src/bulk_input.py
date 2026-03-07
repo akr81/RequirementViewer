@@ -124,6 +124,12 @@ def parse_connections(
 ) -> Tuple[List[Dict], Set[Tuple[str, str]], List[str]]:
     """接続記法からエッジの追加・削除リストを生成する。
 
+    書式:
+      - 「1 3」 — #1→#3 の接続（従来形式・2つの数字）
+      - 「2 3 4 > 5 6」 — #2→#5, #2→#6, #3→#5, #3→#6, #4→#5, #4→#6 の直積接続
+
+    既存エッジと一致する場合は削除扱い（トグル動作）。
+
     Returns:
         (追加エッジリスト, 削除対象(source,destination)セット, エラーメッセージリスト)
     """
@@ -136,45 +142,97 @@ def parse_connections(
         line = line.strip()
         if not line:
             continue
-        parts = line.split()
-        if len(parts) != 2:
-            errors.append(f"行{line_num}: 「{line}」— 数字2つをスペース区切りで入力してください")
-            continue
-        try:
-            src_id, dst_id = int(parts[0]), int(parts[1])
-        except ValueError:
-            errors.append(f"行{line_num}: 「{line}」— 数字以外が含まれています")
-            continue
-        if src_id not in full_temp_map:
-            errors.append(f"行{line_num}: 仮ID #{src_id} が存在しません")
-            continue
-        if dst_id not in full_temp_map:
-            errors.append(f"行{line_num}: 仮ID #{dst_id} が存在しません")
-            continue
-        if src_id == dst_id:
-            errors.append(f"行{line_num}: 自己参照は設定できません")
-            continue
 
-        src_uid = full_temp_map[src_id]["unique_id"]
-        dst_uid = full_temp_map[dst_id]["unique_id"]
-
-        # 既存エッジに同じ source→destination があれば削除、なければ追加
-        is_existing = any(
-            e.get("source") == src_uid and e.get("destination") == dst_uid
-            for e in existing_edges
-        )
-        if is_existing:
-            edges_to_remove.add((src_uid, dst_uid))
+        # 「>」を含む場合: 複数対複数の直積接続
+        if ">" in line:
+            halves = line.split(">")
+            if len(halves) != 2:
+                errors.append(f"行{line_num}: 「{line}」— '>' は1行に1つだけ使用してください")
+                continue
+            src_tokens = halves[0].split()
+            dst_tokens = halves[1].split()
+            if not src_tokens or not dst_tokens:
+                errors.append(f"行{line_num}: 「{line}」— '>' の両側に仮IDを指定してください")
+                continue
+            # 各トークンを整数に変換
+            src_ids = []
+            dst_ids = []
+            has_error = False
+            for token in src_tokens:
+                try:
+                    src_ids.append(int(token))
+                except ValueError:
+                    errors.append(f"行{line_num}: 「{token}」は数字ではありません")
+                    has_error = True
+            for token in dst_tokens:
+                try:
+                    dst_ids.append(int(token))
+                except ValueError:
+                    errors.append(f"行{line_num}: 「{token}」は数字ではありません")
+                    has_error = True
+            if has_error:
+                continue
+            # 存在チェック・直積ペア生成
+            pairs = []
+            for sid in src_ids:
+                if sid not in full_temp_map:
+                    errors.append(f"行{line_num}: 仮ID #{sid} が存在しません")
+                    has_error = True
+            for did in dst_ids:
+                if did not in full_temp_map:
+                    errors.append(f"行{line_num}: 仮ID #{did} が存在しません")
+                    has_error = True
+            if has_error:
+                continue
+            for sid in src_ids:
+                for did in dst_ids:
+                    if sid == did:
+                        errors.append(f"行{line_num}: #{sid} の自己参照はスキップします")
+                        continue
+                    pairs.append((sid, did))
         else:
-            edge = {
-                "source": src_uid,
-                "destination": dst_uid,
-                "comment": "",
-                "type": "arrow",
-            }
-            if extra_edge_fields:
-                edge.update(extra_edge_fields)
-            edges_to_add.append(edge)
+            # 従来形式: 「1 3」（数字2つ）
+            parts = line.split()
+            if len(parts) != 2:
+                errors.append(f"行{line_num}: 「{line}」— 数字2つをスペース区切り、または '>' で複数指定してください")
+                continue
+            try:
+                src_id, dst_id = int(parts[0]), int(parts[1])
+            except ValueError:
+                errors.append(f"行{line_num}: 「{line}」— 数字以外が含まれています")
+                continue
+            if src_id not in full_temp_map:
+                errors.append(f"行{line_num}: 仮ID #{src_id} が存在しません")
+                continue
+            if dst_id not in full_temp_map:
+                errors.append(f"行{line_num}: 仮ID #{dst_id} が存在しません")
+                continue
+            if src_id == dst_id:
+                errors.append(f"行{line_num}: 自己参照は設定できません")
+                continue
+            pairs = [(src_id, dst_id)]
+
+        # ペアごとに追加 or 削除を判定
+        for src_id, dst_id in pairs:
+            src_uid = full_temp_map[src_id]["unique_id"]
+            dst_uid = full_temp_map[dst_id]["unique_id"]
+
+            is_existing = any(
+                e.get("source") == src_uid and e.get("destination") == dst_uid
+                for e in existing_edges
+            )
+            if is_existing:
+                edges_to_remove.add((src_uid, dst_uid))
+            else:
+                edge = {
+                    "source": src_uid,
+                    "destination": dst_uid,
+                    "comment": "",
+                    "type": "arrow",
+                }
+                if extra_edge_fields:
+                    edge.update(extra_edge_fields)
+                edges_to_add.append(edge)
 
     return edges_to_add, edges_to_remove, errors
 
@@ -286,7 +344,7 @@ def render_bulk_input_ui(
         height=100,
         key=f"{page_key_prefix}_bulk_connections_{counter}",
         label_visibility="collapsed",
-        placeholder="仮IDをスペース区切りで入力\n例:\n1 3\n2 4",
+        placeholder="仮IDをスペース区切りで入力（'>'で複数対複数）\n例:\n1 3\n2 3 4 > 5 6",
     )
 
     # パース
