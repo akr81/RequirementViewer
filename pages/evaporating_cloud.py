@@ -50,14 +50,14 @@ def render_edit_panel():
             key="selected_backup_file",
         )
     show_backup_diff_preview(requirement_data)
-    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
     diagram_title = st.text_input(
         "ECタイトル",
         value=requirement_data.get("title", ""),
         key="diagram_title_input",
     )
     requirement_data["title"] = diagram_title  # タイトルを更新
-    st.write("---")
+
+    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
     # 直接データ操作はせず、コピーに対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定

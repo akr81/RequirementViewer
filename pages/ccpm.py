@@ -483,8 +483,6 @@ def _render_project_settings(
                 st.toast("プロジェクト設定を保存しました ✅")
                 st.rerun()
                     
-    st.write("---")
-
 
 @st.fragment
 def render_edit_panel():

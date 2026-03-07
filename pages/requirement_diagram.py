@@ -1,6 +1,7 @@
 import streamlit as st
 from src.operate_buttons import add_operate_buttons, add_node_selector
 from src.page_setup import setup_page_layout_and_data  # 変更
+from src.bulk_input import render_bulk_input_ui
 from src.utility import (  # copy_file, get_backup_files_for_current_data のみ使用
     get_backup_files_for_current_data,
     copy_file,
@@ -110,7 +111,6 @@ def render_edit_panel():
             key="selected_backup_file",
         )
     show_backup_diff_preview(requirement_data)
-    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
     # ダイアグラムのタイトルを表示
     diagram_title = st.text_input(
         "REQタイトル",
@@ -118,7 +118,30 @@ def render_edit_panel():
         key="diagram_title_input",  # ページ全体の設定なので固定keyでよい
     )
     requirement_data["title"] = diagram_title  # タイトルを更新
-    st.write("---")
+
+    # --- タブ切り替え: 個別入力 / 一括入力 ---
+    tab_individual, tab_bulk = st.tabs(["✏️ 個別入力", "📝 一括入力"])
+
+    with tab_individual:
+        _render_individual_edit()
+
+    with tab_bulk:
+        render_bulk_input_ui(
+            nodes=requirement_data.get("nodes", []),
+            requirement_manager=requirement_manager,
+            file_path=file_path,
+            type_list=entity_types,
+            display_key="title",
+            page_key_prefix="req",
+            metadata_columns=[
+                {"key": "color", "name": "色", "type": str, "default": "None"},
+            ],
+        )
+
+def _render_individual_edit():
+    """個別エンティティ編集タブの内容を描画する。"""
+    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
+
     # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
