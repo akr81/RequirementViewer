@@ -2,6 +2,7 @@ import streamlit as st
 from src.operate_buttons import add_operate_buttons, add_node_selector
 from src.page_setup import setup_page_layout_and_data
 from src.diagram_column import draw_diagram_column
+from src.bulk_input import render_bulk_input_ui
 from src.utility import (
     get_backup_files_for_current_data,
     copy_file,
@@ -511,7 +512,6 @@ def render_edit_panel():
             key="selected_backup_file",
         )
     show_backup_diff_preview(requirement_data)
-    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
 
     _render_project_settings(
         requirement_data=requirement_data,
@@ -520,7 +520,30 @@ def render_edit_panel():
         file_path=file_path,
     )
 
-    # --- エンティティ編集 (PFD と同じ操作感) ---
+    # --- タブ切り替え: 個別入力 / 一括入力 ---
+    tab_individual, tab_bulk = st.tabs(["✏️ 個別入力", "📝 一括入力"])
+
+    with tab_individual:
+        _render_individual_ccpm_edit()
+
+    with tab_bulk:
+        render_bulk_input_ui(
+            nodes=requirement_data.get("nodes", []),
+            requirement_manager=requirement_manager,
+            file_path=file_path,
+            type_list=ccpm_type_list,
+            display_key="title",
+            page_key_prefix="ccpm",
+            content_field="title",
+            extra_fields={"days": 1, "remains": 0, "resource": "",
+                          "start": "", "end": "", "finished": False},
+        )
+
+
+def _render_individual_ccpm_edit():
+    """個別エンティティ編集タブの内容を描画する。"""
+    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
+
     # 後でボタンを配置する
     top_button_container = st.container()
 

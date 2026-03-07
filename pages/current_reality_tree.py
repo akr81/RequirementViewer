@@ -8,7 +8,8 @@ from src.utility import (
     show_backup_diff_preview,
 )  # draw_diagram_column を削除
 from src.operate_buttons import add_operate_buttons, add_node_selector
-from src.page_setup import setup_page_layout_and_data  # 変更
+from src.page_setup import setup_page_layout_and_data
+from src.bulk_input import render_bulk_input_ui
 import uuid
 import copy
 
@@ -142,20 +143,42 @@ def render_edit_panel():
             key="selected_backup_file",
         )
     show_backup_diff_preview(requirement_data)
-    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
     # ダイアグラムのタイトルを表示
     diagram_title = st.text_input(
         "CRTタイトル",
         value=requirement_data.get("title", ""),
         key="diagram_title_input",
     )
-    requirement_data["title"] = diagram_title  # タイトルを更新
-    
+    requirement_data["title"] = diagram_title
+
+    # --- タブ切り替え: 個別入力 / 一括入力 ---
+    tab_individual, tab_bulk = st.tabs(["✏️ 個別入力", "📝 一括入力"])
+
+    with tab_individual:
+        _render_individual_edit()
+
+    with tab_bulk:
+        render_bulk_input_ui(
+            nodes=requirement_data.get("nodes", []),
+            requirement_manager=requirement_manager,
+            file_path=file_path,
+            type_list=entity_list,
+            display_key="id",
+            page_key_prefix="crt",
+            content_field="id",
+            extra_edge_fields={"and": "None"},
+        )
+
+
+def _render_individual_edit():
+    """個別エンティティ編集タブの内容を描画する。"""
+    add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
+
     # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
     tmp_entity = copy.deepcopy(selected_entity)
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
-    tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
-    tmp_entity.setdefault("type", "entity")  # typeがない場合はentityを設定
+    tmp_entity.setdefault("color", "None")
+    tmp_entity.setdefault("type", "entity")
 
     # 後でボタンを配置する
     top_button_container = st.container()
@@ -169,7 +192,7 @@ def render_edit_panel():
         height=calculate_text_area_height(unescape_newline(tmp_entity.get("text", ""))),
         key=f"crt_text_{selected_unique_id}",
     )
-    
+
     tmp_entity["color"] = st.selectbox(
         "色",
         color_list,
@@ -186,12 +209,11 @@ def render_edit_panel():
         (edge_params["to_selected"], "destination", "source"),
         (edge_params["from_selected"], "source", "destination"),
     ]
-    
+
     for idx, (params, dest_key, src_key) in enumerate(connection_configs):
         if idx > 0:
-            st.write("---")  # to と from の区切り線
+            st.write("---")
 
-        # データ参照を params に追加（関数シグネチャを変えずにグローバル依存を除去）
         params["selected_unique_id"] = selected_unique_id
         params["id_title_dict"] = id_title_dict
         params["unique_id_dict"] = unique_id_dict
@@ -202,22 +224,18 @@ def render_edit_panel():
         for i, edge in enumerate(tmp_edges):
             visibility = render_edge_connection(edge, i, visibility, params, tmp_entity["type"])
 
-        # 関係追加の操作があるため、1つは常に表示
         temp_edge = {
             dest_key: tmp_entity["unique_id"] if dest_key == "source" else "None",
             src_key: "None" if dest_key == "source" else tmp_entity["unique_id"],
             "and": "None",
             "type": "arrow",
         }
-        # dest_key == "source" なら connection_configs[1] (from_selected) 相当
-        # dest_key == "destination" なら connection_configs[0] (to_selected) 相当
-        # 上記の辞書キーは、temp_predecessorとtemp_ancestorの生成ロジックを統合しています
-        
+
         visibility = "visible"
         render_edge_connection_new(temp_edge, 0, visibility, params)
         new_edges.append(temp_edge)
 
-    # 操作ボタンの共通引数辞書を作成
+    # 操作ボタン
     btn_kwargs = {
         "selected_unique_id": selected_unique_id,
         "tmp_entity": tmp_entity,
@@ -230,11 +248,9 @@ def render_edit_panel():
         "display_key": "text",
     }
 
-    # 上部のボタンを配置
     with top_button_container:
         add_operate_buttons(**btn_kwargs, key_suffix="top")
 
-    # 下部のボタンを配置
     add_operate_buttons(**btn_kwargs, key_suffix="bottom")
 
 

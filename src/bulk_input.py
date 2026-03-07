@@ -33,9 +33,20 @@ def parse_entities(
     start_id: int,
     default_type: str,
     existing_map: Dict[int, Dict],
+    content_field: str = "title",
     default_color: str = "None",
+    extra_fields: Dict = None,
 ) -> Tuple[List[Dict], Dict[int, Dict], Set[str]]:
     """テキストからエンティティの追加・削除リストを生成する。
+
+    Args:
+        text: 1行1エンティティのテキスト
+        start_id: 仮IDの開始番号
+        default_type: デフォルトのエンティティタイプ
+        existing_map: 既存ノードの仮IDマップ
+        content_field: テキストを格納するフィールド名（PFD/CCPM: "title", CRT: "id"）
+        default_color: デフォルトの色
+        extra_fields: エンティティに追加するフィールド（CCPM の days, remains 等）
 
     Returns:
         (新規エンティティリスト, 新規分の仮IDマップ, 削除対象unique_idセット)
@@ -60,13 +71,15 @@ def parse_entities(
         # テキスト行 → 新規エンティティ
         temp_id = start_id + len(entities_to_add)
         unique_id = f"{uuid.uuid4()}".replace("-", "")
-        entities_to_add.append({
+        entity = {
             "type": default_type,
-            "id": "",
-            "title": line,
+            content_field: line,
             "color": default_color,
             "unique_id": unique_id,
-        })
+        }
+        if extra_fields:
+            entity.update(extra_fields)
+        entities_to_add.append(entity)
         new_temp_map[temp_id] = {
             "unique_id": unique_id,
             "label": line,
@@ -78,6 +91,7 @@ def parse_connections(
     text: str,
     full_temp_map: Dict[int, Dict],
     existing_edges: List[Dict],
+    extra_edge_fields: Dict = None,
 ) -> Tuple[List[Dict], Set[Tuple[str, str]], List[str]]:
     """接続記法からエッジの追加・削除リストを生成する。
 
@@ -123,12 +137,15 @@ def parse_connections(
         if is_existing:
             edges_to_remove.add((src_uid, dst_uid))
         else:
-            edges_to_add.append({
+            edge = {
                 "source": src_uid,
                 "destination": dst_uid,
                 "comment": "",
                 "type": "arrow",
-            })
+            }
+            if extra_edge_fields:
+                edge.update(extra_edge_fields)
+            edges_to_add.append(edge)
 
     return edges_to_add, edges_to_remove, errors
 
@@ -185,8 +202,17 @@ def render_bulk_input_ui(
     type_list: List[str],
     display_key: str = "title",
     page_key_prefix: str = "pfd",
+    content_field: str = "title",
+    extra_fields: Dict = None,
+    extra_edge_fields: Dict = None,
 ):
-    """一括入力UIを描画する。"""
+    """一括入力UIを描画する。
+
+    Args:
+        content_field: 入力テキストを格納するフィールド名（PFD/CCPM: 'title', CRT: 'id'）
+        extra_fields: エンティティに追加するデフォルトフィールド（CCPMの days, remains 等）
+        extra_edge_fields: エッジに追加するデフォルトフィールド（CRTの and 等）
+    """
 
     # カウンターベースのキー: 実行成功時にインクリメントし、
     # 新しいキーのウィジェットが空の状態で生成される
@@ -226,12 +252,14 @@ def render_bulk_input_ui(
 
     # パース
     new_entities, new_temp_map, del_entity_ids = parse_entities(
-        entity_text, start_id, default_type, existing_map
+        entity_text, start_id, default_type, existing_map,
+        content_field=content_field, extra_fields=extra_fields,
     )
     full_temp_map = {**existing_map, **new_temp_map}
     current_edges = requirement_manager.requirements.get("edges", [])
     add_edges, rm_edge_keys, conn_errors = parse_connections(
-        connection_text, full_temp_map, current_edges
+        connection_text, full_temp_map, current_edges,
+        extra_edge_fields=extra_edge_fields,
     )
 
     # プレビュー

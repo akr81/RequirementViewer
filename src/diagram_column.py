@@ -170,20 +170,27 @@ def _render_diagram(
     parameters_dict["max_concurrency"] = len(project.get("resources", []))
 
     plantuml_code = ""
-    # show_temp_id が ON の場合のみ、subgraphのノードtitleに仮ID(#N)を付加
+    # show_temp_id が ON の場合のみ、subgraphのノードに仮ID(#N)を付加
     subgraph = options.graph_data.subgraph
     original_titles = {}
     if getattr(options, "show_temp_id", False):
+        # ダイアグラムタイプごとのPlantUML表示フィールド
+        # (convert_puml_code.py のノードコンバータが参照するフィールドに合わせる)
+        _display_field_map = {
+            "Current Reality Tree Viewer": "text",
+            "Evaporating Cloud Viewer": "text",
+        }
+        display_field = _display_field_map.get(context.app_name, "title")
+
         all_nodes = context.requirements.get("nodes", [])
         uid_to_temp_id = {
             n.get("unique_id"): i for i, n in enumerate(all_nodes, start=1)
         }
         for node_id, attrs in subgraph.nodes(data=True):
             temp_id = uid_to_temp_id.get(attrs.get("unique_id"))
-            if temp_id is not None:
-                field = "title" if attrs.get("title") else "id"
-                original_titles[node_id] = (field, attrs.get(field, ""))
-                attrs[field] = f"{attrs.get(field, '')}\n(#{temp_id})"
+            if temp_id is not None and display_field in attrs:
+                original_titles[node_id] = (display_field, attrs.get(display_field, ""))
+                attrs[display_field] = f"{attrs.get(display_field, '')}\n(#{temp_id})"
     try:
         plantuml_code = _converter.convert_to_puml(
             context.app_name,
