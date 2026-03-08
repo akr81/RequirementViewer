@@ -51,7 +51,45 @@ _CONVERTER_CONFIG = {
 }
 _converter = ConvertPumlCode(_CONVERTER_CONFIG)
 
+def _format_node_label(unique_id: Optional[str], unique_id_dict: Dict[str, str]) -> str:
+    """Return a display label for the current node selection."""
+    if not unique_id or unique_id in ("None", "default", ""):
+        return "未選択"
+    return unique_id_dict.get(unique_id, "未選択")
 
+
+def _render_status_bar(context: DiagramContext, options: DiagramOptions):
+    """Render the link-mode status bar and toggle action."""
+    selected_unique_id = st.query_params.get("selected") or "default"
+    selected_label = _format_node_label(selected_unique_id, context.unique_id_dict)
+    source_label = _format_node_label(options.previous_selected, context.unique_id_dict)
+    status_key = "".join(ch if ch.isalnum() else "-" for ch in context.app_name.lower())
+    status_class = f"rv-status-bar-{status_key}"
+
+    if options.link_mode:
+        mode_label = "接続モード ON"
+        button_kind = "primary"
+        shell_background = "#ffedd5"
+    else:
+        mode_label = "接続モード OFF"
+        button_kind = "secondary"
+        shell_background = "#dbeafe"
+
+    status_container = st.container()
+    with status_container:
+        st.markdown(f'<div class="{status_class}"></div>', unsafe_allow_html=True)
+        bar_col1, bar_col2 = st.columns([4, 1.4])
+        with bar_col1:
+            st.markdown(f"**選択中:** {selected_label}")
+        with bar_col2:
+            if st.button(
+                mode_label,
+                key=f"{context.app_name}_status_link_mode_toggle",
+                type=button_kind,
+                use_container_width=True,
+            ):
+                st.query_params["link_mode"] = "False" if options.link_mode else "True"
+                st.rerun()
 def _render_controls(context: DiagramContext, options: DiagramOptions) -> Optional[str]:
     """画面上のコントロールウィジェットを描画し、オプションを更新する。"""
     (
@@ -65,7 +103,6 @@ def _render_controls(context: DiagramContext, options: DiagramOptions) -> Option
 
     with title_column:
         st.write(f"### {context.app_name}")
-        st.write("クリックするとエンティティが選択されます")
 
     target = None
     with filter_column:
@@ -124,11 +161,6 @@ def _render_controls(context: DiagramContext, options: DiagramOptions) -> Option
             options.show_temp_id = st.checkbox(
                 "ID表示", value=True, key=f"{context.app_name}_tempid_checkbox"
             )
-        options.link_mode = st.toggle(
-            "🖱️ 接続モード",
-            value=options.link_mode,
-            key=f"{context.app_name}_connect_mode",
-        )
 
     with scale_column:
         options.scale = st.slider(
@@ -451,6 +483,7 @@ def draw_diagram_column(
 ):
     with column:
         target = _render_controls(context, options)
+        _render_status_bar(context, options)
         plantuml_code = _render_diagram(context, options, target)
         _render_file_operations(context, options, plantuml_code)
         
@@ -459,3 +492,4 @@ def draw_diagram_column(
         st.text_area("PlantUML コード", value=plantuml_code, height=250)
 
     return plantuml_code
+

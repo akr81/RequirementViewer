@@ -2,40 +2,11 @@
     nodes:
     [
         {
-            id: 金曜の夜に夜更かししてしまう
-            color: None
-            unique_id: root_stay_up_late
-            type: entity
-        }
-        {
-            id: 土曜の昼過ぎまで寝てしまう
-            color: None
-            unique_id: node_sleep_in
-            type: entity
-        }
-        {
-            id: 休日の明確な予定を立てていない
-            color: None
-            unique_id: root_no_plan
-            type: entity
-        }
-        {
-            id: 起きてから何をしようか迷う
-            color: None
-            unique_id: node_wonder_what_to_do
-            type: entity
-        }
-        {
-            id: とりあえずスマホや動画を見てしまう
-            color: None
-            unique_id: node_watch_smartphone
-            type: entity
-        }
-        {
             id: 気づけば夕方になっている
             color: None
             unique_id: node_already_evening
             type: entity
+            text: 気づけば夕方になっている
         }
         {
             id:
@@ -46,19 +17,66 @@
             color: None
             unique_id: node_give_up_going_out
             type: entity
+            text:
+                '''
+                今から出かけても遅いと
+                諦めてしまう
+                '''
+        }
+        {
+            id: 土曜の昼過ぎまで寝てしまう
+            color: None
+            unique_id: node_sleep_in
+            type: entity
+            text: 土曜の昼過ぎまで寝てしまう
+        }
+        {
+            id: とりあえずスマホや動画を見てしまう
+            color: None
+            unique_id: node_watch_smartphone
+            type: entity
+            text: とりあえずスマホや動画を見てしまう
+        }
+        {
+            id: 起きてから何をしようか迷う
+            color: None
+            unique_id: node_wonder_what_to_do
+            type: entity
+            text: 起きてから何をしようか迷う
+        }
+        {
+            id: 休日の明確な予定を立てていない
+            color: None
+            unique_id: root_no_plan
+            type: entity
+            text: 休日の明確な予定を立てていない
+        }
+        {
+            id: 金曜の夜に夜更かししてしまう
+            color: None
+            unique_id: root_stay_up_late
+            type: entity
+            text: 金曜の夜に夜更かししてしまう
         }
         {
             id: 休日に何もせずダラダラ過ごして自己嫌悪になる
             color: Red
             unique_id: ude_self_hatred
             type: entity
+            text: 休日に何もせずダラダラ過ごして自己嫌悪になる
         }
     ]
     edges:
     [
         {
-            source: root_stay_up_late
-            destination: node_sleep_in
+            source: node_already_evening
+            destination: node_give_up_going_out
+            and: None
+            type: arrow
+        }
+        {
+            source: node_give_up_going_out
+            destination: ude_self_hatred
             and: None
             type: arrow
         }
@@ -69,8 +87,8 @@
             type: arrow
         }
         {
-            source: root_no_plan
-            destination: node_wonder_what_to_do
+            source: node_watch_smartphone
+            destination: node_already_evening
             and: None
             type: arrow
         }
@@ -81,20 +99,14 @@
             type: arrow
         }
         {
-            source: node_watch_smartphone
-            destination: node_already_evening
+            source: root_no_plan
+            destination: node_wonder_what_to_do
             and: None
             type: arrow
         }
         {
-            source: node_already_evening
-            destination: node_give_up_going_out
-            and: None
-            type: arrow
-        }
-        {
-            source: node_give_up_going_out
-            destination: ude_self_hatred
+            source: root_stay_up_late
+            destination: node_sleep_in
             and: None
             type: arrow
         }
