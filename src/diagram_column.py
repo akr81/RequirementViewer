@@ -57,6 +57,14 @@ def _format_node_label(unique_id: Optional[str], unique_id_dict: Dict[str, str])
         return "未選択"
     return unique_id_dict.get(unique_id, "未選択")
 
+def _truncate_status_label(label: str, max_length: int = 48) -> str:
+    """Keep the status label on a single line with an ellipsis when needed."""
+    normalized = " ".join(str(label).split())
+    if len(normalized) <= max_length:
+        return normalized
+    return f"{normalized[:max_length - 3]}..."
+
+
 
 def _render_status_bar(context: DiagramContext, options: DiagramOptions):
     """Render the link-mode status bar and toggle action."""
@@ -80,7 +88,8 @@ def _render_status_bar(context: DiagramContext, options: DiagramOptions):
         st.markdown(f'<div class="{status_class}"></div>', unsafe_allow_html=True)
         bar_col1, bar_col2 = st.columns([4, 1.4])
         with bar_col1:
-            st.markdown(f"**選択中:** {selected_label}")
+            truncated_selected_label = _truncate_status_label(selected_label)
+            st.text(f"選択中: {truncated_selected_label}")
         with bar_col2:
             if st.button(
                 mode_label,
