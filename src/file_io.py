@@ -5,22 +5,10 @@ import os
 import shutil
 import datetime
 import copy
-import time
 import tempfile
-from contextlib import contextmanager
 from typing import Dict, List, Any
 
 
-@contextmanager
-def log_time(label: str):
-    """実行時間のロギングを行うコンテキストマネージャ。"""
-    start_time = time.time()
-    try:
-        yield
-    finally:
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"[{label}] Execution time: {elapsed_time:.4f} seconds")
 
 
 def load_colors() -> list:
