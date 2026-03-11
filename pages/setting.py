@@ -2,7 +2,14 @@ import streamlit as st
 from src.file_io import load_config, save_config
 
 st.set_page_config(layout="wide")
-
+st.markdown(
+    """
+    <style>
+    .stMainBlockContainer { padding-top: 3.0rem !important; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 st.title("Setting")
 
 # 各設定キーの説明を定義

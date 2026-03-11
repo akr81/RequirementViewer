@@ -67,6 +67,10 @@ def initialize_page(app_name: str):
             padding: 0.2rem 0.5rem;
             min-height: 0;
         }
+        /* ヘッダーとコンテンツの隙間を詰める */
+        .stMainBlockContainer {
+            padding-top: 3.0rem !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,

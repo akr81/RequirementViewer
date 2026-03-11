@@ -2,7 +2,14 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(layout="wide")
-
+st.markdown(
+    """
+    <style>
+    .stMainBlockContainer { padding-top: 3.0rem !important; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 st.title("Data Table")
 
 graph = st.session_state.graph_data.subgraph
