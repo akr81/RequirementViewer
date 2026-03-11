@@ -621,9 +621,9 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "hjson", specifier = ">=3.1.0" },
-    { name = "networkx", specifier = "==3.4.2" },
-    { name = "numpy", specifier = "==1.26.4" },
-    { name = "pandas", specifier = "==2.2.3" },
+    { name = "networkx", specifier = ">=3.4.2" },
+    { name = "numpy", specifier = ">=1.26.4" },
+    { name = "pandas", specifier = ">=2.2.3" },
     { name = "plotly", specifier = ">=6.5.2" },
     { name = "streamlit", specifier = ">=1.53.1" },
     { name = "workdays", specifier = ">=1.4" },
