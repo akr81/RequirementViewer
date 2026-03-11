@@ -63,7 +63,7 @@ uv sync
 
 ローカルサーバの構築には、以下のいずれかの方法を利用します。
 
-#### 方法1: JavaとJARファイルを利用する
+#### JavaとJARファイルを利用する
 
 1. **Javaのセットアップ**: PlantUMLの実行に`Java`が必要です。
 2. **PlantUMLの配置**: PlantUMLの公式サイトから`jar`ファイルを取得し、RequirementViewerフォルダ直下に`plantuml.jar`として配置します。
@@ -71,18 +71,6 @@ uv sync
 配置後、`config.hjson` の `plantuml` にローカルURL（例: `http://localhost:8080`）を設定すると、
 アプリ起動時に `plantuml.jar` を使ったローカルサーバの起動を試みます。  
 空きポートが使われるため、実際の接続先は `8080` 以外になる場合があります。
-
-#### 方法2: Dockerを利用する（Docker環境がある場合）
-
-既にDocker環境がある場合は、JavaやJARファイルの準備なしに以下のコマンドだけでローカルサーバを起動できます。
-
-```bash
-docker run -d -p 8080:8080 plantuml/plantuml-server:tomcat
-```
-
-Dockerで起動したPlantUMLサーバに接続したい場合も、現在の実装ではアプリ側が `plantuml.jar` による
-ローカル起動を試みます。  
-そのため、Docker利用時も `Java` と `plantuml.jar` を併用するか、実装を接続専用モードに変更する必要があります。
 
 ## 実行
 
