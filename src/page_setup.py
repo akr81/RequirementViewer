@@ -144,14 +144,29 @@ def load_graph_data(file_path: str, mtime: float, app_name: str) -> GraphData:
         # 表示対象キーが未定義の場合は空文字にする
         if display_key not in node:
             node[display_key] = ""
+        
+    # 各ノードの表示キーの出現回数をカウント（フォールバック後）
+    display_key_counts = {}
+    for node in nodes:
+        key_val = node[display_key]
+        display_key_counts[key_val] = display_key_counts.get(key_val, 0) + 1
+
+    for node in nodes:
+        key_val = node[display_key]
+        # UI表示用の一意なラベル（[_display_label]）を作成（コンボボックスでの同名競合防止）
+        if display_key_counts.get(key_val, 0) > 1:
+            # 同名が存在する場合はハッシュの先頭5文字を付与して区別
+            node["_display_label"] = f"{key_val} ({node['unique_id'][:5]})"
+        else:
+            node["_display_label"] = key_val
 
     requirement_manager = RequirementManager(requirement_data)
     graph_data = RequirementGraph(requirement_data, app_name)
     
-    # 変数名は既存との互換性のため id_title_dict としているが、実際は display_key を用いている
-    id_title_dict = build_mapping(nodes, display_key, "unique_id", add_empty=True)
-    unique_id_dict = build_mapping(nodes, "unique_id", display_key, add_empty=True)
-    id_title_list = build_sorted_list(nodes, display_key, prepend=["None"])
+    # 変数名は既存との互換性のため id_title_dict としているが、実際は _display_label を用いている
+    id_title_dict = build_mapping(nodes, "_display_label", "unique_id", add_empty=True)
+    unique_id_dict = build_mapping(nodes, "unique_id", "_display_label", add_empty=True)
+    id_title_list = build_sorted_list(nodes, "_display_label", prepend=["None"])
     add_list = build_and_list(edges, prepend=["None", "New"])
 
     return GraphData(
