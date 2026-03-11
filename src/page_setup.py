@@ -204,6 +204,9 @@ def load_and_prepare_data(file_path, app_name):
     # URLパラメタから取得すると文字列なのでboolに変換
     detail = True if detail == "True" else False
 
+    show_temp_id = st.query_params.get("show_temp_id", "True")
+    show_temp_id = True if show_temp_id == "True" else False
+
     # 接続モード時、requirement_dataのエッジのみを直接更新する
     link_mode = st.query_params.get("link_mode", "False")
     link_mode = True if link_mode == "True" else False
@@ -309,6 +312,7 @@ def load_and_prepare_data(file_path, app_name):
             landscape=landscape,
             title=title,
             detail=detail,
+            show_temp_id=show_temp_id,
             link_mode=link_mode,
             previous_selected=previous_selected,
         ),

@@ -39,6 +39,7 @@ class DiagramOptions:
     landscape: bool = False
     title: bool = False
     detail: bool = False
+    show_temp_id: bool = True
     link_mode: bool = False
     previous_selected: str = "None"
 
@@ -99,6 +100,32 @@ def _render_status_bar(context: DiagramContext, options: DiagramOptions):
             ):
                 st.query_params["link_mode"] = "False" if options.link_mode else "True"
                 st.rerun()
+
+def _render_toggle_buttons(context: DiagramContext, options: DiagramOptions):
+    """表示オプション（横向き・詳細・タイトル・ID表示）をトグルボタンとして描画する。"""
+    col1_defs = [
+        ("landscape", "横向き", options.landscape),
+        ("detail", "詳細", options.detail),
+    ]
+    col2_defs = [
+        ("title", "タイトル", options.title),
+        ("show_temp_id", "ID表示", options.show_temp_id),
+    ]
+    cb_col1, cb_col2 = st.columns(2)
+    for col, defs in [(cb_col1, col1_defs), (cb_col2, col2_defs)]:
+        with col:
+            for param_key, label, current_value in defs:
+                btn_type = "primary" if current_value else "secondary"
+                if st.button(
+                    label,
+                    key=f"{context.app_name}_{param_key}_toggle",
+                    type=btn_type,
+                    use_container_width=True,
+                ):
+                    new_val = "False" if current_value else "True"
+                    st.query_params[param_key] = new_val
+                    st.rerun()
+
 def _render_controls(context: DiagramContext, options: DiagramOptions) -> Optional[str]:
     """画面上のコントロールウィジェットを描画し、オプションを更新する。"""
     (
@@ -153,23 +180,7 @@ def _render_controls(context: DiagramContext, options: DiagramOptions) -> Option
         )
 
     with landscape_column:
-        cb_col1, cb_col2 = st.columns(2)
-        with cb_col1:
-            options.landscape = st.checkbox(
-                "横向き",
-                value=options.landscape,
-                key=f"{context.app_name}_landscape_checkbox",
-            )
-            options.detail = st.checkbox(
-                "詳細", value=options.detail, key=f"{context.app_name}_detail_checkbox"
-            )
-        with cb_col2:
-            options.title = st.checkbox(
-                "タイトル", value=options.title, key=f"{context.app_name}_title_checkbox"
-            )
-            options.show_temp_id = st.checkbox(
-                "ID表示", value=True, key=f"{context.app_name}_tempid_checkbox"
-            )
+        _render_toggle_buttons(context, options)
 
     with scale_column:
         options.scale = st.slider(
