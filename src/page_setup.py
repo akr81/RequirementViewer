@@ -232,16 +232,12 @@ def load_and_prepare_data(file_path, app_name):
     previous_selected = st.query_params.get("previous_selected", "None")
 
     # --- ステート制御: 接続モード（link_mode）の自動切り替え ---
-    # ユーザーが図上の同じノードを2回連続でクリックした場合、直感的な操作として
-    # 「そのノードからのエッジを繋ぐ（接続）モード」のON/OFFをトグルする仕様。
+    # ユーザーが図上の同じノードを2回連続でクリックした場合、以前は接続モードに
+    # 入っていたが、誤操作が多いためONにする処理は廃止。
+    # すでに接続モード(ON)の時のキャンセル(OFF)処理のみ残す。
     if (previous_selected == selected_unique_id):
-        # 連続クリックされた場合、現在の接続モード状態を反転させる
-        if not link_mode:
-            link_mode = True
-            st.toast(f"接続モードON: 接続先ノードを選択")
-        else:
+        if link_mode:
             link_mode = False
-            st.toast(f"接続モードOFF")
     else:
         # 別のノードが選択された場合の処理
         if link_mode:
