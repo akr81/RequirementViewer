@@ -13,6 +13,7 @@ dependencies = [
     "plotly>=6.5.2",
     "streamlit>=1.53.1",
     "workdays>=1.4",
+    "tornado>=6.5.5",
 ]
 
 [dependency-groups]
