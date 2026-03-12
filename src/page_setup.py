@@ -164,9 +164,9 @@ def load_graph_data(file_path: str, mtime: float, app_name: str) -> GraphData:
     graph_data = RequirementGraph(requirement_data, app_name)
     
     # 変数名は既存との互換性のため id_title_dict としているが、実際は _display_label を用いている
-    id_title_dict = build_mapping(nodes, "_display_label", "unique_id", add_empty=True)
-    unique_id_dict = build_mapping(nodes, "unique_id", "_display_label", add_empty=True)
-    id_title_list = build_sorted_list(nodes, "_display_label", prepend=["None"])
+    id_title_dict = build_mapping(nodes, "_display_label", "unique_id", add_empty=True, empty_key="--- 未選択 ---", empty_value="default")
+    unique_id_dict = build_mapping(nodes, "unique_id", "_display_label", add_empty=True, empty_key="default", empty_value="--- 未選択 ---")
+    id_title_list = build_sorted_list(nodes, "_display_label", prepend=["--- 未選択 ---"])
     add_list = build_and_list(edges, prepend=["None", "New"])
 
     return GraphData(

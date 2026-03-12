@@ -87,7 +87,7 @@ def _render_individual_edit():
 
 
     # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
-    tmp_entity = copy.deepcopy(selected_entity)
+    tmp_entity = copy.deepcopy(selected_entity) or {}
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")
     # 古いデータにフィールドが欠けている場合のフォールバック
@@ -99,44 +99,44 @@ def _render_individual_edit():
 
     tmp_entity["id"] = st.text_input(
         "ID",
-        tmp_entity["id"],
+        tmp_entity.get("id", ""),
         key=f"stt_id_{selected_unique_id}",
     )
     tmp_entity["necessary_assumption"] = st.text_area(
         "なぜこの変化が必要か？",
-        unescape_newline(tmp_entity["necessary_assumption"]),
-        height=calculate_text_area_height(unescape_newline(tmp_entity["necessary_assumption"])),
+        unescape_newline(tmp_entity.get("necessary_assumption", "")),
+        height=calculate_text_area_height(unescape_newline(tmp_entity.get("necessary_assumption", ""))),
         key=f"stt_necessary_{selected_unique_id}",
     )
     
     tmp_entity["strategy"] = st.text_area(
         "**戦略：何がこの変化の具体的な目的なのか？**",
-        unescape_newline(tmp_entity["strategy"]),
-        height=calculate_text_area_height(unescape_newline(tmp_entity["strategy"])),
+        unescape_newline(tmp_entity.get("strategy", "")),
+        height=calculate_text_area_height(unescape_newline(tmp_entity.get("strategy", ""))),
         key=f"stt_strategy_{selected_unique_id}",
     )
     tmp_entity["parallel_assumption"] = st.text_area(
         "なぜこの戦術をとるのか？",
-        unescape_newline(tmp_entity["parallel_assumption"]),
-        height=calculate_text_area_height(unescape_newline(tmp_entity["parallel_assumption"])),
+        unescape_newline(tmp_entity.get("parallel_assumption", "")),
+        height=calculate_text_area_height(unescape_newline(tmp_entity.get("parallel_assumption", ""))),
         key=f"stt_parallel_{selected_unique_id}",
     )
     tmp_entity["tactics"] = st.text_area(
         "**戦術：どのようにこの変化を達成するのか？**",
-        unescape_newline(tmp_entity["tactics"]),
-        height=calculate_text_area_height(unescape_newline(tmp_entity["tactics"])),
+        unescape_newline(tmp_entity.get("tactics", "")),
+        height=calculate_text_area_height(unescape_newline(tmp_entity.get("tactics", ""))),
         key=f"stt_tactics_{selected_unique_id}",
     )
     tmp_entity["sufficient_assumption"] = st.text_area(
         "なぜより詳細な具体策とアクションが必要なのか？",
-        unescape_newline(tmp_entity["sufficient_assumption"]),
-        height=calculate_text_area_height(unescape_newline(tmp_entity["sufficient_assumption"])),
+        unescape_newline(tmp_entity.get("sufficient_assumption", "")),
+        height=calculate_text_area_height(unescape_newline(tmp_entity.get("sufficient_assumption", ""))),
         key=f"stt_sufficient_{selected_unique_id}",
     )
     tmp_entity["color"] = st.selectbox(
         "色",
         color_list,
-        index=color_list.index(tmp_entity["color"]),
+        index=color_list.index(tmp_entity.get("color", "None")),
         key=f"stt_color_{selected_unique_id}",
     )
 
@@ -159,7 +159,7 @@ def _render_individual_edit():
 
     # 関係追加の操作があるため、1つは常に表示
     destination_unique_id = id_title_dict[
-        st.selectbox("接続先(新規)", id_title_list, index=id_title_list.index("None"))
+        st.selectbox("接続先(新規)", id_title_list, index=id_title_list.index("--- 未選択 ---"))
     ]  # 末尾に追加用の空要素を追加
 
     new_edge = {

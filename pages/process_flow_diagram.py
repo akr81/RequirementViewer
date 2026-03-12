@@ -45,8 +45,8 @@ def render_edge_connection(
 
 def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict):
     expected_index = -1
-    if "None" in params["id_title_list"]:
-        expected_index = params["id_title_list"].index("None")
+    if "--- 未選択 ---" in params["id_title_list"]:
+        expected_index = params["id_title_list"].index("--- 未選択 ---")
     with params["connection_column"]:
         connection_key = f"{params['selectbox_key']}_new"
         selected_value_from_widget = st.selectbox(
@@ -171,7 +171,7 @@ def render_edit_panel():
 def _render_individual_edit():
     """個別エンティティ編集タブの内容を描画する。"""
     add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
-    tmp_entity = copy.deepcopy(selected_entity)
+    tmp_entity = copy.deepcopy(selected_entity) or {}
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")
     tmp_entity.setdefault("type", "entity")
@@ -180,7 +180,7 @@ def _render_individual_edit():
     top_button_container = st.container()
 
     tmp_entity["type"] = st.selectbox(
-        "タイプ", pfd_type_list, index=pfd_type_list.index(tmp_entity["type"])
+        "タイプ", pfd_type_list, index=pfd_type_list.index(tmp_entity.get("type", "entity"))
     )
     title_value = tmp_entity.get("title", "") or tmp_entity.get("id", "")
     tmp_entity["title"] = st.text_area(
@@ -199,7 +199,7 @@ def _render_individual_edit():
     tmp_entity["color"] = st.selectbox(
         "色",
         color_list,
-        index=color_list.index(tmp_entity["color"]),
+        index=color_list.index(tmp_entity.get("color", "None")),
         key=f"pfd_color_{selected_unique_id}",
     )
     

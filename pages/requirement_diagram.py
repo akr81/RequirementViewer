@@ -143,7 +143,7 @@ def _render_individual_edit():
     add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
 
     # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
-    tmp_entity = copy.deepcopy(selected_entity)
+    tmp_entity = copy.deepcopy(selected_entity) or {}
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
 
@@ -153,30 +153,30 @@ def _render_individual_edit():
     tmp_entity["type"] = st.selectbox(
         "エンティティタイプ",
         entity_types,
-        index=entity_types.index(tmp_entity["type"]),
+        index=entity_types.index(tmp_entity.get("type", "Requirement")),
         key=f"entity_type_{selected_unique_id}",
     )
     tmp_entity["title"] = st.text_input(
         "タイトル",
-        tmp_entity["title"],
+        tmp_entity.get("title", ""),
         key=f"entity_title_{selected_unique_id}",
     )
     tmp_entity["id"] = st.text_input(
         "ID",
-        tmp_entity["id"],
+        tmp_entity.get("id", ""),
         key=f"entity_id_{selected_unique_id}",
     )
     tmp_entity["text"] = st.text_area(
         "説明",
-        unescape_newline(tmp_entity["text"]),
-        height=calculate_text_area_height(unescape_newline(tmp_entity["text"])),
+        unescape_newline(tmp_entity.get("text", "")),
+        height=calculate_text_area_height(unescape_newline(tmp_entity.get("text", ""))),
         key=f"entity_text_{selected_unique_id}",
     )
     
     tmp_entity["color"] = st.selectbox(
         "色",
         color_list,
-        index=color_list.index(tmp_entity["color"]),
+        index=color_list.index(tmp_entity.get("color", "None")),
         key=f"entity_color_{selected_unique_id}",
     )
 
@@ -254,7 +254,7 @@ def _render_individual_edit():
             st.selectbox(
                 "接続先(新規)",
                 id_title_list,
-                index=id_title_list.index("None"),
+                index=id_title_list.index("--- 未選択 ---"),
                 key="new_relation_destination",
             )
         ]  # 末尾に追加用の空要素を追加

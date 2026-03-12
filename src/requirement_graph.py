@@ -85,7 +85,7 @@ class RequirementGraph:
             detail (bool): 詳細(note等)を含めるかどうか
         """
         # Store graph itself as subgraph if target_node is None
-        if target_node is None or target_node == "None":
+        if target_node is None or target_node in ("None", "default", ""):
             if not detail:
                 # ノードの詳細情報がnoteの場合はreachable_nodesから除外する
                 reachable_nodes = {

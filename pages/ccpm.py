@@ -81,8 +81,8 @@ def render_edge_connection(
 def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict):
     """新規エッジ接続 UI。"""
     expected_index = -1
-    if "None" in params["id_title_list"]:
-        expected_index = params["id_title_list"].index("None")
+    if "--- 未選択 ---" in params["id_title_list"]:
+        expected_index = params["id_title_list"].index("--- 未選択 ---")
     with params["connection_column"]:
         connection_key = f"{params['selectbox_key']}_new"
         selected_value = st.selectbox(
@@ -130,7 +130,7 @@ diagram_options = page_elements["diagram_options"]
 
 def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm_type_list: list, color_list: list) -> dict:
     """エンティティ編集 (PFD と同じ操作感) の UI を描画し、入力結果の辞書を返す"""
-    tmp_entity = copy.deepcopy(selected_entity)
+    tmp_entity = copy.deepcopy(selected_entity) or {}
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")
     tmp_entity.setdefault("type", "process")
@@ -142,7 +142,7 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
         tmp_entity.setdefault(field, default)
 
     tmp_entity["type"] = st.selectbox(
-        "タイプ", ccpm_type_list, index=ccpm_type_list.index(tmp_entity["type"]),
+        "タイプ", ccpm_type_list, index=ccpm_type_list.index(tmp_entity.get("type", "process")),
         key=f"ccpm_type_{selected_unique_id}",
     )
     tmp_entity["title"] = st.text_area(
@@ -209,7 +209,7 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
 
     tmp_entity["color"] = st.selectbox(
         "色", color_list,
-        index=color_list.index(tmp_entity["color"]),
+        index=color_list.index(tmp_entity.get("color", "None")),
         key=f"ccpm_color_{selected_unique_id}",
     )
     

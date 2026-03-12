@@ -8,13 +8,13 @@ def add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_uni
     ユーザーがセレクトボックスで別のノードを選ぶと、
     query_params.selected を更新してページ全体を再描画する。
     """
-    # 「None」を除いた選択肢を作成
-    node_options = [label for label in id_title_list if label != "None"]
+    # 全ての選択肢をそのまま使用 (未選択等も含む)
+    node_options = id_title_list
     if not node_options:
         return
 
     # 現在選択中のノードのラベルを取得
-    current_label = unique_id_dict.get(selected_unique_id, "None")
+    current_label = unique_id_dict.get(selected_unique_id, "--- 未選択 ---")
     if current_label in node_options:
         current_index = node_options.index(current_label)
     else:
@@ -27,9 +27,13 @@ def add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_uni
         key="node_selector",
     )
     new_unique_id = id_title_dict.get(selected_label)
+    # selected_unique_id と new_unique_id が異なる場合のみ、かつ現在のURLパラメータとも異なる場合のみ更新
+    # ただし、UI上の選択と現在のクエリが異なる（ボタン操作等で既に遷移予定）場合はセレクトボックスによる上書きを防ぐ
     if new_unique_id and new_unique_id != selected_unique_id:
-        st.query_params.selected = new_unique_id
-        st.rerun(scope="app")
+        current_param = st.query_params.get("selected")
+        if current_param == selected_unique_id:
+            st.query_params.selected = new_unique_id
+            st.rerun(scope="app")
 
 
 

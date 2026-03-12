@@ -144,7 +144,7 @@ def _render_controls(context: DiagramContext, options: DiagramOptions) -> Option
     with filter_column:
         target = st.query_params.get("target", None)
         if target == None or target == "None" or target not in context.unique_id_dict:
-            target = "None"
+            target = "default"
         target = context.id_title_dict[
             st.selectbox(
                 "フィルタ",

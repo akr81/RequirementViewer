@@ -59,19 +59,19 @@ def render_edit_panel():
 
     add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
     # 直接データ操作はせず、コピーに対して操作する
-    tmp_entity = copy.deepcopy(selected_entity)
+    tmp_entity = copy.deepcopy(selected_entity) or {}
     tmp_entity.setdefault("color", "None")  # colorがない場合はNoneを設定
 
     # text フィールドが未設定の場合に title からフォールバック（旧データ互換）
     if not tmp_entity.get("text", "") and tmp_entity.get("title", ""):
         tmp_entity["text"] = tmp_entity["title"]
 
-    st.write(tmp_entity["id"])
-    if tmp_entity["id"] == "head":
+    st.write(tmp_entity.get("id", "新規"))
+    if tmp_entity.get("id") == "head":
         question = "共通の目的は何か？"
-    elif tmp_entity["id"] == "right_shoulder" or tmp_entity["id"] == "left_shoulder":
+    elif tmp_entity.get("id") == "right_shoulder" or tmp_entity.get("id") == "left_shoulder":
         question = "目的は何か？"
-    elif tmp_entity["id"] == "right_hand" or tmp_entity["id"] == "left_hand":
+    elif tmp_entity.get("id") == "right_hand" or tmp_entity.get("id") == "left_hand":
         question = "行動は何か？"
     else:
         question = "仮定・前提条件は何か？"
@@ -85,7 +85,7 @@ def render_edit_panel():
     tmp_entity["color"] = st.selectbox(
         "色",
         color_list,
-        index=color_list.index(tmp_entity["color"]),
+        index=color_list.index(tmp_entity.get("color", "None")),
         key=f"ec_color_{selected_unique_id}",
     )
 

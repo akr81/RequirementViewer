@@ -55,7 +55,7 @@ def render_edge_connection_new(edge: dict, _: int, visibility: str, params: dict
             st.selectbox(
                 f"{params['selectbox_label']}(新規)",
                 params["id_title_list"],
-                index=params["id_title_list"].index("None"),
+                index=params["id_title_list"].index("--- 未選択 ---"),
                 key=f"{params['selectbox_key']}_new",
                 label_visibility=visibility,
             )
@@ -178,7 +178,7 @@ def _render_individual_edit():
     add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id)
 
     # 直接データ操作はせず、コピー(uuidは異なる)に対して操作する
-    tmp_entity = copy.deepcopy(selected_entity)
+    tmp_entity = copy.deepcopy(selected_entity) or {}
     tmp_entity["unique_id"] = f"{uuid.uuid4()}".replace("-", "")
     tmp_entity.setdefault("color", "None")
     tmp_entity.setdefault("type", "entity")
@@ -187,7 +187,7 @@ def _render_individual_edit():
     top_button_container = st.container()
 
     tmp_entity["type"] = st.selectbox(
-        "タイプ", entity_list, index=entity_list.index(tmp_entity["type"])
+        "タイプ", entity_list, index=entity_list.index(tmp_entity.get("type", "entity"))
     )
     tmp_entity["text"] = st.text_area(
         "課題・状況",
@@ -199,7 +199,7 @@ def _render_individual_edit():
     tmp_entity["color"] = st.selectbox(
         "色",
         color_list,
-        index=color_list.index(tmp_entity["color"]),
+        index=color_list.index(tmp_entity.get("color", "None")),
         key=f"crt_color_{selected_unique_id}",
     )
 
