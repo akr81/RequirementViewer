@@ -99,6 +99,8 @@ def _render_status_bar(context: DiagramContext, options: DiagramOptions):
                 use_container_width=True,
             ):
                 st.query_params["link_mode"] = "False" if options.link_mode else "True"
+                # ボタン起因でのトグルであることを示すフラグを付与
+                st.query_params["_toggle_action"] = "True"
                 st.rerun()
 
 def _render_toggle_buttons(context: DiagramContext, options: DiagramOptions):

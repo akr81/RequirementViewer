@@ -232,13 +232,12 @@ def load_and_prepare_data(file_path, app_name):
     previous_selected = st.query_params.get("previous_selected", "None")
 
     # --- ステート制御: 接続モード（link_mode）の自動切り替え ---
-    # ユーザーが図上の同じノードを2回連続でクリックした場合、以前は接続モードに
-    # 入っていたが、誤操作が多いためONにする処理は廃止。
-    # すでに接続モード(ON)の時のキャンセル(OFF)処理のみ残す。
-    if (previous_selected == selected_unique_id):
-        if link_mode:
-            link_mode = False
-    else:
+    toggle_action = st.query_params.pop("_toggle_action", "False")
+
+    if toggle_action == "True":
+        # ボタンからのトグル操作の場合はエッジの生成判定をスキップする
+        pass
+    elif previous_selected != selected_unique_id:
         # 別のノードが選択された場合の処理
         if link_mode:
             # 接続モードがONの状態で別のノードが選ばれた場合、
@@ -270,8 +269,9 @@ def load_and_prepare_data(file_path, app_name):
                 update_source_data(file_path, requirement_manager.requirements)
                 print("update file")
             st.query_params["link_mode"] = "False"
+            link_mode = False
             st.rerun()
-        link_mode = False
+
     st.query_params["link_mode"] = str(link_mode)
 
     # "default" 等の無効なIDは "None" に正規化して次フレームへ引き渡す
