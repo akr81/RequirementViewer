@@ -6,16 +6,16 @@ class RequirementManager:
         self.requirements = requirement_data
     
     def update_edge(self, source: str, destination: str, defaults: dict = None):
-        """(link_mode専用) エッジを更新（追加・削除）する
+        """(link_mode専用) 接続を更新（追加・削除）する
         
         Args:
-            source (str): 接続元ノードのユニークID
-            destination (str): 接続先ノードのユニークID
-            defaults (dict): デフォルトのエッジ属性
+            source (str): 接続元エンティティのユニークID
+            destination (str): 接続先エンティティのユニークID
+            defaults (dict): デフォルトの接続属性
         """
         existing_edge = [e for e in self.requirements["edges"] if e["source"] == source and e["destination"] == destination]
         if existing_edge:
-            # 該当エッジを除外（pop+ループはインデックスずれのバグがあるため内包表記で除外）
+            # 該当接続を除外（pop+ループはインデックスずれのバグがあるため内包表記で除外）
             self.requirements["edges"] = [e for e in self.requirements["edges"] if not (e["source"] == source and e["destination"] == destination)]
         else:
             new_edge = defaults.copy()
@@ -29,8 +29,8 @@ class RequirementManager:
 
         Args:
             requirement (Dict): 追加する新しい要求データ
-            tmp_edges (List): 無効な（削除された）ものを含む一時的なエッジのリスト
-            new_edges (List): 新たに追加するエッジのリスト
+            tmp_edges (List): 無効な（削除された）ものを含む一時的な接続のリスト
+            new_edges (List): 新たに追加する接続のリスト
 
         Returns:
             str: 追加された要求のユニークID
@@ -85,8 +85,8 @@ class RequirementManager:
         Args:
             selected_unique_id (str): 更新対象の要求のユニークID
             requirement (Dict): 更新する要求データ
-            tmp_edges (List): 無効な（削除された）ものを含む一時的なエッジのリスト
-            new_edges (List): 新規追加エッジのリスト
+            tmp_edges (List): 無効な（削除された）ものを含む一時的な接続のリスト
+            new_edges (List): 新規追加接続のリスト
         """
         requirement.setdefault("title", "")
         # 渡されるrequirementは、暫定的にユニークIDを振り直しているので、元のユニークIDで上書きする

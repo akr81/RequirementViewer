@@ -224,12 +224,12 @@ def _render_diagram(
     parameters_dict["max_concurrency"] = len(project.get("resources", []))
 
     plantuml_code = ""
-    # show_temp_id が ON の場合のみ、subgraphのノードに仮ID(#N)を付加
+    # show_temp_id が ON の場合のみ、subgraphのエンティティに仮ID(#N)を付加
     subgraph = options.graph_data.subgraph
     original_titles = {}
     if getattr(options, "show_temp_id", False):
         # ダイアグラムタイプごとのPlantUML表示フィールド
-        # (convert_puml_code.py のノードコンバータが参照するフィールドに合わせる)
+        # (convert_puml_code.py のエンティティコンバータが参照するフィールドに合わせる)
         _display_field_map = {
             "Current Reality Tree Viewer": "text",
             "Evaporating Cloud Viewer": "text",

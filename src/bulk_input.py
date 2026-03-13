@@ -1,6 +1,6 @@
 """一括入力機能モジュール。
 
-テキストベースでエンティティの一括作成・削除と接続関係の設定・削除を行う。
+テキストベースでエンティティの一括作成・削除と接続接続の設定・削除を行う。
 仮ID（#1, #2, ...）はUI表示のみに使用し、データには保存しない。
 
 エンティティ入力欄:
@@ -16,7 +16,7 @@ from typing import Dict, List, Set, Tuple
 
 
 def build_temp_id_map(nodes: List[Dict], display_key: str = "title") -> Dict[int, Dict]:
-    """既存ノードに仮ID（通番）を付与したマップを返す。"""
+    """既存エンティティに仮ID（通番）を付与したマップを返す。"""
     temp_map = {}
     for i, node in enumerate(nodes, start=1):
         label = node.get(display_key, "") or node.get("id", "") or node.get("unique_id", "")
@@ -44,7 +44,7 @@ def parse_entities(
         text: 1行1エンティティのテキスト
         start_id: 仮IDの開始番号
         default_type: デフォルトのエンティティタイプ
-        existing_map: 既存ノードの仮IDマップ
+        existing_map: 既存エンティティの仮IDマップ
         content_field: テキストを格納するフィールド名（PFD/CCPM: "title", CRT: "id"）
         default_color: デフォルトの色
         extra_fields: エンティティに追加するフィールド（CCPM の days, remains 等）
@@ -122,16 +122,16 @@ def parse_connections(
     existing_edges: List[Dict],
     extra_edge_fields: Dict = None,
 ) -> Tuple[List[Dict], Set[Tuple[str, str]], List[str]]:
-    """接続記法からエッジの追加・削除リストを生成する。
+    """接続記法から接続の追加・削除リストを生成する。
 
     書式:
       - 「1 3」 — #1→#3 の接続（従来形式・2つの数字）
       - 「2 3 4 > 5 6」 — #2→#5, #2→#6, #3→#5, #3→#6, #4→#5, #4→#6 の直積接続
 
-    既存エッジと一致する場合は削除扱い（トグル動作）。
+    既存接続と一致する場合は削除扱い（トグル動作）。
 
     Returns:
-        (追加エッジリスト, 削除対象(source,destination)セット, エラーメッセージリスト)
+        (追加接続リスト, 削除対象(source,destination)セット, エラーメッセージリスト)
     """
     edges_to_add = []
     edges_to_remove: Set[Tuple[str, str]] = set()
@@ -259,7 +259,7 @@ def _apply_changes(
     reqs = requirement_manager.requirements
     # エンティティ追加
     reqs["nodes"].extend(new_entities)
-    # エンティティ削除（関連エッジも同時削除）
+    # エンティティ削除（関連接続も同時削除）
     if del_entity_ids:
         reqs["nodes"] = [
             n for n in reqs["nodes"]
@@ -270,9 +270,9 @@ def _apply_changes(
             if e.get("source") not in del_entity_ids
             and e.get("destination") not in del_entity_ids
         ]
-    # エッジ追加
+    # 接続追加
     reqs.setdefault("edges", []).extend(add_edges)
-    # エッジ削除
+    # 接続削除
     if rm_edge_keys:
         reqs["edges"] = [
             e for e in reqs.get("edges", [])
@@ -299,7 +299,7 @@ def render_bulk_input_ui(
     Args:
         content_field: 入力テキストを格納するフィールド名（PFD/CCPM: 'title', CRT: 'id'）
         extra_fields: エンティティに追加するデフォルトフィールド（CCPMの days, remains 等）
-        extra_edge_fields: エッジに追加するデフォルトフィールド（CRTの and 等）
+        extra_edge_fields: 接続に追加するデフォルトフィールド（CRTの and 等）
         metadata_columns: カンマ区切りで入力可能なメタデータの定義リスト
     """
 

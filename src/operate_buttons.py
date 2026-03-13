@@ -3,9 +3,9 @@ from src.utility import update_source_data, undo_last_change
 
 
 def add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_unique_id):
-    """右パネル上部にノード検索・選択用セレクトボックスを描画する。
+    """右パネル上部にエンティティ検索・選択用セレクトボックスを描画する。
 
-    ユーザーがセレクトボックスで別のノードを選ぶと、
+    ユーザーがセレクトボックスで別のエンティティを選ぶと、
     query_params.selected を更新してページ全体を再描画する。
     """
     # 全ての選択肢をそのまま使用 (未選択等も含む)
@@ -13,7 +13,7 @@ def add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_uni
     if not node_options:
         return
 
-    # 現在選択中のノードのラベルを取得
+    # 現在選択中のエンティティのラベルを取得
     current_label = unique_id_dict.get(selected_unique_id, "--- 未選択 ---")
     if current_label in node_options:
         current_index = node_options.index(current_label)
@@ -21,7 +21,7 @@ def add_node_selector(id_title_list, id_title_dict, unique_id_dict, selected_uni
         current_index = 0
 
     selected_label = st.selectbox(
-        "🔍 ノード検索",
+        "🔍 エンティティ検索",
         node_options,
         index=current_index,
         key="node_selector",
@@ -72,7 +72,7 @@ def add_operate_buttons(
     key_suffix="",
     display_key="id",
 ):
-    # 既存ノード編集中か新規作成中かを判定
+    # 既存エンティティ編集中か新規作成中かを判定
     is_existing = selected_unique_id in unique_id_dict
 
     (
@@ -92,13 +92,13 @@ def add_operate_buttons(
                 st.query_params.detail = "True"
                 st.rerun()
     with duplicate_button_column:
-        # 複製ボタンを表示（既存ノード選択時のみ有効）
+        # 複製ボタンを表示（既存エンティティ選択時のみ有効）
         if not no_duplicate:
             if st.button("複製", key=f"duplicate_button_{key_suffix}", disabled=not is_existing):
                 import uuid
                 import copy
 
-                # ノードの深いコピーを作成し、新しい unique_id を付与
+                # エンティティの深いコピーを作成し、新しい unique_id を付与
                 new_node = copy.deepcopy(
                     next(
                         n for n in requirement_manager.requirements["nodes"]
@@ -108,11 +108,11 @@ def add_operate_buttons(
                 new_unique_id = f"{uuid.uuid4()}".replace("-", "")
                 new_node["unique_id"] = new_unique_id
 
-                # ノードを追加
+                # エンティティを追加
                 requirement_manager.requirements["nodes"].append(new_node)
 
-                # 元ノードの outgoing edges（source が元ノード）を複製
-                # 元ノードの incoming edges（destination が元ノード）も複製
+                # 元エンティティの outgoing edges（source が元エンティティ）を複製
+                # 元エンティティの incoming edges（destination が元エンティティ）も複製
                 for edge in requirement_manager.requirements["edges"][:]:
                     if edge.get("source") == selected_unique_id:
                         new_edge = copy.deepcopy(edge)
@@ -149,7 +149,7 @@ def add_operate_buttons(
                     st.query_params.selected = added_id
                     st.rerun()
     with update_button_column:
-        # 更新ボタン（既存ノード選択時のみ有効）
+        # 更新ボタン（既存エンティティ選択時のみ有効）
         if st.button("更新", key=f"update_button_{key_suffix}", disabled=not is_existing):
             requirement_manager.update(
                 selected_unique_id, tmp_entity, tmp_edges, new_edges

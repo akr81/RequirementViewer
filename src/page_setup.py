@@ -145,7 +145,7 @@ def load_graph_data(file_path: str, mtime: float, app_name: str) -> GraphData:
         if display_key not in node:
             node[display_key] = ""
         
-    # 各ノードの表示キーの出現回数をカウント（フォールバック後）
+    # 各エンティティの表示キーの出現回数をカウント（フォールバック後）
     display_key_counts = {}
     for node in nodes:
         key_val = node[display_key]
@@ -226,7 +226,7 @@ def load_and_prepare_data(file_path, app_name):
     show_temp_id = st.query_params.get("show_temp_id", "True")
     show_temp_id = True if show_temp_id == "True" else False
 
-    # 接続モード時、requirement_dataのエッジのみを直接更新する
+    # 接続モード時、requirement_dataの接続のみを直接更新する
     link_mode = st.query_params.get("link_mode", "False")
     link_mode = True if link_mode == "True" else False
     previous_selected = st.query_params.get("previous_selected", "None")
@@ -235,13 +235,13 @@ def load_and_prepare_data(file_path, app_name):
     toggle_action = st.query_params.pop("_toggle_action", "False")
 
     if toggle_action == "True":
-        # ボタンからのトグル操作の場合はエッジの生成判定をスキップする
+        # ボタンからのトグル操作の場合は接続の生成判定をスキップする
         pass
     elif previous_selected != selected_unique_id:
-        # 別のノードが選択された場合の処理
+        # 別のエンティティが選択された場合の処理
         if link_mode:
-            # 接続モードがONの状態で別のノードが選ばれた場合、
-            # previous_selected(接続元) から selected_unique_id(接続先) へエッジを引く。
+            # 接続モードがONの状態で別のエンティティが選ばれた場合、
+            # previous_selected(接続元) から selected_unique_id(接続先) へ接続を引く。
             # アプリケーションごとに必須の属性を定義
             edge_defaults = {"type": EdgeType.ARROW} # 共通のデフォルト
 
@@ -253,7 +253,7 @@ def load_and_prepare_data(file_path, app_name):
                 edge_defaults["type"] = EdgeType.DERIVE_KEY
                 # 必要に応じて 'note': {} なども追加
 
-            # 両端が実在するノードIDである場合のみエッジを生成する
+            # 両端が実在するエンティティIDである場合のみ接続を生成する
             # "default" や "None" 等のセンチネル値がIDとして混入するのを防ぐ
             _SENTINEL = ("None", "default", "")
             _can_create_edge = (
@@ -275,7 +275,7 @@ def load_and_prepare_data(file_path, app_name):
     st.query_params["link_mode"] = str(link_mode)
 
     # "default" 等の無効なIDは "None" に正規化して次フレームへ引き渡す
-    # これにより接続モード中に不正なIDがエッジのsource/destinationに混入するのを防ぐ
+    # これにより接続モード中に不正なIDが接続のsource/destinationに混入するのを防ぐ
     _SENTINEL = ("None", "default", "")
     if (
         isinstance(selected_unique_id, str)

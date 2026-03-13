@@ -423,7 +423,7 @@ def show_backup_diff_preview(current_data: Dict):
     if not isinstance(backup_data, dict) or not isinstance(current_data, dict):
         return
 
-    # ノード名の取得（title > text > id > unique_id の優先順でラベルを取得）
+    # エンティティ名の取得（title > text > id > unique_id の優先順でラベルを取得）
     def _node_label(node: Dict) -> str:
         return (
             node.get("title")
@@ -448,14 +448,14 @@ def show_backup_diff_preview(current_data: Dict):
         parts = []
         if added_ids:
             names = ", ".join(_node_label(bak_nodes[uid]) for uid in sorted(added_ids))
-            parts.append(f"＋ノード {len(added_ids)}件: {names}")
+            parts.append(f"＋エンティティ {len(added_ids)}件: {names}")
         if removed_ids:
             names = ", ".join(_node_label(cur_nodes[uid]) for uid in sorted(removed_ids))
-            parts.append(f"－ノード {len(removed_ids)}件: {names}")
+            parts.append(f"－エンティティ {len(removed_ids)}件: {names}")
         if edge_diff > 0:
-            parts.append(f"＋エッジ {edge_diff}件")
+            parts.append(f"＋接続 {edge_diff}件")
         elif edge_diff < 0:
-            parts.append(f"－エッジ {abs(edge_diff)}件")
+            parts.append(f"－接続 {abs(edge_diff)}件")
         summary = "📋 " + " / ".join(parts)
 
     st.caption(summary)
