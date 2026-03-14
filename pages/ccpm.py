@@ -358,7 +358,10 @@ def _render_project_settings(
 ):
     """プロジェクトの基本設定 (開始日, 終了日, 祝日, リソースなど) UI を描画する"""
     project = requirement_data.get("project", {})
-    with st.expander("📅 プロジェクト設定", expanded=False):
+    today_str = project.get("today", "")
+    expander_title = f"📅 プロジェクト設定 (今日: {today_str})" if today_str else "📅 プロジェクト設定"
+    
+    with st.expander(expander_title, expanded=False):
         from datetime import datetime
         
         # 文字列をdatetime(date)に変換するヘルパー。未設定ならNoneを返す
@@ -795,7 +798,7 @@ def _render_fever_tab(
 
         with data_col:
             st.caption(
-                f"📊 CC完了率: **{fever['progress']:.1f}%** / バッファ消費率: **{fever['buffer_used']:.1f}%**"
+                f"📊 **【今日: {today_str}】** CC完了率: **{fever['progress']:.1f}%** / バッファ消費率: **{fever['buffer_used']:.1f}%**"
             )
             if st.button("📝 現在の値を記録", key="ccpm_record_fever"):
                 if "progress" not in requirement_data:
