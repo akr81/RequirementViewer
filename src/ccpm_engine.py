@@ -722,20 +722,18 @@ def calculate_priority_table(
         days = _get_effective_days(work_graph, task)
         buffer = unfinished_cp_length - remain_length
         
-        # 状態判定: 完了 → 待機中 → バッファに基づく信号色
+        # 状態判定: バッファに基づく信号色を決定し、着手不可なら末尾に待機中を付与
         if is_finished:
             status = "⚫ 完了"
-        elif not actionable:
-            # 前工程が未完了のため着手不可
-            status = "⏳ 待機中"
         elif buffer <= (unfinished_cp_length * 0.1):
-            # 残バッファが残りCCの10%以下（消費率90%超）で赤
             status = "🔴 警告"
         elif buffer <= (unfinished_cp_length * 0.3):
-            # 残バッファが残りCCの30%以下（消費率70%超）で黄
             status = "🟡 注意"
         else:
             status = "🟢 余裕あり"
+        
+        if not is_finished and not actionable:
+            status += " (⏳ 待機中)"
         
         all_info[task] = {
             "task": task,
