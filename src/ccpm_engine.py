@@ -733,7 +733,14 @@ def calculate_priority_table(
             status = "🟢 余裕あり"
         
         if not is_finished and not actionable:
-            status += " (⏳ 待機中)"
+            # 未完了の先行タスク名を取得
+            blocking_titles = [
+                work_graph.nodes[p].get("title", p)
+                for p in work_graph.predecessors(task)
+                if not work_graph.nodes[p].get("finished", False)
+            ]
+            blocking_str = ", ".join(blocking_titles)
+            status += f" (⏳ 待: {blocking_str})"
         
         all_info[task] = {
             "task": task,
