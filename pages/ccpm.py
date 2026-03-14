@@ -208,9 +208,20 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
         st.write("")
         if raw_estart:
             from datetime import datetime
+            import workdays
+            
             calc_end = raw_eend if raw_eend else datetime.now().date()
-            actual_days = (calc_end - raw_estart).days + 1
-            st.markdown(f"<div style='margin-top: 14px;'>実績: <b>{actual_days}日</b></div>", unsafe_allow_html=True)
+            
+            # config_dataのprojectから休日を取得
+            # pages/ccpm.py自体にはconfig_dataが関数の引数等で直接渡されていない場合もあるため、
+            # Streamlitのsession_stateなどから取れるか試みるか、デフォルト空で渡す
+            holidays = []
+            if "config_data" in st.session_state and "project" in st.session_state["config_data"]:
+                h_strs = st.session_state["config_data"]["project"].get("holidays", [])
+                holidays = [datetime.strptime(h, "%Y/%m/%d").date() for h in h_strs]
+                
+            actual_days = workdays.networkdays(raw_estart, calc_end, holidays=holidays)
+            st.markdown(f"<div style='margin-top: 14px;'>実績: <b>{actual_days}稼働日</b></div>", unsafe_allow_html=True)
 
     tmp_entity["resource"] = st.text_input(
         "担当者", tmp_entity.get("resource", ""),
