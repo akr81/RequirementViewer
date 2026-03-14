@@ -193,9 +193,19 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
     def on_finished_change():
         is_finished = st.session_state.get(finished_key, False)
         if is_finished:
-            # 完了 ON -> 終了日に今日をセット、残日数を0に
+            # 完了 ON -> 終了日にプロジェクト設定の今日をセット、残日数を0に
             from datetime import datetime
-            st.session_state[end_key] = datetime.now().date()
+            
+            calc_today = datetime.now().date()
+            if "config_data" in st.session_state and "project" in st.session_state["config_data"]:
+                today_str = st.session_state["config_data"]["project"].get("today", "")
+                if today_str:
+                    try:
+                        calc_today = datetime.strptime(today_str, "%Y/%m/%d").date()
+                    except ValueError:
+                        pass
+                        
+            st.session_state[end_key] = calc_today
             st.session_state[remains_key] = 0.0
         else:
             # 完了 OFF -> 終了日をクリア
@@ -234,16 +244,21 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
             from datetime import datetime
             import workdays
             
-            calc_end = raw_eend if raw_eend else datetime.now().date()
-            
-            # config_dataのprojectから休日を取得
-            # pages/ccpm.py自体にはconfig_dataが関数の引数等で直接渡されていない場合もあるため、
-            # Streamlitのsession_stateなどから取れるか試みるか、デフォルト空で渡す
+            calc_today = datetime.now().date()
             holidays = []
             if "config_data" in st.session_state and "project" in st.session_state["config_data"]:
-                h_strs = st.session_state["config_data"]["project"].get("holidays", [])
-                holidays = [datetime.strptime(h, "%Y/%m/%d").date() for h in h_strs]
+                p_conf = st.session_state["config_data"]["project"]
+                today_str = p_conf.get("today", "")
+                if today_str:
+                    try:
+                        calc_today = datetime.strptime(today_str, "%Y/%m/%d").date()
+                    except ValueError:
+                        pass
                 
+                h_strs = p_conf.get("holidays", [])
+                holidays = [datetime.strptime(h, "%Y/%m/%d").date() for h in h_strs]
+            
+            calc_end = raw_eend if raw_eend else calc_today
             actual_days = workdays.networkdays(raw_estart, calc_end, holidays=holidays)
             st.markdown(f"<div style='margin-top: 14px;'>実績: <b>{actual_days}日</b></div>", unsafe_allow_html=True)
 
