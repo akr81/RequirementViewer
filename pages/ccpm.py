@@ -153,19 +153,6 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
     )
 
     # CCPM 固有フィールド
-    col_days, col_remains, col_finished = st.columns([2, 2, 1])
-    with col_days:
-        tmp_entity["days"] = st.number_input(
-            "見積り日数", min_value=0.0, value=float(tmp_entity.get("days", 1)),
-            step=0.5, key=f"ccpm_days_{selected_unique_id}",
-        )
-    with col_remains:
-        tmp_entity["remains"] = st.number_input(
-            "残日数", min_value=0.0, value=float(tmp_entity.get("remains", 0)),
-            step=0.5, key=f"ccpm_remains_{selected_unique_id}",
-        )
-    col_start, col_end, col_actual = st.columns([2, 2, 1])
-    
     start_key = f"ccpm_start_{selected_unique_id}"
     end_key = f"ccpm_end_{selected_unique_id}"
     finished_key = f"ccpm_finished_{selected_unique_id}"
@@ -180,10 +167,27 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
         except ValueError:
             return None
 
-    def _get_val_node(key: str, default_val):
-        if key in st.session_state:
-            return st.session_state[key]
-        return default_val
+    # ウィジェットのvalue引数に起因するStreamlit警告を防ぐため、事前にsession_stateを初期化する
+    if remains_key not in st.session_state:
+        st.session_state[remains_key] = float(tmp_entity.get("remains", 0))
+    if finished_key not in st.session_state:
+        st.session_state[finished_key] = tmp_entity.get("finished", False)
+    if start_key not in st.session_state:
+        st.session_state[start_key] = _get_entity_date(tmp_entity.get("start", ""))
+    if end_key not in st.session_state:
+        st.session_state[end_key] = _get_entity_date(tmp_entity.get("end", ""))
+
+    col_days, col_remains, col_finished = st.columns([2, 2, 1])
+    with col_days:
+        tmp_entity["days"] = st.number_input(
+            "見積り日数", min_value=0.0, value=float(tmp_entity.get("days", 1)),
+            step=0.5, key=f"ccpm_days_{selected_unique_id}",
+        )
+    with col_remains:
+        tmp_entity["remains"] = st.number_input(
+            "残日数", min_value=0.0, step=0.5, key=remains_key,
+        )
+    col_start, col_end, col_actual = st.columns([2, 2, 1])
 
     # 連動用コールバック関数
     def on_finished_change():
@@ -208,22 +212,18 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
         st.write("")
         st.write("")
         tmp_entity["finished"] = st.checkbox(
-            "完了", value=tmp_entity.get("finished", False),
-            key=finished_key,
-            on_change=on_finished_change
+            "完了", key=finished_key, on_change=on_finished_change
         )
 
     with col_start:
         raw_estart = st.date_input(
-            "開始日", value=_get_val_node(start_key, _get_entity_date(tmp_entity.get("start", ""))),
-            key=start_key,
+            "開始日", key=start_key
         )
         tmp_entity["start"] = raw_estart.strftime("%Y/%m/%d") if raw_estart else ""
 
     with col_end:
         raw_eend = st.date_input(
-            "終了日", value=_get_val_node(end_key, _get_entity_date(tmp_entity.get("end", ""))),
-            key=end_key,
+            "終了日", key=end_key,
             on_change=on_end_date_change
         )
         tmp_entity["end"] = raw_eend.strftime("%Y/%m/%d") if raw_eend else ""
