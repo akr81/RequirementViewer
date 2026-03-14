@@ -401,7 +401,7 @@ class ConvertPumlCode:
         color_str = self._get_puml_color(node_attrs)
         raw_content = node_attrs.get(content_field, "") or node_attrs.get("title", "") or node_attrs.get("id", "")
         if node_attrs.get("finished", False):
-            raw_content = "☑ " + raw_content
+            raw_content = "<img:images/check.png> " + raw_content
             
         # カード要素は文字列の途中で改行が有効になるように \n を許可しておく
         content = self._escape_puml(raw_content, keep_newline=True)
@@ -851,7 +851,7 @@ class ConvertPumlCode:
             attrs = render_graph.nodes[node_id]
             title = attrs.get("title", "")
             if attrs.get("finished", False):
-                title = "☑ " + title
+                title = "<img:images/check.png> " + title
             
             # 詳細表示がオンで、days や resource が設定されている場合に追加
             if detail_flag:
@@ -940,7 +940,7 @@ class ConvertPumlCode:
         
         id_val = node_attrs.get("title", "")
         if node_attrs.get("finished", False):
-            id_val = "☑ " + id_val
+            id_val = "<img:images/check.png> " + id_val
             
         # エスケープ処理 (usecaseなどは\nに変換)
         escaped_id_val = self._escape_puml(id_val, keep_newline=False)
