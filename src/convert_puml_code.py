@@ -262,7 +262,7 @@ class ConvertPumlCode:
         # Draw package as frame
         target = parameters_dict.get("target", None)
         if not title:
-            if target == None or target == "None":
+            if target == None or target == "None" or target == "default":
                 title = '"req Requirements [all]"'
             else:
                 target_title = graph.nodes(data=True)[target]["title"]

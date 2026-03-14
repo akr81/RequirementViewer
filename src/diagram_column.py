@@ -253,8 +253,10 @@ def _render_diagram(
             parameters_dict=parameters_dict,
             diagram_title=context.requirements.get("title", ""),
         )
-    except:
-        st.error("PlantUMLコードの変換に失敗しました。")
+    except Exception as e:
+        import traceback
+        st.error(f"PlantUMLコードの変換に失敗しました。詳細: {e}")
+        st.code(traceback.format_exc())
         plantuml_code = ""
     finally:
         # 仮IDを付加したtitleを元に戻す
