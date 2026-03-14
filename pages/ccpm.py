@@ -197,8 +197,8 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
             from datetime import datetime
             
             calc_today = datetime.now().date()
-            if "config_data" in st.session_state and "project" in st.session_state["config_data"]:
-                today_str = st.session_state["config_data"]["project"].get("today", "")
+            if "project" in config_data:
+                today_str = config_data["project"].get("today", "")
                 if today_str:
                     try:
                         calc_today = datetime.strptime(today_str, "%Y/%m/%d").date()
@@ -246,8 +246,8 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
             
             calc_today = datetime.now().date()
             holidays = []
-            if "config_data" in st.session_state and "project" in st.session_state["config_data"]:
-                p_conf = st.session_state["config_data"]["project"]
+            if "project" in config_data:
+                p_conf = config_data["project"]
                 today_str = p_conf.get("today", "")
                 if today_str:
                     try:
