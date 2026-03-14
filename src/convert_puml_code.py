@@ -1,4 +1,8 @@
+import base64
 from typing import Dict, List, Tuple, Any
+
+# Base64エンコードされたチェックマーク画像 (16x16)
+CHECKBOX_IMG_PUML = "<img:data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiUlEQVR4nGNgoBAwInNEG2z/E6vxdcNhsF4WZM28roqkWP4fZAgjmZrB4PPu+wxMpGi4a7UQQ4yJVM3ohjAxkAiUj8WTbsBdLE7Ha8BdJA3IbHTbUaKRkF+xacbqAmUsCnFpxmoAIQ3ogAmXBMwQQobhjQViXAI2AJSmQcmSFABSD88LMEBObgQATcY1I+vCAPQAAAAASUVORK5CYII=>"
 import networkx as nx
 import re
 import unicodedata
@@ -401,7 +405,7 @@ class ConvertPumlCode:
         color_str = self._get_puml_color(node_attrs)
         raw_content = node_attrs.get(content_field, "") or node_attrs.get("title", "") or node_attrs.get("id", "")
         if node_attrs.get("finished", False):
-            raw_content = "<img:images/check.png> " + raw_content
+            raw_content = CHECKBOX_IMG_PUML + " " + raw_content
             
         # カード要素は文字列の途中で改行が有効になるように \n を許可しておく
         content = self._escape_puml(raw_content, keep_newline=True)
@@ -842,7 +846,7 @@ class ConvertPumlCode:
 
         # ノード変換（完了タスクに ☑ プレフィックス、詳細なら日数と担当者を追加）
         import copy
-        render_graph = graph.copy()
+        render_graph = copy.deepcopy(graph)
         
         # parameters_dict から詳細表示フラグを取得
         detail_flag = parameters_dict.get("detail", False)
@@ -850,8 +854,7 @@ class ConvertPumlCode:
         for node_id in render_graph.nodes:
             attrs = render_graph.nodes[node_id]
             title = attrs.get("title", "")
-            if attrs.get("finished", False):
-                title = "<img:images/check.png> " + title
+            # check アイコンは _convert_simple_card_node で付与されるためここでは付けない
             
             # 詳細表示がオンで、days や resource が設定されている場合に追加
             if detail_flag:
@@ -940,7 +943,7 @@ class ConvertPumlCode:
         
         id_val = node_attrs.get("title", "")
         if node_attrs.get("finished", False):
-            id_val = "<img:images/check.png> " + id_val
+            id_val = CHECKBOX_IMG_PUML + " " + id_val
             
         # エスケープ処理 (usecaseなどは\nに変換)
         escaped_id_val = self._escape_puml(id_val, keep_newline=False)
