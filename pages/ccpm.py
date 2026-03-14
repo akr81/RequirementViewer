@@ -221,7 +221,7 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
                 holidays = [datetime.strptime(h, "%Y/%m/%d").date() for h in h_strs]
                 
             actual_days = workdays.networkdays(raw_estart, calc_end, holidays=holidays)
-            st.markdown(f"<div style='margin-top: 14px;'>実績: <b>{actual_days}稼働日</b></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='margin-top: 14px;'>実績: <b>{actual_days}日</b></div>", unsafe_allow_html=True)
 
     tmp_entity["resource"] = st.text_input(
         "担当者", tmp_entity.get("resource", ""),
