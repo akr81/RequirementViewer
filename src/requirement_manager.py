@@ -43,10 +43,8 @@ class RequirementManager:
         if new_edges is not None:
             for new_edge in new_edges:
                 if (
-                    new_edge["source"] != "None"
-                    and new_edge["destination"] != "None"
-                    and new_edge["source"] != None
-                    and new_edge["destination"] != None
+                    new_edge["source"] not in ["None", None, "default"]
+                    and new_edge["destination"] not in ["None", None, "default"]
                 ):
                     self.requirements["edges"].append(new_edge)
 
@@ -115,9 +113,7 @@ class RequirementManager:
             self.requirements["edges"].clear()
             for edge in all_edges:
                 if (
-                    edge["source"] != "None"
-                    and edge["destination"] != "None"
-                    and edge["source"] != None
-                    and edge["destination"] != None
+                    edge["source"] not in ["None", None, "default"]
+                    and edge["destination"] not in ["None", None, "default"]
                 ):
                     self.requirements["edges"].append(edge)

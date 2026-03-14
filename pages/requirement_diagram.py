@@ -198,7 +198,7 @@ def _render_individual_edit():
                 "関係タイプ",
                 relation_types,
                 relation_types.index(tmp_edge["type"]),
-                key=f"relation_type{i}",
+                key=f"relation_type_{selected_unique_id}_{i}",
                 label_visibility=visibility,
             )
         with destination_column:
@@ -207,7 +207,7 @@ def _render_individual_edit():
                     "接続先",
                     id_title_list,
                     id_title_list.index(unique_id_dict[tmp_edge["destination"]]),
-                    key=f"destination{i}",
+                    key=f"destination_{selected_unique_id}_{i}",
                     label_visibility=visibility,
                 )
             ]

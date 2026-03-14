@@ -27,7 +27,7 @@ def render_edge_connection(
                     params["selectbox_label"],
                     params["id_title_list"],
                     index=params["id_title_list"].index(current_label),
-                    key=f"{params['selectbox_key']}{index}",
+                    key=f"{params['selectbox_key']}_{params['selected_unique_id']}_{index}",
                     label_visibility=visibility,
                 )
             ]
