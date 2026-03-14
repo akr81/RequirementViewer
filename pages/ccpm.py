@@ -165,12 +165,7 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
             step=0.5, key=f"ccpm_remains_{selected_unique_id}",
         )
 
-    tmp_entity["resource"] = st.text_input(
-        "担当者", tmp_entity.get("resource", ""),
-        key=f"ccpm_resource_{selected_unique_id}",
-    )
-
-    col_start, col_end = st.columns(2)
+    col_start, col_end, col_finished = st.columns([2, 2, 1])
     
     def _get_entity_date(d_str):
         if not d_str:
@@ -202,9 +197,17 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
         )
         tmp_entity["end"] = raw_eend.strftime("%Y/%m/%d") if raw_eend else ""
 
-    tmp_entity["finished"] = st.checkbox(
-        "完了", value=tmp_entity.get("finished", False),
-        key=f"ccpm_finished_{selected_unique_id}",
+    with col_finished:
+        st.write("")
+        st.write("")
+        tmp_entity["finished"] = st.checkbox(
+            "完了", value=tmp_entity.get("finished", False),
+            key=f"ccpm_finished_{selected_unique_id}",
+        )
+
+    tmp_entity["resource"] = st.text_input(
+        "担当者", tmp_entity.get("resource", ""),
+        key=f"ccpm_resource_{selected_unique_id}",
     )
 
     tmp_entity["color"] = st.selectbox(
