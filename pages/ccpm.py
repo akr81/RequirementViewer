@@ -153,7 +153,7 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
     )
 
     # CCPM 固有フィールド
-    col_days, col_remains = st.columns(2)
+    col_days, col_remains, col_finished = st.columns([2, 2, 1])
     with col_days:
         tmp_entity["days"] = st.number_input(
             "見積り日数", min_value=0.0, value=float(tmp_entity.get("days", 1)),
@@ -164,8 +164,15 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
             "残日数", min_value=0.0, value=float(tmp_entity.get("remains", 0)),
             step=0.5, key=f"ccpm_remains_{selected_unique_id}",
         )
+    with col_finished:
+        st.write("")
+        st.write("")
+        tmp_entity["finished"] = st.checkbox(
+            "完了", value=tmp_entity.get("finished", False),
+            key=f"ccpm_finished_{selected_unique_id}",
+        )
 
-    col_start, col_end, col_finished = st.columns([2, 2, 1])
+    col_start, col_end, col_actual = st.columns([2, 2, 1])
     
     def _get_entity_date(d_str):
         if not d_str:
@@ -197,13 +204,13 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
         )
         tmp_entity["end"] = raw_eend.strftime("%Y/%m/%d") if raw_eend else ""
 
-    with col_finished:
+    with col_actual:
         st.write("")
-        st.write("")
-        tmp_entity["finished"] = st.checkbox(
-            "完了", value=tmp_entity.get("finished", False),
-            key=f"ccpm_finished_{selected_unique_id}",
-        )
+        if raw_estart:
+            from datetime import datetime
+            calc_end = raw_eend if raw_eend else datetime.now().date()
+            actual_days = (calc_end - raw_estart).days + 1
+            st.markdown(f"<div style='margin-top: 14px;'>実績: <b>{actual_days}日</b></div>", unsafe_allow_html=True)
 
     tmp_entity["resource"] = st.text_input(
         "担当者", tmp_entity.get("resource", ""),
