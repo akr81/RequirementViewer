@@ -667,6 +667,7 @@ def calculate_fever_data(
 def calculate_priority_table(
     graph: nx.DiGraph,
     critical_path: List[str],
+    virtual_edges: Optional[List[Tuple[str, str, str]]] = None,
 ) -> List[Dict[str, Any]]:
     """タスクのバッファ消費に基づく優先度テーブルを計算する。
 
@@ -679,17 +680,23 @@ def calculate_priority_table(
     inputs, _ = get_in_out_edge_list(graph)
     final_task = critical_path[-1]
 
+    # 仮想エッジ（リソース待ち）を含めた作業用グラフを作成して計算する
+    work_graph = graph.copy()
+    if virtual_edges:
+        for src, dst, _ in virtual_edges:
+            work_graph.add_edge(src, dst)
+
     # 未完了のCPタスクから残りのCP長を算出
     first_unfinished = None
     for t in critical_path:
-        if not graph.nodes[t].get("finished", False):
+        if not work_graph.nodes[t].get("finished", False):
             first_unfinished = t
             break
     if not first_unfinished:
         return []
 
     unfinished_cp_length = sum(
-        _get_effective_days(graph, t)
+        _get_effective_days(work_graph, t)
         for t in critical_path[critical_path.index(first_unfinished):]
     )
 
@@ -697,21 +704,24 @@ def calculate_priority_table(
     memo: Dict[str, float] = {}
     all_info: Dict[str, Dict[str, Any]] = {}
     
-    for task in graph.nodes:
+    for task in work_graph.nodes:
         # メモやクラウドなどの図形はスキップ
-        if graph.nodes[task].get("type", "") in ["note", "cloud"]:
+        if work_graph.nodes[task].get("type", "") in ["note", "cloud"]:
             continue
 
-        is_finished = graph.nodes[task].get("finished", False)
+        is_finished = work_graph.nodes[task].get("finished", False)
             
         # 該当タスクから終端までの最長残パス長（自身の日数を含む）
-        remain_length = _compute_remaining_path_length(graph, task, memo)
-        days = _get_effective_days(graph, task)
+        remain_length = _compute_remaining_path_length(work_graph, task, memo)
+        days = _get_effective_days(work_graph, task)
         buffer = unfinished_cp_length - remain_length
         
         # 状態（信号色）の判定 (1/3ルールに基づいた早期警告設定)
         if is_finished:
             status = "⚫ 完了"
+        elif task in critical_path:
+            # CC上のタスクは計算上必ずバッファ0になるためエラー（警告）ではなく専用ステータス
+            status = "🔵 CC(最優先)"
         elif buffer <= (unfinished_cp_length * 0.1):
             # 残バッファが残りCCの10%以下（消費率90%超）で赤
             status = "🔴 警告"
@@ -724,12 +734,12 @@ def calculate_priority_table(
         all_info[task] = {
             "task": task,
             "status": status,
-            "title": graph.nodes[task].get("title", task),
+            "title": work_graph.nodes[task].get("title", task),
             "days": days,
-            "resource": graph.nodes[task].get("resource", ""),
+            "resource": work_graph.nodes[task].get("resource", ""),
             "total_remains": remain_length,
             "cp_remains": unfinished_cp_length,
-            "buffer": buffer,
+            "buffer": buffer if task not in critical_path else 0.0,
             "is_finished": is_finished,
         }
 

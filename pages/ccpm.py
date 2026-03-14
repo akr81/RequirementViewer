@@ -197,8 +197,8 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
             from datetime import datetime
             
             calc_today = datetime.now().date()
-            if "project" in config_data:
-                today_str = config_data["project"].get("today", "")
+            if "project" in requirement_data:
+                today_str = requirement_data["project"].get("today", "")
                 if today_str:
                     try:
                         calc_today = datetime.strptime(today_str, "%Y/%m/%d").date()
@@ -246,8 +246,8 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
             
             calc_today = datetime.now().date()
             holidays = []
-            if "project" in config_data:
-                p_conf = config_data["project"]
+            if "project" in requirement_data:
+                p_conf = requirement_data["project"]
                 today_str = p_conf.get("today", "")
                 if today_str:
                     try:
@@ -851,10 +851,10 @@ def _render_fever_tab(
         st.info("クリティカルパスが計算できません。")
 
 
-def _render_priority_tab(active_chain: list, nx_graph):
+def _render_priority_tab(active_chain: list, nx_graph, virtual_edges: list = None):
     """優先度タブの UI (優先度テーブル) を描画する"""
     if active_chain:
-        priority = calculate_priority_table(nx_graph, active_chain)
+        priority = calculate_priority_table(nx_graph, active_chain, virtual_edges)
         if priority:
             import pandas as pd
             df = pd.DataFrame(priority)
@@ -986,6 +986,7 @@ def render_ccpm_analysis():
         _render_priority_tab(
             active_chain=active_chain,
             nx_graph=nx_graph,
+            virtual_edges=virtual_edges,
         )
 
 
