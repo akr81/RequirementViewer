@@ -164,16 +164,13 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
             "残日数", min_value=0.0, value=float(tmp_entity.get("remains", 0)),
             step=0.5, key=f"ccpm_remains_{selected_unique_id}",
         )
-    with col_finished:
-        st.write("")
-        st.write("")
-        tmp_entity["finished"] = st.checkbox(
-            "完了", value=tmp_entity.get("finished", False),
-            key=f"ccpm_finished_{selected_unique_id}",
-        )
-
     col_start, col_end, col_actual = st.columns([2, 2, 1])
     
+    start_key = f"ccpm_start_{selected_unique_id}"
+    end_key = f"ccpm_end_{selected_unique_id}"
+    finished_key = f"ccpm_finished_{selected_unique_id}"
+    remains_key = f"ccpm_remains_{selected_unique_id}"
+
     def _get_entity_date(d_str):
         if not d_str:
             return None
@@ -188,8 +185,35 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
             return st.session_state[key]
         return default_val
 
+    # 連動用コールバック関数
+    def on_finished_change():
+        is_finished = st.session_state.get(finished_key, False)
+        if is_finished:
+            # 完了 ON -> 終了日に今日をセット、残日数を0に
+            from datetime import datetime
+            st.session_state[end_key] = datetime.now().date()
+            st.session_state[remains_key] = 0.0
+        else:
+            # 完了 OFF -> 終了日をクリア
+            st.session_state[end_key] = None
+
+    def on_end_date_change():
+        end_date_val = st.session_state.get(end_key)
+        if end_date_val:
+            # 終了日がセットされた -> 完了をON、残日数を0に
+            st.session_state[finished_key] = True
+            st.session_state[remains_key] = 0.0
+
+    with col_finished:
+        st.write("")
+        st.write("")
+        tmp_entity["finished"] = st.checkbox(
+            "完了", value=tmp_entity.get("finished", False),
+            key=finished_key,
+            on_change=on_finished_change
+        )
+
     with col_start:
-        start_key = f"ccpm_start_{selected_unique_id}"
         raw_estart = st.date_input(
             "開始日", value=_get_val_node(start_key, _get_entity_date(tmp_entity.get("start", ""))),
             key=start_key,
@@ -197,10 +221,10 @@ def _render_entity_settings(selected_entity: dict, selected_unique_id: str, ccpm
         tmp_entity["start"] = raw_estart.strftime("%Y/%m/%d") if raw_estart else ""
 
     with col_end:
-        end_key = f"ccpm_end_{selected_unique_id}"
         raw_eend = st.date_input(
             "終了日", value=_get_val_node(end_key, _get_entity_date(tmp_entity.get("end", ""))),
             key=end_key,
+            on_change=on_end_date_change
         )
         tmp_entity["end"] = raw_eend.strftime("%Y/%m/%d") if raw_eend else ""
 
