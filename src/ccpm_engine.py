@@ -578,19 +578,14 @@ def calculate_fever_data(
     for task_id in critical_path:
         attrs = graph.nodes[task_id]
         days = float(attrs.get("days", 0.0))
-        if attrs.get("finished", False):
-            # 完了済みのタスクは残なし、当初見積り日数を消化したとみなす
-            finished_days_equivalent += days
-        elif attrs.get("start", ""):
-            # 着手済みの未完了タスクは現在の残日数(remains)を使う
-            remains = float(attrs.get("remains", 0.0))
-            remaining_cc_length += remains
-            # 消化済み分を加算 (見積り - 残日数、遅れのバッファ食いはY軸に任せる)
-            if days > remains:
-                finished_days_equivalent += (days - remains)
-        else:
-            # 未着手のタスクは初期の見積り日数(days)をそのまま使う
-            remaining_cc_length += days
+        remains = _get_effective_days(graph, task_id)
+        
+        remaining_cc_length += remains
+        
+        # 消化済み日数 = 見積り日数 - 現在の残日数
+        # ただし、完了済みの場合は remains は 0 になるため全日数消化扱いとなる
+        if days > remains:
+            finished_days_equivalent += (days - remains)
 
     # CC完了率 = 消化済み日数 / ベースラインCC長
     progress = (finished_days_equivalent / baseline_cc_length) * 100
