@@ -710,18 +710,24 @@ def calculate_priority_table(
             continue
 
         is_finished = work_graph.nodes[task].get("finished", False)
+
+        # 着手可能判定: 全ての先行タスク（predecessors）が完了済みか
+        actionable = all(
+            work_graph.nodes[p].get("finished", False)
+            for p in work_graph.predecessors(task)
+        ) if not is_finished else False
             
         # 該当タスクから終端までの最長残パス長（自身の日数を含む）
         remain_length = _compute_remaining_path_length(work_graph, task, memo)
         days = _get_effective_days(work_graph, task)
         buffer = unfinished_cp_length - remain_length
         
-        # 状態（信号色）の判定 (1/3ルールに基づいた早期警告設定)
+        # 状態判定: 完了 → 待機中 → バッファに基づく信号色
         if is_finished:
             status = "⚫ 完了"
-        elif task in critical_path:
-            # CC上のタスクは計算上必ずバッファ0になるためエラー（警告）ではなく専用ステータス
-            status = "🔵 CC(最優先)"
+        elif not actionable:
+            # 前工程が未完了のため着手不可
+            status = "⏳ 待機中"
         elif buffer <= (unfinished_cp_length * 0.1):
             # 残バッファが残りCCの10%以下（消費率90%超）で赤
             status = "🔴 警告"
@@ -739,9 +745,14 @@ def calculate_priority_table(
             "resource": work_graph.nodes[task].get("resource", ""),
             "total_remains": remain_length,
             "cp_remains": unfinished_cp_length,
-            "buffer": buffer if task not in critical_path else 0.0,
+            "buffer": buffer,
             "is_finished": is_finished,
+            "actionable": actionable,
         }
 
-    # 未完了が先、その中でバッファが少ない順 にソート
-    return sorted(all_info.values(), key=lambda x: (x["is_finished"], x["buffer"]))
+    # ソート: 着手可能な未完了タスク(buffer昇順) → 待機中(buffer昇順) → 完了済み
+    return sorted(all_info.values(), key=lambda x: (
+        x["is_finished"],       # 完了済みは最後
+        not x["actionable"],    # 着手可能タスクを先に
+        x["buffer"],            # バッファが少ない順
+    ))
