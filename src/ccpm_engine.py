@@ -732,15 +732,19 @@ def calculate_priority_table(
         else:
             status = "🟢 余裕あり"
         
-        if not is_finished and not actionable:
-            # 未完了の先行タスク名を取得
-            blocking_titles = [
-                work_graph.nodes[p].get("title", p)
-                for p in work_graph.predecessors(task)
-                if not work_graph.nodes[p].get("finished", False)
-            ]
-            blocking_str = ", ".join(blocking_titles)
-            status += f" (⏳ 待: {blocking_str})"
+        if not is_finished:
+            if not actionable:
+                # 未完了の先行タスク名を取得
+                blocking_titles = [
+                    work_graph.nodes[p].get("title", p)
+                    for p in work_graph.predecessors(task)
+                    if not work_graph.nodes[p].get("finished", False)
+                ]
+                blocking_str = ", ".join(blocking_titles)
+                status += f" (⏳ 待: {blocking_str})"
+            elif work_graph.nodes[task].get("start", ""):
+                # 着手可能で開始日が入力されている場合は実施中
+                status += " (🏃 実施中)"
         
         all_info[task] = {
             "task": task,
