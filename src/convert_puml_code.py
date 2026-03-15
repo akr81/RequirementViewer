@@ -3,6 +3,8 @@ from typing import Dict, List, Tuple, Any
 
 # Base64エンコードされたチェックマーク画像 (16x16)
 CHECKBOX_IMG_PUML = "<img:data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiUlEQVR4nGNgoBAwInNEG2z/E6vxdcNhsF4WZM28roqkWP4fZAgjmZrB4PPu+wxMpGi4a7UQQ4yJVM3ohjAxkAiUj8WTbsBdLE7Ha8BdJA3IbHTbUaKRkF+xacbqAmUsCnFpxmoAIQ3ogAmXBMwQQobhjQViXAI2AJSmQcmSFABSD88LMEBObgQATcY1I+vCAPQAAAAASUVORK5CYII=>"
+# オレンジ色の走る人画像 (16x16)
+RUNNING_IMG_PUML = "<img:data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAASElEQVR4nGNgGBLgfw/DfxDGJsdEjGZsbKINGHgvEAKM+CSRbWUsYWCE8UFsBkoDjyTwH48BTAy0Bv+httMsFhiIsR0Xf3AAABkIJw4Wy34oAAAAAElFTkSuQmCC>"
 import networkx as nx
 import re
 import unicodedata
@@ -406,6 +408,8 @@ class ConvertPumlCode:
         raw_content = node_attrs.get(content_field, "") or node_attrs.get("title", "") or node_attrs.get("id", "")
         if node_attrs.get("finished", False):
             raw_content = CHECKBOX_IMG_PUML + " " + raw_content
+        elif node_attrs.get("running", False):
+            raw_content = RUNNING_IMG_PUML + " " + raw_content
             
         # カード要素は文字列の途中で改行が有効になるように \n を許可しておく
         content = self._escape_puml(raw_content, keep_newline=True)
@@ -854,7 +858,19 @@ class ConvertPumlCode:
         for node_id in render_graph.nodes:
             attrs = render_graph.nodes[node_id]
             title = attrs.get("title", "")
-            # check アイコンは _convert_simple_card_node で付与されるためここでは付けない
+            # check / running アイコンは _convert_simple_card_node 等で付与される
+            
+            # 着手可能判定（全先行タスクが完了しているか）
+            if not attrs.get("finished", False):
+                actionable = True
+                for p in graph.predecessors(node_id):
+                    if not graph.nodes[p].get("finished", False):
+                        actionable = False
+                        break
+                
+                # 着手可能かつ開始日が設定されている場合は実行中アイコン対象
+                if actionable and attrs.get("start", ""):
+                    attrs["running"] = True
             
             # 詳細表示がオンで、days や resource が設定されている場合に追加
             if detail_flag:
@@ -944,6 +960,8 @@ class ConvertPumlCode:
         id_val = node_attrs.get("title", "")
         if node_attrs.get("finished", False):
             id_val = CHECKBOX_IMG_PUML + " " + id_val
+        elif node_attrs.get("running", False):
+            id_val = RUNNING_IMG_PUML + " " + id_val
             
         # エスケープ処理 (usecaseなどは\nに変換)
         escaped_id_val = self._escape_puml(id_val, keep_newline=False)
