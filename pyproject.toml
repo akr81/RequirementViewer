@@ -16,6 +16,9 @@ dependencies = [
     "tornado>=6.5.5",
 ]
 
+[tool.uv]
+package = false
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
