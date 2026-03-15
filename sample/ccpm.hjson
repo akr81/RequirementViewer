@@ -4,8 +4,8 @@
         {
             type: deliverable
             title: 画面待ちバッファ
-            days: 2.0
-            remains: 0.0
+            days: 2
+            remains: 0
             resource: ""
             start: ""
             end: ""
@@ -110,11 +110,11 @@
             title: UIプロトタイプ作成
             type: process
             days: 3
-            remains: 2.5
+            remains: 0
             resource: 佐藤
             start: 2025/08/04
-            end: ""
-            finished: false
+            end: 2025/08/05
+            finished: true
             color: None
             _display_label: UIプロトタイプ作成
         }
@@ -126,8 +126,8 @@
             remains: 0
             resource: 田中
             start: ""
-            end: ""
-            finished: false
+            end: 2025/08/05
+            finished: true
             color: None
             _display_label: ユーザビリティレビュー
         }
@@ -136,11 +136,11 @@
             title: データモデル設計
             type: process
             days: 4
-            remains: 6
+            remains: 0
             resource: 鈴木
             start: 2025/08/04
-            end: ""
-            finished: false
+            end: 2025/08/05
+            finished: true
             color: None
             _display_label: データモデル設計
         }
@@ -152,8 +152,8 @@
             remains: 0
             resource: 高橋
             start: ""
-            end: ""
-            finished: false
+            end: 2025/08/05
+            finished: true
             color: None
             _display_label: ER図作成
         }
@@ -191,8 +191,8 @@
             remains: 0
             resource: 伊藤
             start: ""
-            end: ""
-            finished: false
+            end: 2025/08/05
+            finished: true
             color: None
             _display_label: 認証設計
         }
@@ -204,8 +204,8 @@
             remains: 0
             resource: 佐藤
             start: ""
-            end: ""
-            finished: false
+            end: 2025/08/05
+            finished: true
             color: None
             _display_label: 共通コンポーネント実装
         }
@@ -213,12 +213,12 @@
             unique_id: t13
             title: 画面A実装
             type: process
-            days: 4
-            remains: 0
+            days: 4.0
+            remains: 0.0
             resource: 佐藤
             start: ""
-            end: ""
-            finished: false
+            end: 2025/08/05
+            finished: true
             color: None
             _display_label: 画面A実装
         }
