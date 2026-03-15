@@ -12,6 +12,7 @@
             finished: false
             color: None
             unique_id: 31a52e5ce46a414aaea9779d449b54f9
+            _display_label: 画面待ちバッファ
         }
         {
             unique_id: d01
@@ -20,10 +21,11 @@
             days: 0
             remains: 0
             resource: ""
-            start: ""
-            end: ""
-            finished: false
+            start: 2025/07/22
+            end: 2025/07/22
+            finished: true
             color: None
+            _display_label: 要件定義書
         }
         {
             unique_id: d02
@@ -36,6 +38,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: 設計書一式
         }
         {
             unique_id: d03
@@ -48,30 +51,33 @@
             end: ""
             finished: false
             color: None
+            _display_label: 本番リリース完了
         }
         {
             unique_id: t01
             title: 要件ヒアリング
             type: process
             days: 5
-            remains: 3
+            remains: 0
             resource: 田中
             start: 2025/07/01
-            end: 2025/07/08
+            end: 2025/07/04
             finished: true
             color: None
+            _display_label: 要件ヒアリング
         }
         {
             unique_id: t02
             title: 業務フロー分析
             type: process
             days: 2
-            remains: 2
+            remains: 0
             resource: 鈴木
-            start: 2025/07/08
-            end: ""
-            finished: false
+            start: 2025/07/04
+            end: 2025/07/14
+            finished: true
             color: None
+            _display_label: 業務フロー分析
         }
         {
             unique_id: t03
@@ -80,10 +86,11 @@
             days: 4
             remains: 0
             resource: 田中
-            start: ""
-            end: ""
-            finished: false
+            start: 2025/07/14
+            end: 2025/07/22
+            finished: true
             color: None
+            _display_label: 要件定義書作成
         }
         {
             unique_id: t04
@@ -92,22 +99,24 @@
             days: 5
             remains: 0
             resource: 鈴木
-            start: ""
-            end: ""
-            finished: false
+            start: 2025/07/22
+            end: 2025/08/04
+            finished: true
             color: None
+            _display_label: 画面設計
         }
         {
             unique_id: t05
             title: UIプロトタイプ作成
             type: process
             days: 3
-            remains: 0
+            remains: 2.5
             resource: 佐藤
-            start: ""
+            start: 2025/08/04
             end: ""
             finished: false
             color: None
+            _display_label: UIプロトタイプ作成
         }
         {
             unique_id: t06
@@ -120,18 +129,20 @@
             end: ""
             finished: false
             color: None
+            _display_label: ユーザビリティレビュー
         }
         {
             unique_id: t07
             title: データモデル設計
             type: process
             days: 4
-            remains: 0
+            remains: 6
             resource: 鈴木
-            start: ""
+            start: 2025/08/04
             end: ""
             finished: false
             color: None
+            _display_label: データモデル設計
         }
         {
             unique_id: t08
@@ -144,6 +155,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: ER図作成
         }
         {
             unique_id: t09
@@ -156,6 +168,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: DB性能設計
         }
         {
             unique_id: t10
@@ -164,10 +177,11 @@
             days: 3
             remains: 0
             resource: 伊藤
-            start: ""
-            end: ""
-            finished: false
+            start: 2025/07/22
+            end: 2025/08/01
+            finished: true
             color: None
+            _display_label: API仕様設計
         }
         {
             unique_id: t11
@@ -180,6 +194,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: 認証設計
         }
         {
             unique_id: t12
@@ -192,6 +207,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: 共通コンポーネント実装
         }
         {
             unique_id: t13
@@ -204,6 +220,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: 画面A実装
         }
         {
             unique_id: t14
@@ -216,6 +233,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: 画面B実装
         }
         {
             unique_id: t15
@@ -228,6 +246,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: 画面C実装
         }
         {
             unique_id: t16
@@ -240,6 +259,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: DB構築・マイグレーション
         }
         {
             unique_id: t17
@@ -252,6 +272,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: API実装(認証)
         }
         {
             unique_id: t18
@@ -264,6 +285,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: API実装(業務ロジック)
         }
         {
             unique_id: t19
@@ -276,6 +298,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: バッチ処理実装
         }
         {
             unique_id: t20
@@ -288,6 +311,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: CI/CDパイプライン構築
         }
         {
             unique_id: t21
@@ -300,6 +324,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: ステージング環境構築
         }
         {
             unique_id: t22
@@ -312,6 +337,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: 単体テスト(FE)
         }
         {
             unique_id: t23
@@ -324,6 +350,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: 単体テスト(BE)
         }
         {
             unique_id: t24
@@ -336,6 +363,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: 結合テスト
         }
         {
             unique_id: t25
@@ -348,6 +376,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: 性能テスト
         }
         {
             unique_id: t26
@@ -360,6 +389,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: セキュリティテスト
         }
         {
             unique_id: t27
@@ -372,6 +402,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: UAT(ユーザ受入テスト)
         }
         {
             unique_id: t28
@@ -384,6 +415,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: 本番環境構築
         }
         {
             unique_id: t29
@@ -396,6 +428,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: データ移行
         }
         {
             unique_id: t30
@@ -408,6 +441,7 @@
             end: ""
             finished: false
             color: None
+            _display_label: リリース作業
         }
     ]
     edges:
@@ -482,6 +516,7 @@
             type: arrow
             source: t04
             destination: t13
+            comment: ""
         }
         {
             source: t05
@@ -718,7 +753,7 @@
             2025/09/23
             2025/10/13
         ]
-        today: 2025/07/08
+        today: 2025/08/05
         baseline:
         {
             cc_length: 60
@@ -739,20 +774,68 @@
     {
         2025/07/01:
         [
-            0
-            0
+            0.0
+            0.0
             ""
         ]
         2025/07/04:
         [
-            3.33
-            4.17
+            8.33
+            0.0
             ""
         ]
         2025/07/08:
         [
             8.33
-            0
+            0.0
+            ""
+        ]
+        2025/07/11:
+        [
+            8.33
+            4.17
+            ""
+        ]
+        2025/07/15:
+        [
+            8.33
+            12.5
+            ""
+        ]
+        2025/07/18:
+        [
+            10.0
+            12.5
+            ""
+        ]
+        2025/07/22:
+        [
+            15.0
+            4.17
+            ""
+        ]
+        2025/07/25:
+        [
+            18.33
+            8.33
+            ""
+        ]
+        2025/07/29:
+        [
+            15.0
+            25.0
+            ""
+        ]
+        2025/08/01:
+        [
+            18.33
+            29.17
+            ""
+        ]
+        2025/08/05:
+        [
+            24.17
+            22.92
             ""
         ]
     }
