@@ -780,16 +780,16 @@ def _render_fever_tab(
                     line=dict(width=0), showlegend=False,
                 ))
 
-            # 進捗プロット（日付・メモラベル付き）
+            # 進捗プロット（最新の点を大きく表示）
+            marker_sizes = [14] * len(progress_hist)
+            if marker_sizes:
+                marker_sizes[-1] = 22
             fig.add_trace(go.Scatter(
                 x=progress_hist, y=buffer_hist,
-                mode="lines+markers+text",
-                text=plot_texts,
+                mode="lines+markers",
                 hovertext=hover_texts,
                 hoverinfo="text",
-                textposition="top left",
-                textfont=dict(size=18),
-                marker=dict(size=14),
+                marker=dict(size=marker_sizes),
                 line=dict(width=4),
                 name="進捗",
             ))
