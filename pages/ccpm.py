@@ -725,13 +725,19 @@ def _render_fever_tab(
         buffer_hist.append(fever["buffer_used"])
         memos.append("")
         
-        # メモ付きのチャートラベルを生成
+        # チャート上の表示用ラベル（現在のみ表示）とホバー用テキストを生成
         plot_texts = []
-        for d, m in zip(dates, memos):
-            if m:
-                plot_texts.append(f"{d}<br>🗣 {m}")
+        hover_texts = []
+        for i, (d, m) in enumerate(zip(dates, memos)):
+            # ホバー用（全部表示）
+            hover_text = f"{d}<br>🗣 {m}" if m else d
+            hover_texts.append(hover_text)
+            
+            # チャート上のテキスト（最後=現在以外は非表示）
+            if i == len(dates) - 1:
+                plot_texts.append(hover_text)
             else:
-                plot_texts.append(d)
+                plot_texts.append("")
 
         # チャート（75%縮小に伴いカラム比率を拡大）とデータテーブルを横並び
         chart_col, data_col = st.columns([2, 1])
@@ -779,7 +785,9 @@ def _render_fever_tab(
                 x=progress_hist, y=buffer_hist,
                 mode="lines+markers+text",
                 text=plot_texts,
-                textposition="top center",
+                hovertext=hover_texts,
+                hoverinfo="text",
+                textposition="top left",
                 textfont=dict(size=18),
                 marker=dict(size=14),
                 line=dict(width=4),
