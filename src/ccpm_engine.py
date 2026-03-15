@@ -25,21 +25,68 @@ def get_in_out_edge_list(graph: nx.DiGraph) -> Tuple[List[str], List[str]]:
     return inputs, outputs
 
 
-def _get_effective_days(graph: nx.DiGraph, node: str) -> float:
+def _parse_project_date(date_str: str) -> Optional[datetime]:
+    """Parse a project date string."""
+    if not date_str:
+        return None
+    try:
+        return datetime.strptime(date_str, "%Y/%m/%d")
+    except ValueError:
+        return None
+
+
+def _calculate_actual_workdays(
+    node_attrs: Dict[str, Any], project: Optional[Dict[str, Any]] = None
+) -> Optional[float]:
+    """Return actual workdays for a completed task when dates are available."""
+    if not workdays:
+        return None
+
+    start_dt = _parse_project_date(node_attrs.get("start", ""))
+    end_dt = _parse_project_date(node_attrs.get("end", ""))
+    if not start_dt or not end_dt:
+        return None
+
+    holidays = []
+    if project:
+        holidays = [
+            holiday_dt
+            for holiday in project.get("holidays", [])
+            if (holiday_dt := _parse_project_date(holiday)) is not None
+        ]
+
+    return float(workdays.networkdays(start_dt, end_dt, holidays=holidays))
+
+
+def _get_effective_days(
+    graph: nx.DiGraph,
+    node: str,
+    project: Optional[Dict[str, Any]] = None,
+    duration_mode: str = "remaining",
+) -> float:
     """ノードの実質的な残日数を返す。
     - 完了済み: 0.0
     - 着手済み（開始日あり）: remains
     - 未着手: days (見積もり日数)
     """
-    if graph.nodes[node].get("finished", False):
+    node_attrs = graph.nodes[node]
+    if duration_mode == "display" and node_attrs.get("finished", False):
+        actual_days = _calculate_actual_workdays(node_attrs, project)
+        if actual_days is not None:
+            return actual_days
+    if node_attrs.get("finished", False):
         return 0.0
-    if graph.nodes[node].get("start", ""):
-        return float(graph.nodes[node].get("remains", 0.0))
-    return float(graph.nodes[node].get("days", 0.0))
+    if node_attrs.get("start", ""):
+        return float(node_attrs.get("remains", 0.0))
+    return float(node_attrs.get("days", 0.0))
 
 
 def calculate_critical_path(
-    graph: nx.DiGraph, inputs: List[str], outputs: List[str]
+    graph: nx.DiGraph,
+    inputs: List[str],
+    outputs: List[str],
+    project: Optional[Dict[str, Any]] = None,
+    duration_mode: str = "remaining",
 ) -> Tuple[float, List[str]]:
     """動的計画法 (DP) を用いて O(V+E) で最長パス（クリティカルパス）を返す。
 
@@ -67,7 +114,9 @@ def calculate_critical_path(
     pred: Dict[str, Optional[str]] = {}
 
     for node in topo_order:
-        days = _get_effective_days(graph, node)
+        days = _get_effective_days(
+            graph, node, project=project, duration_mode=duration_mode
+        )
         dist[node] = days  # 親がない入端の場合
         pred[node] = None
         
@@ -137,17 +186,28 @@ def _compute_earliest_schedule(graph: nx.DiGraph) -> Dict[str, Tuple[float, floa
 
 
 def _compute_remaining_path_length(
-    graph: nx.DiGraph, node: str, memo: Dict[str, float]
+    graph: nx.DiGraph,
+    node: str,
+    memo: Dict[str, float],
+    project: Optional[Dict[str, Any]] = None,
+    duration_mode: str = "remaining",
 ) -> float:
     """ノードから終端までの最長残パス長を計算する（メモ化再帰）。"""
     if node in memo:
         return memo[node]
-    days = _get_effective_days(graph, node)
+    days = _get_effective_days(
+        graph, node, project=project, duration_mode=duration_mode
+    )
     successors = list(graph.successors(node))
     if not successors:
         memo[node] = days
         return days
-    max_child = max(_compute_remaining_path_length(graph, s, memo) for s in successors)
+    max_child = max(
+        _compute_remaining_path_length(
+            graph, s, memo, project=project, duration_mode=duration_mode
+        )
+        for s in successors
+    )
     result = days + max_child
     memo[node] = result
     return result
@@ -249,7 +309,9 @@ def _detect_resource_conflicts(
 
 def calculate_critical_chain(
     graph: nx.DiGraph,
-    max_concurrency: int = 0
+    max_concurrency: int = 0,
+    project: Optional[Dict[str, Any]] = None,
+    duration_mode: str = "remaining",
 ) -> Tuple[float, List[str], List[Tuple[str, str, str]]]:
     """リソース競合および同時実行上限を考慮したクリティカルチェーンを算出する。
 
@@ -287,8 +349,20 @@ def calculate_critical_chain(
         best_priority_diff = -1
 
         for task_a, task_b, resource in conflicts:
-            rem_a = _compute_remaining_path_length(work_graph, task_a, memo)
-            rem_b = _compute_remaining_path_length(work_graph, task_b, memo)
+            rem_a = _compute_remaining_path_length(
+                work_graph,
+                task_a,
+                memo,
+                project=project,
+                duration_mode=duration_mode,
+            )
+            rem_b = _compute_remaining_path_length(
+                work_graph,
+                task_b,
+                memo,
+                project=project,
+                duration_mode=duration_mode,
+            )
             diff = abs(rem_a - rem_b)
             if diff > best_priority_diff:
                 best_priority_diff = diff
@@ -320,7 +394,13 @@ def calculate_critical_chain(
 
     # 最終的なクリティカルチェーンを算出
     inputs, outputs = get_in_out_edge_list(work_graph)
-    cc_length, cc_path = calculate_critical_path(work_graph, inputs, outputs)
+    cc_length, cc_path = calculate_critical_path(
+        work_graph,
+        inputs,
+        outputs,
+        project=project,
+        duration_mode=duration_mode,
+    )
 
     return cc_length, cc_path, virtual_edges
 

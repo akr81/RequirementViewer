@@ -311,8 +311,11 @@ class ConvertPumlCode:
             str: PlantUMLリンク文字列 (例: "[[?param1=val1&selected=id]]")
         """
         query_items = []
+        link_excluded_keys = {"project"}
         if parameters_dict:  # parameters_dictがNoneや空でないことを確認
             for key, value in parameters_dict.items():
+                if key in link_excluded_keys:
+                    continue
                 query_items.append(f"{key}={value}")
 
         # 常にselectedパラメータを追加
@@ -897,10 +900,22 @@ class ConvertPumlCode:
 
         # CP / CC 算出
         inputs, outputs = get_in_out_edge_list(graph)
-        cp_length, cp = calculate_critical_path(graph, inputs, outputs)
-        
+        project = parameters_dict.get("project", {})
+        cp_length, cp = calculate_critical_path(
+            graph,
+            inputs,
+            outputs,
+            project=project,
+            duration_mode="display",
+        )
+
         max_concurrency = parameters_dict.get("max_concurrency", 0)
-        cc_length, cc, virtual_edges = calculate_critical_chain(graph, max_concurrency=max_concurrency)
+        cc_length, cc, virtual_edges = calculate_critical_chain(
+            graph,
+            max_concurrency=max_concurrency,
+            project=project,
+            duration_mode="display",
+        )
 
         # CP / CC のエッジペアセットを構築
         cp_edges = set()

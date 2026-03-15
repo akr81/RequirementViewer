@@ -222,6 +222,7 @@ def _render_diagram(
     # プロジェクト設定から同時実行上限（リソースの行数）を取得してパラメータに渡す
     project = context.requirements.get("project", {})
     parameters_dict["max_concurrency"] = len(project.get("resources", []))
+    parameters_dict["project"] = project
 
     plantuml_code = ""
     # show_temp_id が ON の場合のみ、subgraphのエンティティに仮ID(#N)を付加
