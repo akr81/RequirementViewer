@@ -1,10 +1,22 @@
 {
     settings: {
-        display_last_n_points: 10
+        display_last_n_points: 20
         default_buffer_percent: 30
     }
     common: {
         holidays: [
+            2025/11/03
+            2025/11/24
+            2025/12/31
+            2026/01/01
+            2026/01/02
+            2026/01/03
+            2026/01/13
+            2026/02/11
+            2026/02/23
+            2026/03/20
+            2026/04/29
+            2026/05/03
             2026/05/04
             2026/05/05
             2026/05/06
@@ -12,45 +24,377 @@
     }
     projects: [
         {
+            // 順調: 進捗が計画通りに推移し、バッファ消費も最小限
             id: pj-alpha
-            name: Project Alpha
-            start: 2026/04/01
-            end: 2026/06/30
+            name: 基幹システム刷新
+            start: 2025/10/01
+            end: 2026/03/31
             buffer_percent: 30
             progress: [
                 {
-                    date: 2026/04/03
-                    progress: 8
-                    memo: kick-off
+                    date: 2025/10/10
+                    progress: 5
+                    memo: キックオフ完了
                 }
                 {
-                    date: 2026/04/10
-                    progress: 18
-                    memo: design
+                    date: 2025/10/24
+                    progress: 12
+                    memo: 要件定義開始
                 }
                 {
-                    date: 2026/04/17
-                    progress: 27
-                    memo: api ready
+                    date: 2025/11/07
+                    progress: 20
+                    memo: 要件定義完了
+                }
+                {
+                    date: 2025/11/21
+                    progress: 28
+                    memo: 基本設計開始
+                }
+                {
+                    date: 2025/12/05
+                    progress: 37
+                    memo: 基本設計完了
+                }
+                {
+                    date: 2025/12/19
+                    progress: 45
+                    memo: 詳細設計開始
+                }
+                {
+                    date: 2026/01/09
+                    progress: 52
+                    memo: 詳細設計完了
+                }
+                {
+                    date: 2026/01/23
+                    progress: 61
+                    memo: 実装Phase1完了
+                }
+                {
+                    date: 2026/02/06
+                    progress: 70
+                    memo: 実装Phase2完了
+                }
+                {
+                    date: 2026/02/20
+                    progress: 79
+                    memo: 結合テスト開始
+                }
+                {
+                    date: 2026/03/06
+                    progress: 87
+                    memo: 結合テスト完了
+                }
+                {
+                    date: 2026/03/20
+                    progress: 95
+                    memo: 受入テスト中
                 }
             ]
         }
         {
+            // スコープ追加: 中盤で要件追加が入り進捗率が後退
             id: pj-beta
-            name: Project Beta
-            start: 2026/04/15
-            end: 2026/07/15
+            name: モバイルアプリ開発
+            start: 2025/11/01
+            end: 2026/04/30
             buffer_percent: 25
             progress: [
                 {
-                    date: 2026/04/18
-                    progress: 5
-                    memo: start
+                    date: 2025/11/14
+                    progress: 4
+                    memo: 企画フェーズ
                 }
                 {
-                    date: 2026/04/25
+                    date: 2025/11/28
+                    progress: 10
+                    memo: UI設計開始
+                }
+                {
+                    date: 2025/12/12
+                    progress: 18
+                    memo: UI設計完了
+                }
+                {
+                    date: 2025/12/26
+                    progress: 26
+                    memo: フロントエンド着手
+                }
+                {
+                    date: 2026/01/09
+                    progress: 34
+                    memo: API連携開始
+                }
+                {
+                    date: 2026/01/23
+                    progress: 42
+                    memo: 機能実装順調
+                }
+                {
+                    date: 2026/02/06
+                    progress: 50
+                    memo: 結合テスト環境構築
+                }
+                {
+                    date: 2026/02/20
+                    progress: 42
+                    memo: 【スコープ追加】決済機能の追加要件
+                }
+                {
+                    date: 2026/03/06
+                    progress: 48
+                    memo: 追加要件の設計完了
+                }
+                {
+                    date: 2026/03/20
+                    progress: 55
+                    memo: 追加機能実装中
+                }
+                {
+                    date: 2026/04/03
+                    progress: 63
+                    memo: 追加機能テスト開始
+                }
+                {
+                    date: 2026/04/10
+                    progress: 68
+                    memo: テスト中・残課題対応
+                }
+            ]
+        }
+        {
+            // 手戻り: テスト工程で品質問題が発覚し、設計からやり直し
+            id: pj-gamma
+            name: データ基盤構築
+            start: 2025/12/01
+            end: 2026/05/29
+            buffer_percent: 30
+            progress: [
+                {
+                    date: 2025/12/12
+                    progress: 6
+                    memo: 要件ヒアリング
+                }
+                {
+                    date: 2025/12/26
                     progress: 12
-                    memo: backlog fixed
+                    memo: アーキテクチャ設計
+                }
+                {
+                    date: 2026/01/09
+                    progress: 19
+                    memo: PoC・ETL設計
+                }
+                {
+                    date: 2026/01/23
+                    progress: 26
+                    memo: ETL実装開始
+                }
+                {
+                    date: 2026/02/06
+                    progress: 33
+                    memo: ETL実装完了
+                }
+                {
+                    date: 2026/02/20
+                    progress: 38
+                    memo: データ投入テスト開始
+                }
+                {
+                    date: 2026/03/06
+                    progress: 28
+                    memo: 【手戻り】データ品質問題で設計からやり直し
+                }
+                {
+                    date: 2026/03/20
+                    progress: 32
+                    memo: ETL再設計完了
+                }
+                {
+                    date: 2026/04/03
+                    progress: 36
+                    memo: ETL再実装中
+                }
+                {
+                    date: 2026/04/10
+                    progress: 40
+                    memo: 再テスト準備中
+                }
+            ]
+        }
+        {
+            // 危険: 序盤から遅延が続き、赤ゾーンに突入
+            id: pj-delta
+            name: セキュリティ基盤強化
+            start: 2026/01/05
+            end: 2026/06/30
+            buffer_percent: 30
+            progress: [
+                {
+                    date: 2026/01/16
+                    progress: 3
+                    memo: 現状分析開始
+                }
+                {
+                    date: 2026/01/30
+                    progress: 5
+                    memo: ベンダー選定遅れ
+                }
+                {
+                    date: 2026/02/13
+                    progress: 8
+                    memo: ベンダー決定
+                }
+                {
+                    date: 2026/02/27
+                    progress: 10
+                    memo: 要件定義難航
+                }
+                {
+                    date: 2026/03/13
+                    progress: 13
+                    memo: 要件定義完了・大幅遅延
+                }
+                {
+                    date: 2026/03/27
+                    progress: 16
+                    memo: 設計着手・リソース不足
+                }
+                {
+                    date: 2026/04/10
+                    progress: 19
+                    memo: 設計レビュー 追加要件発生
+                }
+            ]
+        }
+        {
+            // 短期・順調: 小規模プロジェクト、計画通り
+            id: pj-epsilon
+            name: 社内ポータル改修
+            start: 2026/02/01
+            end: 2026/04/30
+            buffer_percent: 20
+            progress: [
+                {
+                    date: 2026/02/14
+                    progress: 15
+                    memo: 改修要件確定
+                }
+                {
+                    date: 2026/02/28
+                    progress: 32
+                    memo: フロント改修完了
+                }
+                {
+                    date: 2026/03/14
+                    progress: 50
+                    memo: バックエンド改修完了
+                }
+                {
+                    date: 2026/03/28
+                    progress: 68
+                    memo: テスト開始
+                }
+                {
+                    date: 2026/04/11
+                    progress: 85
+                    memo: テスト完了・リリース準備
+                }
+            ]
+        }
+        {
+            // 新規着手: まだデータが少ないが出だしは悪くない
+            id: pj-zeta
+            name: AI活用PoC
+            start: 2026/03/01
+            end: 2026/07/31
+            buffer_percent: 35
+            progress: [
+                {
+                    date: 2026/03/14
+                    progress: 5
+                    memo: テーマ選定
+                }
+                {
+                    date: 2026/03/28
+                    progress: 11
+                    memo: データ収集開始
+                }
+                {
+                    date: 2026/04/11
+                    progress: 17
+                    memo: モデル検討中
+                }
+            ]
+        }
+        {
+            // 終盤の追い込み: 進捗は進んでいるがバッファ消費も大きい
+            id: pj-eta
+            name: 会計システム移行
+            start: 2025/09/01
+            end: 2026/02/28
+            buffer_percent: 25
+            progress: [
+                {
+                    date: 2025/09/12
+                    progress: 4
+                    memo: 移行計画策定
+                }
+                {
+                    date: 2025/09/26
+                    progress: 10
+                    memo: データ抽出ツール開発
+                }
+                {
+                    date: 2025/10/10
+                    progress: 16
+                    memo: 第1回移行リハーサル
+                }
+                {
+                    date: 2025/10/24
+                    progress: 22
+                    memo: リハーサル不具合対応
+                }
+                {
+                    date: 2025/11/07
+                    progress: 30
+                    memo: 第2回移行リハーサル
+                }
+                {
+                    date: 2025/11/21
+                    progress: 36
+                    memo: 残課題対応
+                }
+                {
+                    date: 2025/12/05
+                    progress: 44
+                    memo: 並行稼働開始
+                }
+                {
+                    date: 2025/12/19
+                    progress: 50
+                    memo: 並行稼働で差異検出
+                }
+                {
+                    date: 2026/01/09
+                    progress: 58
+                    memo: 差異原因調査
+                }
+                {
+                    date: 2026/01/23
+                    progress: 65
+                    memo: 修正対応・再テスト
+                }
+                {
+                    date: 2026/02/06
+                    progress: 74
+                    memo: 最終移行リハーサル
+                }
+                {
+                    date: 2026/02/20
+                    progress: 88
+                    memo: 本番移行実施
                 }
             ]
         }

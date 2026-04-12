@@ -303,64 +303,85 @@ def _render_chart(projects: list, common_holidays: list, latest_n: int):
         st.warning("plotly がインストールされていません。")
         return
 
-    fig = go.Figure()
-    x = list(range(0, 101))
-    y1 = [0.6 * xi + 10 for xi in x]
-    y2 = [0.6 * xi + 25 for xi in x]
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=y1,
-            fill="tozeroy",
-            fillcolor="rgba(144,238,144,0.3)",
-            line=dict(color="green", width=1),
-            showlegend=False,
-            hoverinfo="skip",
-        )
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=y2,
-            fill="tonexty",
-            fillcolor="rgba(255,255,150,0.3)",
-            line=dict(color="orange", width=1),
-            showlegend=False,
-            hoverinfo="skip",
-        )
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=[100] * len(x),
-            fill="tonexty",
-            fillcolor="rgba(255,160,160,0.3)",
-            line=dict(width=0),
-            showlegend=False,
-            hoverinfo="skip",
-        )
-    )
+    # ゾーン塗りつぶし（緑・黄・赤・グレー）と被らない配色
+    _PROJECT_COLORS = [
+        "#e6194b",  # 赤系
+        "#3cb44b",  # 緑系
+        "#4363d8",  # 青
+        "#f58231",  # オレンジ
+        "#911eb4",  # 紫
+        "#42d4f4",  # シアン
+        "#f032e6",  # マゼンタ
+        "#e6beff",  # ラベンダー
+        "#469990",  # ティール
+        "#dcbeff",  # ライトパープル
+        "#9a6324",  # ブラウン
+        "#800000",  # マルーン
+    ]
 
+    # 事前にデータを収集し、max_buffer を計算する
+    project_traces = []
     max_buffer = 100.0
-    rendered = 0
+    color_idx = 0
     for project in projects:
         points = _sorted_progress_points(project, common_holidays)
         if latest_n > 0:
             points = points[-latest_n:]
         if not points:
             continue
-        rendered += 1
         max_buffer = max(
             max_buffer, max(point["fever"]["buffer_used"] for point in points)
         )
+        project_traces.append((project, points, _PROJECT_COLORS[color_idx % len(_PROJECT_COLORS)]))
+        color_idx += 1
+
+    if not project_traces:
+        st.info("表示できる進捗データがありません。")
+        return
+
+    y_range_max = int(max_buffer + 9) // 10 * 10 + 10 if max_buffer > 100 else 100
+
+    # ゾーン塗りつぶしを先にすべて描画（tonexty が連続するように）
+    fig = go.Figure()
+    x = list(range(0, 101))
+    y1 = [0.6 * xi + 10 for xi in x]
+    y2 = [0.6 * xi + 25 for xi in x]
+
+    # 緑ゾーン
+    fig.add_trace(go.Scatter(
+        x=x, y=y1, fill="tozeroy", fillcolor="rgba(144,238,144,0.3)",
+        line=dict(color="green", width=1), showlegend=False, hoverinfo="skip",
+    ))
+    # 黄ゾーン
+    fig.add_trace(go.Scatter(
+        x=x, y=y2, fill="tonexty", fillcolor="rgba(255,255,150,0.3)",
+        line=dict(color="orange", width=1), showlegend=False, hoverinfo="skip",
+    ))
+    # 赤ゾーン（100%まで）
+    fig.add_trace(go.Scatter(
+        x=x, y=[100] * len(x), fill="tonexty", fillcolor="rgba(255,160,160,0.3)",
+        line=dict(width=0), showlegend=False, hoverinfo="skip",
+    ))
+    # 100%超えグレーゾーン（必要な場合、赤ゾーンの直後に連続して描画）
+    if y_range_max > 100:
+        fig.add_trace(go.Scatter(
+            x=x, y=[y_range_max] * len(x), fill="tonexty", fillcolor="rgba(200,200,200,0.3)",
+            line=dict(width=0), showlegend=False, hoverinfo="skip",
+        ))
+
+    # プロジェクトのデータトレースを描画（ゾーンの上に重ねる）
+    for project, points, color in project_traces:
         fig.add_trace(
             go.Scatter(
                 x=[point["fever"]["progress"] for point in points],
                 y=[point["fever"]["buffer_used"] for point in points],
                 mode="lines+markers",
                 name=project.get("name", project.get("id", "")),
-                marker=dict(size=[11] * (len(points) - 1) + [18]),
-                line=dict(width=3),
+                marker=dict(
+                    size=[11] * (len(points) - 1) + [18],
+                    color=color,
+                ),
+                line=dict(width=3, color=color),
                 hovertext=[
                     (
                         f"{project.get('name', project.get('id', ''))}<br>"
@@ -372,24 +393,6 @@ def _render_chart(projects: list, common_holidays: list, latest_n: int):
                     for point in points
                 ],
                 hoverinfo="text",
-            )
-        )
-
-    if rendered == 0:
-        st.info("表示できる進捗データがありません。")
-        return
-
-    y_range_max = int(max_buffer + 9) // 10 * 10 + 10 if max_buffer > 100 else 100
-    if y_range_max > 100:
-        fig.add_trace(
-            go.Scatter(
-                x=x,
-                y=[y_range_max] * len(x),
-                fill="tonexty",
-                fillcolor="rgba(200,200,200,0.3)",
-                line=dict(width=0),
-                showlegend=False,
-                hoverinfo="skip",
             )
         )
 
@@ -405,29 +408,52 @@ def _render_chart(projects: list, common_holidays: list, latest_n: int):
     st.plotly_chart(fig, width="stretch")
 
 
+def _classify_zone(progress: float, buffer_used: float) -> str:
+    """チャートのゾーン境界と同じ式でゾーンを判定する。"""
+    green_yellow = 0.6 * progress + 10  # 緑/黄 境界
+    yellow_red = 0.6 * progress + 25    # 黄/赤 境界
+    if buffer_used >= yellow_red:
+        return "🔴"
+    elif buffer_used >= green_yellow:
+        return "🟡"
+    return "🟢"
+
+
 def _render_summary(projects: list, common_holidays: list):
+    today = datetime.date.today()
     rows = []
     for project in projects:
         points = _sorted_progress_points(project, common_holidays)
         if not points:
             continue
         latest = points[-1]
+        progress = round(latest["fever"]["progress"], 1)
+        buffer_used = round(latest["fever"]["buffer_used"], 1)
         total_workdays = calculate_working_days(
             project.get("start", ""), project.get("end", ""), common_holidays
         )
+        remaining_days = max(
+            0, round(calculate_working_days(today, project.get("end", ""), common_holidays), 0)
+        )
+        zone = _classify_zone(progress, buffer_used)
         rows.append(
             {
-                "project": project.get("name", project.get("id", "")),
-                "last_date": latest["date"],
-                "progress": round(latest["fever"]["progress"], 1),
-                "buffer_used": round(latest["fever"]["buffer_used"], 1),
-                "workdays": round(total_workdays, 1),
-                "buffer_percent": round(
+                "状態": zone,
+                "プロジェクト": project.get("name", project.get("id", "")),
+                "最終記録日": latest["date"],
+                "進捗率(%)": progress,
+                "バッファ消費率(%)": buffer_used,
+                "残日数": int(remaining_days),
+                "稼働日数": round(total_workdays, 1),
+                "バッファ率(%)": round(
                     float(project.get("buffer_percent", 30.0) or 30.0), 1
                 ),
             }
         )
     if rows:
+        # ゾーン順（赤→黄→緑）、次にバッファ消費率降順でソート
+        zone_order = {"🔴": 0, "🟡": 1, "🟢": 2}
+        rows.sort(key=lambda r: (zone_order.get(r["状態"], 9), -r["バッファ消費率(%)"]))
         st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
 
 
@@ -615,7 +641,7 @@ with side_col:
 
         with st.expander(expander_label, expanded=False):
             # --- 簡易追加フォーム ---
-            add_date_col, add_progress_col, add_btn_col = st.columns([2, 2, 1])
+            add_date_col, add_progress_col, add_memo_col, add_btn_col = st.columns([2, 2, 3, 1])
             add_key_prefix = f"mpf_add_{project['id']}"
             with add_date_col:
                 add_date = st.date_input(
@@ -632,6 +658,12 @@ with side_col:
                     step=1.0,
                     key=f"{add_key_prefix}_progress",
                 )
+            with add_memo_col:
+                add_memo = st.text_input(
+                    "メモ",
+                    value="",
+                    key=f"{add_key_prefix}_memo",
+                )
             with add_btn_col:
                 st.write("")
                 st.write("")
@@ -646,12 +678,13 @@ with side_col:
                             for p in project["progress"]:
                                 if p.get("date", "") == date_str:
                                     p["progress"] = min(100.0, max(0.0, float(add_progress)))
+                                    p["memo"] = add_memo
                                     break
                         else:
                             project.setdefault("progress", []).append({
                                 "date": date_str,
                                 "progress": min(100.0, max(0.0, float(add_progress))),
-                                "memo": "",
+                                "memo": add_memo,
                             })
                         project["progress"] = sorted(
                             project["progress"], key=lambda item: item["date"]
@@ -689,8 +722,7 @@ with side_col:
         st.success("データを保存しました。")
         st.rerun()
 
-    st.subheader("最新サマリー")
-    _render_summary(edited_data["projects"], common_holidays)
-
 with chart_col:
     _render_chart(edited_data["projects"], common_holidays, int(latest_n))
+    st.subheader("最新サマリー")
+    _render_summary(edited_data["projects"], common_holidays)
