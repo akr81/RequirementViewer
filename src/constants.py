@@ -5,6 +5,7 @@ class AppName:
     EVAPORATING_CLOUD = "Evaporating Cloud Viewer"
     STRATEGY_TACTICS = "Strategy and Tactics Tree Viewer"
     CCPM = "CCPM Viewer"
+    MULTI_PROJECT_FEVER = "Multi Project Fever Chart Viewer"
 
 
 class NodeType:

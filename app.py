@@ -16,6 +16,7 @@ AVAILABLE_APP_PAGES = {
     "Requirement Diagram Viewer": "pages/requirement_diagram.py",
     "Strategy and Tactics Tree Viewer": "pages/strategy_and_tactics.py",
     "CCPM Viewer": "pages/ccpm.py",
+    "Multi Project Fever Chart Viewer": "pages/multi_project_fever.py",
 }
 DEFAULT_APP_INTERNAL_NAME = "Current Reality Tree Viewer"  # デフォルトページの内部名
 LAST_USED_PAGE_KEY = "last_used_page"  # config.hjson 内のキー

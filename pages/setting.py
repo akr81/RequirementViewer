@@ -1,5 +1,6 @@
 import streamlit as st
-from src.file_io import load_config, save_config
+
+from src.file_io import save_config
 
 st.set_page_config(layout="wide")
 st.markdown(
@@ -12,23 +13,22 @@ st.markdown(
 )
 st.title("Setting")
 
-# 各設定キーの説明を定義
 PARAM_DESCRIPTIONS = {
-    "plantuml": "PlantUMLサーバーのURL",
-    "viewer_height": "図ビューアの高さ（px）",
+    "plantuml": "PlantUML サーバーの URL",
+    "viewer_height": "ビューア高さ(px)",
     "upstream_filter_max": "上流ノードの最大表示数",
     "downstream_filter_max": "下流ノードの最大表示数",
-    "backup_retention_days": "バックアップ保持日数（自動削除）",
-    "requirement_data": "要求図のデータファイルパス",
-    "strategy_and_tactics_data": "S&Tツリーのデータファイルパス",
-    "current_reality_tree_data": "CRTのデータファイルパス",
-    "process_flow_diagram_data": "PFDのデータファイルパス",
-    "evaporating_cloud_data": "ECのデータファイルパス",
-    "ccpm_data": "CCPMのデータファイルパス",
+    "backup_retention_days": "バックアップ保持日数",
+    "requirement_data": "Requirement Diagram のデータファイル",
+    "strategy_and_tactics_data": "Strategy and Tactics Tree のデータファイル",
+    "current_reality_tree_data": "Current Reality Tree のデータファイル",
+    "process_flow_diagram_data": "Process Flow Diagram のデータファイル",
+    "evaporating_cloud_data": "Evaporating Cloud のデータファイル",
+    "ccpm_data": "CCPM のデータファイル",
+    "multi_project_fever_data": "フィーバーチャートのデータファイル",
     "last_used_page": "最後に使用したページ",
 }
 
-# 数値型のキー（text_inputではなくnumber_inputを使う）
 NUMERIC_KEYS = {
     "viewer_height",
     "upstream_filter_max",
@@ -38,10 +38,9 @@ NUMERIC_KEYS = {
 
 config_data = st.session_state.config_data
 
-st.write("## 設定の編集")
-st.caption("値を変更して「保存」ボタンを押すと config.hjson に反映されます。")
+st.write("## 設定")
+st.caption("値を編集して保存すると `config.hjson` に反映されます。")
 
-# 編集用のフォーム
 updated_config = {}
 for key, value in config_data.items():
     description = PARAM_DESCRIPTIONS.get(key, "")
@@ -67,8 +66,7 @@ for key, value in config_data.items():
                 key=f"setting_{key}",
             )
 
-if st.button("💾 保存", key="save_settings"):
-    # 数値型を適切に変換
+if st.button("保存", key="save_settings"):
     for key in NUMERIC_KEYS:
         if key in updated_config:
             try:
@@ -78,14 +76,10 @@ if st.button("💾 保存", key="save_settings"):
 
     save_config(updated_config)
     st.session_state.config_data = updated_config
-    st.toast("設定を保存しました ✅")
+    st.toast("設定を保存しました。")
 
 st.divider()
 
-# 現在のデータファイル情報
 data_key = st.session_state.app_data[st.session_state.app_name]["data"]
-if data_key in config_data:
-    data_file = config_data[data_key]
-else:
-    data_file = "指定なし"
+data_file = config_data.get(data_key, "未設定")
 st.write(f"**現在のデータファイル:** `{data_file}`")

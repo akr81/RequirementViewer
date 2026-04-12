@@ -740,6 +740,109 @@ def calculate_fever_data(
     }
 
 
+def _coerce_datetime(value: Any) -> Optional[datetime]:
+    """Convert string/date/datetime-like values into datetime."""
+    if value in (None, ""):
+        return None
+    if isinstance(value, datetime):
+        return value
+    if hasattr(value, "year") and hasattr(value, "month") and hasattr(value, "day"):
+        return datetime(value.year, value.month, value.day)
+    if isinstance(value, str):
+        return _parse_project_date(value)
+    return None
+
+
+def calculate_working_days(
+    start: Any,
+    end: Any,
+    holidays: Optional[List[Any]] = None,
+) -> float:
+    """Return inclusive working days between two dates."""
+    dt_start = _coerce_datetime(start)
+    dt_end = _coerce_datetime(end)
+    if not dt_start or not dt_end or dt_end < dt_start:
+        return 0.0
+
+    dt_holidays = [
+        holiday_dt
+        for holiday in (holidays or [])
+        if (holiday_dt := _coerce_datetime(holiday)) is not None
+    ]
+    if workdays:
+        return float(workdays.networkdays(dt_start, dt_end, holidays=dt_holidays))
+    return float((dt_end - dt_start).days + 1)
+
+
+def calculate_fever_data_from_progress(
+    project: Dict[str, Any],
+    progress_percent: float,
+    as_of_date: Any,
+    common_holidays: Optional[List[Any]] = None,
+) -> Dict[str, float]:
+    """Calculate fever chart values from schedule and manual progress."""
+    start_dt = _coerce_datetime(project.get("start", ""))
+    end_dt = _coerce_datetime(project.get("end", ""))
+    point_dt = _coerce_datetime(as_of_date)
+    progress = min(100.0, max(0.0, float(progress_percent or 0.0)))
+    buffer_percent = float(project.get("buffer_percent", 30.0) or 30.0)
+
+    default_result = {
+        "progress": progress,
+        "buffer_used": 0.0,
+        "remaining_cc_length": 0.0,
+        "consumed_buffer": 0.0,
+        "baseline_cc_length": 0.0,
+        "baseline_total_buffer": 0.0,
+        "total_workdays": 0.0,
+        "elapsed_workdays": 0.0,
+        "buffer_percent": buffer_percent,
+    }
+    if not start_dt or not end_dt or not point_dt or end_dt < start_dt:
+        return default_result
+
+    holidays = list(common_holidays or [])
+    holidays.extend(project.get("holidays", []))
+    total_workdays = calculate_working_days(start_dt, end_dt, holidays)
+    if total_workdays <= 0:
+        return default_result
+
+    baseline_total_buffer = total_workdays * (buffer_percent / 100.0)
+    baseline_cc_length = total_workdays - baseline_total_buffer
+    if baseline_cc_length <= 0:
+        return {
+            **default_result,
+            "total_workdays": total_workdays,
+            "baseline_total_buffer": max(0.0, baseline_total_buffer),
+        }
+
+    effective_point = min(point_dt, end_dt)
+    elapsed_workdays = max(
+        0.0, calculate_working_days(start_dt, effective_point, holidays) - 1.0
+    )
+    finished_days_equivalent = baseline_cc_length * (progress / 100.0)
+    remaining_cc_length = max(0.0, baseline_cc_length - finished_days_equivalent)
+    projected_total_duration = elapsed_workdays + remaining_cc_length
+    consumed_buffer = max(0.0, projected_total_duration - baseline_cc_length)
+    buffer_used = (
+        (consumed_buffer / baseline_total_buffer) * 100.0
+        if baseline_total_buffer > 0
+        else (100.0 if remaining_cc_length > 0 else 0.0)
+    )
+
+    return {
+        "progress": progress,
+        "buffer_used": buffer_used,
+        "remaining_cc_length": remaining_cc_length,
+        "consumed_buffer": consumed_buffer,
+        "baseline_cc_length": baseline_cc_length,
+        "baseline_total_buffer": baseline_total_buffer,
+        "total_workdays": total_workdays,
+        "elapsed_workdays": elapsed_workdays,
+        "buffer_percent": buffer_percent,
+    }
+
+
 # ---------------------------------------------------------------------------
 # 優先度テーブル
 # ---------------------------------------------------------------------------

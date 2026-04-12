@@ -22,5 +22,9 @@
     "CCPM Viewer": {
         "data": "ccpm_data",
         "postfix": "ccpm"
+    },
+    "Multi Project Fever Chart Viewer": {
+        "data": "multi_project_fever_data",
+        "postfix": "multi_fever"
     }
 }

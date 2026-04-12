@@ -1,0 +1,58 @@
+{
+    settings: {
+        display_last_n_points: 10
+        default_buffer_percent: 30
+    }
+    common: {
+        holidays: [
+            2026/05/04
+            2026/05/05
+            2026/05/06
+        ]
+    }
+    projects: [
+        {
+            id: pj-alpha
+            name: Project Alpha
+            start: 2026/04/01
+            end: 2026/06/30
+            buffer_percent: 30
+            progress: [
+                {
+                    date: 2026/04/03
+                    progress: 8
+                    memo: kick-off
+                }
+                {
+                    date: 2026/04/10
+                    progress: 18
+                    memo: design
+                }
+                {
+                    date: 2026/04/17
+                    progress: 27
+                    memo: api ready
+                }
+            ]
+        }
+        {
+            id: pj-beta
+            name: Project Beta
+            start: 2026/04/15
+            end: 2026/07/15
+            buffer_percent: 25
+            progress: [
+                {
+                    date: 2026/04/18
+                    progress: 5
+                    memo: start
+                }
+                {
+                    date: 2026/04/25
+                    progress: 12
+                    memo: backlog fixed
+                }
+            ]
+        }
+    ]
+}

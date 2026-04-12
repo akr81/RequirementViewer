@@ -11,4 +11,5 @@
     process_flow_diagram_data: sample/pfd.hjson
     evaporating_cloud_data: sample/ec.hjson
     ccpm_data: sample/ccpm.hjson
+    multi_project_fever_data: sample/multi_project_fever.hjson
 }
