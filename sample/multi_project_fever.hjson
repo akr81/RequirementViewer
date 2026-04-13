@@ -29,6 +29,8 @@
             name: 基幹システム刷新
             start: 2025/10/01
             end: 2026/03/31
+            progress_basis: タスクの総量に基づく
+            buffer_basis: CC/CPから計算
             buffer_percent: 30
             progress: [
                 {
@@ -99,6 +101,8 @@
             name: モバイルアプリ開発
             start: 2025/11/01
             end: 2026/04/30
+            progress_basis: クリティカルチェーンに基づく
+            buffer_basis: CC/CPから計算
             buffer_percent: 25
             progress: [
                 {
@@ -169,6 +173,8 @@
             name: データ基盤構築
             start: 2025/12/01
             end: 2026/05/29
+            progress_basis: クリティカルパスに基づく
+            buffer_basis: プロジェクト期間から逆算
             buffer_percent: 30
             progress: [
                 {
@@ -229,6 +235,8 @@
             name: セキュリティ基盤強化
             start: 2026/01/05
             end: 2026/06/30
+            progress_basis: 感覚に基づく
+            buffer_basis: CC/CPから計算
             buffer_percent: 30
             progress: [
                 {

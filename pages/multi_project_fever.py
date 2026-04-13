@@ -20,6 +20,34 @@ APP_NAME = "Multi Project Fever Chart Viewer"
 WORKING_DATA_KEY = "multi_project_fever_working_data"
 WORKING_FILE_KEY = "multi_project_fever_working_file"
 
+PROGRESS_BASIS_OPTIONS = [
+    "感覚に基づく",
+    "タスクの総量に基づく",
+    "クリティカルパスに基づく",
+    "クリティカルチェーンに基づく",
+]
+
+BUFFER_BASIS_OPTIONS = [
+    "プロジェクト期間から逆算",
+    "CC/CPから計算",
+]
+
+
+def _get_marker_symbol(basis: str) -> str:
+    if basis == "タスクの総量に基づく":
+        return "square"
+    if basis == "クリティカルパスに基づく":
+        return "diamond"
+    if basis == "クリティカルチェーンに基づく":
+        return "star"
+    return "circle"  # 感覚に基づく
+
+
+def _get_line_dash(basis: str) -> str:
+    if basis == "CC/CPから計算":
+        return "dash"
+    return "solid"  # プロジェクト期間から逆算
+
 
 def _default_data() -> dict:
     return {
@@ -136,6 +164,8 @@ def _normalize_data(data: dict) -> dict:
         project.setdefault("name", project["id"])
         project.setdefault("start", "")
         project.setdefault("end", "")
+        project.setdefault("progress_basis", PROGRESS_BASIS_OPTIONS[0])
+        project.setdefault("buffer_basis", BUFFER_BASIS_OPTIONS[0])
         project.setdefault(
             "buffer_percent", normalized["settings"]["default_buffer_percent"]
         )
@@ -213,6 +243,8 @@ def _build_projects_df(data: dict, common_holidays: list) -> pd.DataFrame:
                 "name": project.get("name", ""),
                 "start": project.get("start", ""),
                 "end": project.get("end", ""),
+                "progress_basis": project.get("progress_basis", PROGRESS_BASIS_OPTIONS[0]),
+                "buffer_basis": project.get("buffer_basis", BUFFER_BASIS_OPTIONS[0]),
                 "buffer_percent": buffer_percent,
                 "workdays": workdays,
                 "buffer_days": buffer_days,
@@ -225,6 +257,8 @@ def _build_projects_df(data: dict, common_holidays: list) -> pd.DataFrame:
             "name",
             "start",
             "end",
+            "progress_basis",
+            "buffer_basis",
             "buffer_percent",
             "workdays",
             "buffer_days",
@@ -267,6 +301,8 @@ def _parse_projects_from_editor(
                 "name": name or project_id,
                 "start": str(row.get("start", "")).strip(),
                 "end": str(row.get("end", "")).strip(),
+                "progress_basis": str(row.get("progress_basis", PROGRESS_BASIS_OPTIONS[0])),
+                "buffer_basis": str(row.get("buffer_basis", BUFFER_BASIS_OPTIONS[0])),
                 "buffer_percent": float(
                     row.get("buffer_percent", default_buffer_percent)
                     or default_buffer_percent
@@ -380,8 +416,13 @@ def _render_chart(projects: list, common_holidays: list, latest_n: int):
                 marker=dict(
                     size=[11] * (len(points) - 1) + [18],
                     color=color,
+                    symbol=_get_marker_symbol(project.get("progress_basis", "")),
                 ),
-                line=dict(width=3, color=color),
+                line=dict(
+                    width=3,
+                    color=color,
+                    dash=_get_line_dash(project.get("buffer_basis", "")),
+                ),
                 hovertext=[
                     (
                         f"{project.get('name', project.get('id', ''))}<br>"
@@ -406,6 +447,14 @@ def _render_chart(projects: list, common_holidays: list, latest_n: int):
         margin=dict(t=20, b=40, l=40, r=20),
     )
     st.plotly_chart(fig, width="stretch")
+
+    st.markdown(
+        "<div style='font-size: 0.85em; color: gray; margin-top: -10px; margin-bottom: 20px;'>"
+        "<b>線の種類（バッファ）</b>: ── プロジェクト期間から逆算 &nbsp;&nbsp;&nbsp; - - CC/CPから計算<br>"
+        "<b>マーカー（進捗）</b>: ● 感覚に基づく &nbsp;&nbsp;&nbsp; ■ タスクの総量に基づく &nbsp;&nbsp;&nbsp; ◆ クリティカルパスに基づく &nbsp;&nbsp;&nbsp; ★ クリティカルチェーンに基づく"
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def _classify_zone(progress: float, buffer_used: float) -> str:
@@ -464,6 +513,8 @@ def _add_project_to_working_data(
     name: str,
     start_date,
     end_date,
+    progress_basis: str,
+    buffer_basis: str,
     buffer_percent: float,
 ):
     new_id = project_id.strip()
@@ -480,6 +531,8 @@ def _add_project_to_working_data(
         "name": new_name or new_id,
         "start": start_date.strftime("%Y/%m/%d") if start_date else "",
         "end": end_date.strftime("%Y/%m/%d") if end_date else "",
+        "progress_basis": progress_basis,
+        "buffer_basis": buffer_basis,
         "buffer_percent": float(buffer_percent),
         "progress": [],
     }
@@ -525,6 +578,10 @@ data = copy.deepcopy(st.session_state[WORKING_DATA_KEY])
 
 chart_col, side_col = st.columns([2, 1])
 
+chart_container = chart_col.container()
+summary_container = chart_col.container()
+project_table_container = chart_col.container()
+
 with side_col:
     default_buffer_percent = float(
         data["settings"].get("default_buffer_percent", 30.0) or 30.0
@@ -561,6 +618,16 @@ with side_col:
         new_end = st.date_input(
             "終了日", value=None, key="multi_project_fever_new_end"
         )
+        new_progress_basis = st.selectbox(
+            "進捗算出基準",
+            options=PROGRESS_BASIS_OPTIONS,
+            key="multi_project_fever_new_progress_basis",
+        )
+        new_buffer_basis = st.selectbox(
+            "バッファ算出基準",
+            options=BUFFER_BASIS_OPTIONS,
+            key="multi_project_fever_new_buffer_basis",
+        )
         new_buffer_percent = st.number_input(
             "バッファ率 (%)",
             min_value=0.0,
@@ -591,29 +658,38 @@ with side_col:
                 new_project_name,
                 new_start,
                 new_end,
+                new_progress_basis,
+                new_buffer_basis,
                 float(new_buffer_percent),
             )
 
-    st.subheader("プロジェクト")
-    projects_df = _build_projects_df(data, common_holidays)
-    edited_projects_df = st.data_editor(
-        projects_df,
-        num_rows="dynamic",
-        width="stretch",
-        hide_index=True,
-        column_config={
-            "id": st.column_config.TextColumn("ID"),
-            "name": st.column_config.TextColumn("プロジェクト名"),
-            "start": st.column_config.TextColumn("開始日"),
-            "end": st.column_config.TextColumn("終了日"),
-            "buffer_percent": st.column_config.NumberColumn(
-                "バッファ率(%)", min_value=0.0, max_value=95.0, step=1.0
-            ),
-            "workdays": st.column_config.NumberColumn("稼働日数", disabled=True),
-            "buffer_days": st.column_config.NumberColumn("バッファ日数", disabled=True),
-        },
-        key="multi_project_fever_projects",
-    )
+    with project_table_container:
+        st.subheader("プロジェクト詳細設定")
+        projects_df = _build_projects_df(data, common_holidays)
+        edited_projects_df = st.data_editor(
+            projects_df,
+            num_rows="dynamic",
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "id": st.column_config.TextColumn("ID"),
+                "name": st.column_config.TextColumn("プロジェクト名"),
+                "start": st.column_config.TextColumn("開始日"),
+                "end": st.column_config.TextColumn("終了日"),
+                "progress_basis": st.column_config.SelectboxColumn(
+                    "進捗基準", options=PROGRESS_BASIS_OPTIONS
+                ),
+                "buffer_basis": st.column_config.SelectboxColumn(
+                    "バッファ基準", options=BUFFER_BASIS_OPTIONS
+                ),
+                "buffer_percent": st.column_config.NumberColumn(
+                    "バッファ率(%)", min_value=0.0, max_value=95.0, step=1.0
+                ),
+                "workdays": st.column_config.NumberColumn("稼働日数", disabled=True),
+                "buffer_days": st.column_config.NumberColumn("バッファ日数", disabled=True),
+            },
+            key="multi_project_fever_projects",
+        )
 
     edited_projects = _parse_projects_from_editor(
         edited_projects_df, data["projects"], default_buffer_percent
@@ -640,6 +716,42 @@ with side_col:
         expander_label = f"{project.get('name', project.get('id', ''))}{latest_info}"
 
         with st.expander(expander_label, expanded=False):
+            # --- 基準の簡易変更 ---
+            edit_basis_key_p = f"mpf_edit_p_basis_{project['id']}"
+            edit_basis_key_b = f"mpf_edit_b_basis_{project['id']}"
+            
+            basis_col1, basis_col2, basis_btn_col = st.columns([2, 2, 1])
+            orig_p_basis = project.get("progress_basis", PROGRESS_BASIS_OPTIONS[0])
+            orig_b_basis = project.get("buffer_basis", BUFFER_BASIS_OPTIONS[0])
+            
+            with basis_col1:
+                st.selectbox(
+                    "進捗基準",
+                    options=PROGRESS_BASIS_OPTIONS,
+                    index=PROGRESS_BASIS_OPTIONS.index(orig_p_basis) if orig_p_basis in PROGRESS_BASIS_OPTIONS else 0,
+                    key=edit_basis_key_p,
+                )
+            with basis_col2:
+                st.selectbox(
+                    "バッファ基準",
+                    options=BUFFER_BASIS_OPTIONS,
+                    index=BUFFER_BASIS_OPTIONS.index(orig_b_basis) if orig_b_basis in BUFFER_BASIS_OPTIONS else 0,
+                    key=edit_basis_key_b,
+                )
+            with basis_btn_col:
+                st.write("")
+                st.write("")
+                if st.button("基準を変更", key=f"mpf_apply_basis_{project['id']}", width="stretch"):
+                    for p in data["projects"]:
+                        if p["id"] == project["id"]:
+                            p["progress_basis"] = st.session_state[edit_basis_key_p]
+                            p["buffer_basis"] = st.session_state[edit_basis_key_b]
+                            break
+                    st.session_state[WORKING_DATA_KEY] = _normalize_data(data)
+                    st.rerun()
+            
+            st.divider()
+
             # --- 簡易追加フォーム ---
             add_date_col, add_progress_col, add_memo_col, add_btn_col = st.columns([2, 2, 3, 1])
             add_key_prefix = f"mpf_add_{project['id']}"
@@ -722,7 +834,9 @@ with side_col:
         st.success("データを保存しました。")
         st.rerun()
 
-with chart_col:
+with chart_container:
     _render_chart(edited_data["projects"], common_holidays, int(latest_n))
+
+with summary_container:
     st.subheader("最新サマリー")
     _render_summary(edited_data["projects"], common_holidays)
